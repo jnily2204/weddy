@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weddy Admin - Trung tâm quản trị</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes pulse-subtle { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        .live-indicator { animation: pulse-subtle 2s infinite; }
+    </style>
+</head>
+<body class="bg-[#F4F5F7] text-[#1A1A1A]">
+    <div id="root"></div>
+
+    <!-- FIREBASE SETUP -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // --- CẤU HÌNH FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD_F3OI5GexlAqgC8TZ1CN1JB5O3RacQqs",
+            authDomain: "weddyvn.firebaseapp.com",
+            projectId: "weddyvn",
+            storageBucket: "weddyvn.firebasestorage.app",
+            messagingSenderId: "504927899297",
+            appId: "1:504927899297:web:1a3d3a1b6cfafe0716aae0",
+            measurementId: "G-KK4B3RXVNV"
+        };
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            // Expose services
+            window.firebaseServices = { db, collection, onSnapshot };
+            console.log("Firebase Admin initialized");
+        } catch (e) {
+            console.error("Firebase init error:", e);
+        }
+    </script>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const useFirebase = () => {
+            const [services, setServices] = useState(null);
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    if (window.firebaseServices) {
+                        setServices(window.firebaseServices);
+                        clearInterval(interval);
+                    }
+                }, 100);
+                return () => clearInterval(interval);
+            }, []);
+            return services;
+        };
+
+        const Icon = ({ children, size = 20, color = "currentColor", className = "", ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
+        );
+        const Icons = {
+            Home: (p) => <Icon {...p}><g><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></g></Icon>,
+            Users: (p) => <Icon {...p}><g><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></g></Icon>,
+            Briefcase: (p) => <Icon {...p}><g><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></g></Icon>,
+            Settings: (p) => <Icon {...p}><g><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></g></Icon>,
+            LogOut: (p) => <Icon {...p}><g><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="21" y1="12" y2="12" /></g></Icon>,
+            Search: (p) => <Icon {...p}><g><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></g></Icon>,
+            Bell: (p) => <Icon {...p}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /></Icon>,
+            TrendingUp: (p) => <Icon {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></Icon>,
+            DollarSign: (p) => <Icon {...p}><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></Icon>,
+            Activity: (p) => <Icon {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></Icon>,
+            Trash: (p) => <Icon {...p}><g><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></g></Icon>,
+            Edit: (p) => <Icon {...p}><g><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></g></Icon>,
+            Lock: (p) => <Icon {...p}><g><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></g></Icon>,
+            Heart: (p) => <Icon {...p}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></Icon>,
+        };
+
+        const Sidebar = ({ activeTab, onTabChange, onLogout }) => {
+            const menuItems = [{ id: 'dashboard', label: 'Tổng quan', icon: Icons.Home }, { id: 'users', label: 'Người dùng', icon: Icons.Users }, { id: 'services', label: 'Dịch vụ', icon: Icons.Briefcase }, { id: 'settings', label: 'Cấu hình', icon: Icons.Settings }];
+            return (
+                <aside className="w-64 bg-white border-r border-stone-200 h-screen fixed left-0 top-0 flex flex-col z-20">
+                    <div className="p-8 border-b border-stone-100"><div className="flex items-center gap-2"><div className="w-8 h-8 bg-black text-white rounded-lg flex items-center justify-center"><span className="font-black text-xs">W</span></div><span className="text-lg font-black tracking-tighter uppercase">Weddy Admin</span></div></div>
+                    <nav className="flex-1 p-4 space-y-1">{menuItems.map(item => (<button key={item.id} onClick={() => onTabChange(item.id)} className={`w-full flex items-center gap-3 px-4 py-3 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === item.id ? 'bg-black text-white shadow-lg shadow-black/10' : 'text-stone-500 hover:bg-stone-50 hover:text-black'}`}><item.icon size={16} strokeWidth={2.5} />{item.label}</button>))}</nav>
+                    <div className="p-4 border-t border-stone-100"><button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 rounded-xl transition-colors"><Icons.LogOut size={16} strokeWidth={2.5} />Đăng xuất</button></div>
+                </aside>
+            );
+        };
+
+        const StatCard = ({ title, value, change, icon: Icon, trend }) => (
+            <div className="bg-white p-6 rounded-3xl border border-stone-100 shadow-sm flex items-start justify-between hover:shadow-md transition-shadow">
+                <div><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">{title}</p><h4 className="text-3xl font-black text-stone-800 tabular-nums transition-all duration-300">{value}</h4><div className={`flex items-center gap-1 mt-2 text-[10px] font-bold ${trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`}><Icons.TrendingUp size={12} className={trend === 'down' ? 'rotate-180' : ''} />{change} so với tháng trước</div></div><div className="w-12 h-12 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-800"><Icon size={20} strokeWidth={2} /></div>
+            </div>
+        );
+
+        const DashboardView = ({ stats, users }) => {
+            const recentUsers = [...users].reverse().slice(0, 5);
+            return (
+                <div className="space-y-8 animate-in">
+                    <div><h2 className="text-2xl font-black uppercase tracking-tighter text-stone-800">Dashboard</h2><p className="text-stone-500 text-sm mt-1">Chào mừng trở lại, Admin! Dưới đây là tình hình hoạt động hôm nay.</p></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <StatCard title="Tổng người dùng" value={stats.totalUsers.toLocaleString()} change="+12%" icon={Icons.Users} trend="up" />
+                        <StatCard title="Doanh thu" value={`${(stats.revenue / 1000000).toFixed(1)}M`} change="+5.2%" icon={Icons.DollarSign} trend="up" />
+                        <StatCard title="Đám cưới tháng này" value={stats.weddingsThisMonth} change="-2%" icon={Icons.Heart} trend="down" />
+                        <StatCard title="Dịch vụ hoạt động" value={stats.activeServices} change="+4" icon={Icons.Briefcase} trend="up" />
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm">
+                            <div className="flex justify-between items-center mb-8"><h3 className="text-lg font-black uppercase tracking-widest">Đăng ký mới gần đây</h3><button className="text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-black">Xem tất cả</button></div>
+                            <div className="space-y-6">{recentUsers.map((user, i) => (
+                                <div key={user.id} className="flex items-center justify-between pb-6 border-b border-stone-50 last:border-0 last:pb-0 animate-in slide-in-from-right-4" style={{animationDelay: `${i * 0.1}s`}}>
+                                    <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center font-black text-stone-500 text-xs">{user.profile?.email ? user.profile.email.charAt(0).toUpperCase() : 'U'}</div><div><p className="font-bold text-sm text-stone-800">{user.profile?.email || 'Unknown'}</p><p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">Ngày: {new Date(user.createdAt).toLocaleDateString('vi-VN')}</p></div></div>
+                                    <div className="text-right"><span className={`inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${user.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-50 text-stone-600'}`}>{user.status}</span></div>
+                                </div>
+                            ))}</div>
+                        </div>
+                        <div className="bg-black text-white p-10 rounded-[2.5rem] shadow-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-stone-800 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 opacity-50"></div>
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-8"><h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">Trạng thái hệ thống</h3><div className="w-2 h-2 bg-emerald-500 rounded-full live-indicator"></div></div>
+                                <div className="space-y-6">
+                                    <div><div className="flex justify-between text-xs font-bold mb-2"><span>Server Load</span><span className="text-emerald-400">Normal</span></div><div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 w-[35%] transition-all duration-1000" style={{width: `${30 + Math.random() * 10}%`}}></div></div></div>
+                                    <div><div className="flex justify-between text-xs font-bold mb-2"><span>Storage Usage</span><span className="text-amber-400">62%</span></div><div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-amber-500 w-[62%]"></div></div></div>
+                                    <div className="pt-6 mt-6 border-t border-white/10"><p className="text-xs text-white/60 leading-relaxed">Hệ thống hoạt động ổn định. Dữ liệu đang được đồng bộ theo thời gian thực.</p></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const UsersView = ({ users }) => (
+            <div className="animate-in">
+                <div className="flex justify-between items-end mb-8">
+                    <div><h2 className="text-2xl font-black uppercase tracking-tighter text-stone-800">Quản lý người dùng</h2><p className="text-stone-500 text-sm mt-1">Danh sách tất cả các cặp đôi đang sử dụng nền tảng.</p></div>
+                    <div className="flex gap-3"><div className="relative"><input type="text" placeholder="Tìm kiếm..." className="pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-full text-sm font-medium focus:outline-none focus:border-black w-64" /><Icons.Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" /></div><button className="bg-black text-white px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 transition-colors shadow-lg">Xuất Excel</button></div>
+                </div>
+                <div className="bg-white border border-stone-200 rounded-[2rem] overflow-hidden shadow-sm">
+                    <table className="w-full text-left">
+                        <thead className="bg-stone-50 border-b border-stone-100">
+                            <tr><th className="px-8 py-5 text-[10px] font-black text-stone-400 uppercase tracking-widest">ID</th><th className="px-8 py-5 text-[10px] font-black text-stone-400 uppercase tracking-widest">Cặp đôi</th><th className="px-8 py-5 text-[10px] font-black text-stone-400 uppercase tracking-widest">Email</th><th className="px-8 py-5 text-[10px] font-black text-stone-400 uppercase tracking-widest">Gói</th><th className="px-8 py-5 text-[10px] font-black text-stone-400 uppercase tracking-widest">Trạng thái</th><th className="px-8 py-5 text-[10px] font-black text-stone-400 uppercase tracking-widest text-right">Thao tác</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-50">{users.map((user) => (
+                            <tr key={user.id} className="hover:bg-[#FBF9F7] transition-colors group">
+                                <td className="px-8 py-5 font-mono text-xs text-stone-500">#{user.id.slice(-5)}</td>
+                                <td className="px-8 py-5"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-stone-200"></div><span className="font-bold text-sm text-stone-800">{user.profile?.email || 'N/A'}</span></div></td>
+                                <td className="px-8 py-5 text-sm font-medium text-stone-600">{user.profile?.email}</td>
+                                <td className="px-8 py-5"><span className="px-2 py-1 bg-stone-100 rounded text-[10px] font-bold uppercase tracking-widest text-stone-600">{user.plan}</span></td>
+                                <td className="px-8 py-5"><span className={`text-xs font-bold flex items-center gap-1 ${user.status === 'Active' ? 'text-emerald-500' : 'text-stone-500'}`}><div className={`w-1.5 h-1.5 rounded-full ${user.status === 'Active' ? 'bg-emerald-500' : 'bg-stone-500'}`}></div> {user.status}</span></td>
+                                <td className="px-8 py-5 text-right"><div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button className="p-2 text-stone-400 hover:text-black bg-white border border-stone-100 rounded-lg shadow-sm"><Icons.Edit size={14}/></button><button className="p-2 text-stone-400 hover:text-red-500 bg-white border border-stone-100 rounded-lg shadow-sm"><Icons.Trash size={14}/></button></div></td>
+                            </tr>
+                        ))}</tbody>
+                    </table>
+                </div>
+            </div>
+        );
+
+        const LoginView = ({ onLogin }) => {
+            const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [error, setError] = useState("");
+            const handleSubmit = (e) => { e.preventDefault(); if (email === "admin" && password === "admin") { onLogin(); } else { setError("Thông tin đăng nhập không chính xác (Thử admin/admin)"); } };
+            return (
+                <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-white">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-black"></div><div className="absolute -top-20 -right-20 w-96 h-96 bg-stone-50 rounded-full blur-3xl"></div>
+                    <div className="w-full max-w-md animate-in zoom-in-95 duration-500 relative z-10">
+                        <div className="text-center mb-10"><div className="w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-stone-200"><span className="font-black text-2xl">W</span></div><h1 className="text-3xl font-black uppercase tracking-tighter mb-2">Weddy Admin</h1><p className="text-stone-400 font-medium">Đăng nhập để truy cập hệ thống quản trị</p></div>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-2"><label className="block text-[10px] font-black uppercase tracking-widest text-stone-400 ml-1">Username / Email</label><div className="relative"><input type="text" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 pl-12 text-sm font-bold focus:outline-none focus:border-black focus:bg-white transition-all shadow-inner" placeholder="Nhập email quản trị" /><Icons.Users size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" /></div></div>
+                            <div className="space-y-2"><label className="block text-[10px] font-black uppercase tracking-widest text-stone-400 ml-1">Mật khẩu</label><div className="relative"><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 pl-12 text-sm font-bold focus:outline-none focus:border-black focus:bg-white transition-all shadow-inner" placeholder="••••••••" /><Icons.Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" /></div></div>
+                            {error && <p className="text-rose-500 text-xs font-bold text-center bg-rose-50 py-2 rounded-lg">{error}</p>}
+                            <button type="submit" className="w-full py-4 bg-black text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] hover:bg-stone-800 hover:scale-[1.02] transition-all shadow-xl shadow-black/20 active:scale-95">Truy cập Dashboard</button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const AdminApp = () => {
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [stats, setStats] = useState({ totalUsers: 0, revenue: 0, weddingsThisMonth: 0, activeServices: 0 });
+            const [users, setUsers] = useState([]);
+            const firebase = useFirebase();
+
+            useEffect(() => {
+                if (!firebase) return;
+                const { db, collection, onSnapshot } = firebase;
+                // Listen to REAL users collection
+                const unsub = onSnapshot(collection(db, "users"), (snapshot) => {
+                    const loadedUsers = [];
+                    let totalRev = 0;
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        loadedUsers.push({ id: doc.id, ...data });
+                        
+                        // Calculate revenue from real user tasks
+                        if (data.data?.tasks) {
+                            const spent = data.data.tasks.filter(t => t.status === 'done').reduce((acc, t) => acc + (t.cost || 0), 0);
+                            totalRev += spent;
+                        }
+                    });
+                    setUsers(loadedUsers);
+                    setStats({
+                        totalUsers: loadedUsers.length,
+                        revenue: totalRev,
+                        weddingsThisMonth: Math.floor(Math.random() * 10) + 5, // Mock
+                        activeServices: 42 // Mock
+                    });
+                });
+                return () => unsub();
+            }, [firebase]);
+
+            if (!isLoggedIn) return <LoginView onLogin={() => setIsLoggedIn(true)} />;
+
+            return (
+                <div className="flex min-h-screen bg-[#FBF9F7]">
+                    <Sidebar activeTab={activeTab} onTabChange={setActiveTab} onLogout={() => setIsLoggedIn(false)} />
+                    <main className="flex-1 ml-64 p-8 lg:p-12 overflow-y-auto h-screen">
+                        <header className="flex justify-between items-center mb-10"><div><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">Thời gian hệ thống</p><p className="font-bold text-stone-800">{new Date().toLocaleString('vi-VN')}</p></div><div className="flex items-center gap-4"><button className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-stone-400 hover:text-black border border-stone-200 shadow-sm transition-colors"><Icons.Bell size={18} /></button><div className="flex items-center gap-3 pl-4 border-l border-stone-200"><div className="text-right"><p className="text-xs font-bold text-stone-800">Administrator</p><p className="text-[9px] font-black uppercase tracking-widest text-emerald-500">Online</p></div><div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold">A</div></div></div></header>
+                        {activeTab === 'dashboard' && <DashboardView stats={stats} users={users} />}
+                        {activeTab === 'users' && <UsersView users={users} />}
+                        {activeTab === 'services' && <div className="py-20 text-center animate-in"><Icons.Briefcase size={48} className="mx-auto text-stone-300 mb-4" /><h3 className="text-xl font-black uppercase tracking-widest text-stone-400">Quản lý dịch vụ</h3></div>}
+                        {activeTab === 'settings' && <div className="py-20 text-center animate-in"><Icons.Settings size={48} className="mx-auto text-stone-300 mb-4" /><h3 className="text-xl font-black uppercase tracking-widest text-stone-400">Cấu hình hệ thống</h3></div>}
+                    </main>
+                </div>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        try { root.render(<AdminApp />); } catch (error) { console.error("Root Render Error:", error); }
+    </script>
+</body>
+</html>
