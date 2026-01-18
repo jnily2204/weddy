@@ -26,37 +26,36 @@
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .mobile-menu-in { animation: slideDown 0.3s ease-out forwards; }
 
-        /* Wedding Title Animations - NEW & LUXURY */
-        @keyframes float-up-reveal {
-            0% { opacity: 0; transform: translateY(40px) skewY(5deg); }
-            100% { opacity: 1; transform: translateY(0) skewY(0deg); }
+        /* Wedding Title Animations - REFINED & UNIQUE */
+        @keyframes reveal-up-blur {
+            0% { opacity: 0; transform: translateY(100%) scale(1.1); filter: blur(20px); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         
-        @keyframes liquid-gold {
+        @keyframes silk-shine {
             0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
         }
 
         .title-entrance {
-            animation: float-up-reveal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: reveal-up-blur 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .text-liquid-gold {
+        .text-silk {
             background: linear-gradient(
-                -45deg,
-                #B88A44 0%,   /* Dark Gold */
-                #E5D4C0 25%,  /* Light Champagne */
-                #FFECCF 50%,  /* Bright Gold */
-                #C6A674 75%,  /* Classic Gold */
-                #B88A44 100%  /* Dark Gold */
+                90deg, 
+                #806233 0%,   /* Vàng đồng đậm */
+                #CC9C53 25%,  /* Vàng kim loại */
+                #FFECB3 50%,  /* Ánh sáng vàng nhạt */
+                #CC9C53 75%,  /* Vàng kim loại */
+                #806233 100%  /* Vàng đồng đậm */
             );
-            background-size: 300% 300%;
+            background-size: 200% auto;
+            color: #000;
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0px 2px 4px rgba(184, 138, 68, 0.15));
-            animation: liquid-gold 6s ease infinite;
+            animation: silk-shine 5s linear infinite;
         }
 
         @keyframes subtle-zoom {
@@ -363,7 +362,7 @@
                         <div className="bg-black p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] text-white relative overflow-hidden shadow-2xl group cursor-pointer">
                             <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-30 transition-opacity duration-700"></div>
                             <div className="relative z-10"><h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8 md:mb-10">Tài chính tổng quát ({role || 'Bạn'})</h3>
-                                <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-12"><div className="flex-1"><div className="text-[10px] uppercase font-black text-white/30 mb-2">Đã chi tiêu</div><div className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter">{formatMoney(spentAmount)}<span className="text-xl text-white/20 ml-3">MIL</span></div><div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><p className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Hạn mức: {formatMoney(displayBudgetLimit)} Triệu VNĐ</p></div>
+                                <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-12"><div className="flex-1"><div className="text-[10px] uppercase font-black text-white/30 mb-2">Đã chi tiêu</div><div className="text-5xl md:text-7xl font-black tracking-tighter">{formatMoney(spentAmount)}<span className="text-xl text-white/20 ml-3">MIL</span></div><div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><p className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Hạn mức: {formatMoney(displayBudgetLimit)} Triệu VNĐ</p></div>
                                 <div className="md:w-48 flex flex-col gap-4 justify-center"><div className="bg-white/5 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p className="text-[9px] font-black text-white/30 uppercase mb-1">Còn lại</p><p className="text-xl font-bold">{formatMoney(remaining)}m</p></div></div></div>
                             </div>
                         </div>
@@ -798,14 +797,19 @@
                         className="w-full h-full object-cover object-center bg-zoom"
                     />
                     {/* Overlay để làm mờ ảnh giúp chữ dễ đọc hơn */}
-                    <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px]"></div>
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#FBF9F7] via-transparent to-[#FBF9F7]"></div>
+                    <div className="absolute inset-0 bg-white/20 backdrop-blur-[1px]"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#FBF9F7]/90 via-transparent to-[#FBF9F7]/90"></div>
                 </div>
 
                 <div className="relative z-10 container mx-auto text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#EEECE8]/80 backdrop-blur-md text-[#7A7062] rounded-full text-[9px] font-bold uppercase tracking-[0.2em] mb-8 md:mb-12 shadow-sm border border-white/50"><Icons.Smartphone size={12} strokeWidth={3} /> Trợ lý đám cưới bỏ túi</div>
-                    <h1 className="text-5xl md:text-[140px] font-black tracking-[-0.06em] leading-[0.9] md:leading-[0.82] mb-8 md:mb-12 uppercase animate-in text-[#1A1A1A] title-cinematic">WEDDING <br/><span className="text-shimmer">REDEFINED.</span></h1>
-                    <p className="text-base md:text-xl text-[#666] max-w-xl mx-auto mb-12 md:mb-20 font-medium leading-relaxed opacity-90 animate-in" style={{animationDelay: '0.1s'}}>Nền tảng tối ưu để tổ chức một đám cưới hiện đại. Tinh tế, chuyên nghiệp và nằm trọn trong túi bạn.</p>
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#EEECE8]/90 backdrop-blur-md text-[#7A7062] rounded-full text-[9px] font-bold uppercase tracking-[0.2em] mb-8 md:mb-12 shadow-sm border border-white/50"><Icons.Smartphone size={12} strokeWidth={3} /> Trợ lý đám cưới bỏ túi</div>
+                    <h1 className="text-5xl md:text-[140px] font-black tracking-[-0.06em] leading-[0.9] md:leading-[0.82] mb-8 md:mb-12 uppercase animate-in text-[#1A1A1A] title-entrance">
+                        WEDDING <br/>
+                        <span className="text-silk">REDEFINED.</span>
+                    </h1>
+                    <p className="text-base md:text-xl text-[#333] max-w-xl mx-auto mb-12 md:mb-20 font-medium leading-relaxed opacity-90 animate-in drop-shadow-sm" style={{animationDelay: '0.1s'}}>
+                        Nền tảng tối ưu để tổ chức một đám cưới hiện đại. Tinh tế, chuyên nghiệp và nằm trọn trong túi bạn.
+                    </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6 animate-in" style={{animationDelay: '0.2s'}}>
                         <button onClick={() => onNavigate('planner')} className="px-10 md:px-12 py-4 md:py-5 bg-black text-white font-bold text-[10px] md:text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-stone-800 transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-black/20">Khám phá Planner</button>
                         <button className="px-10 md:px-12 py-4 md:py-5 bg-white/90 backdrop-blur-sm border border-[#DDD] text-black font-bold text-[10px] md:text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-white transition-all active:scale-95">Xem mẫu thiệp</button>
