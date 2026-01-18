@@ -112,6 +112,38 @@
             LogOut: (props) => <Icon {...props}><g><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="21" y1="12" y2="12" /></g></Icon>,
         };
 
+        // --- REUSABLE COMPONENTS ---
+        
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <div 
+                        className="absolute inset-0 bg-stone-900/20 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
+                        onClick={onClose}
+                    ></div>
+                    
+                    {/* Modal Content */}
+                    <div className="relative bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl border border-stone-100 animate-in zoom-in-95 duration-300 flex flex-col">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-black uppercase tracking-widest">{title}</h3>
+                            <button 
+                                onClick={onClose}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-black transition-colors"
+                            >
+                                <Icons.X size={16} />
+                            </button>
+                        </div>
+                        <div>
+                            {children}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         // --- SUB-COMPONENTS FOR PLANNER APP ---
         
         const PlannerOverview = () => (
@@ -189,7 +221,6 @@
         );
 
         const PlannerTasks = () => {
-            // Using useState to make the task list dynamic
             const [tasks, setTasks] = useState([
                 { title: "Ký hợp đồng địa điểm tiệc", tag: "Địa điểm", status: "done" },
                 { title: "Duyệt danh sách khách mời chính thức", tag: "Khách mời", status: "urgent" },
@@ -197,14 +228,17 @@
                 { title: "Thử váy cưới và Vest lần 2", tag: "Trang phục", status: "pending" },
                 { title: "Chọn menu thực đơn chính thức", tag: "Ẩm thực", status: "pending" },
             ]);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [newTaskTitle, setNewTaskTitle] = useState("");
 
             const handleAddTask = () => {
-                const newTaskTitle = window.prompt("Nhập tên công việc mới cần làm:");
                 if (newTaskTitle && newTaskTitle.trim() !== "") {
                     setTasks(prevTasks => [
                         { title: newTaskTitle, tag: "Khác", status: "pending" },
                         ...prevTasks
                     ]);
+                    setNewTaskTitle("");
+                    setIsModalOpen(false);
                 }
             };
 
@@ -219,12 +253,13 @@
                     <div className="flex justify-between items-center px-4">
                         <h3 className="text-2xl font-black uppercase tracking-tighter">Tasks</h3>
                         <button 
-                            onClick={handleAddTask}
+                            onClick={() => setIsModalOpen(true)}
                             className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 active:scale-95 transition-transform hover:bg-stone-800"
                         >
                             <Icons.Plus size={16}/> Thêm việc
                         </button>
                     </div>
+                    
                     <div className="bg-white rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">
                         {tasks.map((task, i) => (
                             <div 
@@ -243,6 +278,37 @@
                             </div>
                         ))}
                     </div>
+
+                    {/* Add Task Modal */}
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Thêm công việc mới">
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên công việc</label>
+                                <input 
+                                    type="text" 
+                                    value={newTaskTitle}
+                                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                                    placeholder="Ví dụ: Đặt lịch chụp hình..."
+                                    className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black transition-colors"
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="flex justify-end gap-3">
+                                <button 
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100 transition-colors"
+                                >
+                                    Hủy
+                                </button>
+                                <button 
+                                    onClick={handleAddTask}
+                                    className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors"
+                                >
+                                    Lưu
+                                </button>
+                            </div>
+                        </div>
+                    </Modal>
                 </div>
             );
         };
@@ -348,6 +414,8 @@
         const App = () => {
             const [activeTab, setActiveTab] = useState('home');
             const [scrolled, setScrolled] = useState(false);
+            // State for login modal demo
+            const [showLogin, setShowLogin] = useState(false);
 
             useEffect(() => {
                 const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -402,7 +470,12 @@
                             </div>
 
                             <div className="flex items-center gap-3">
-                                <button className="hidden sm:block text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black">Login</button>
+                                <button 
+                                    onClick={() => setShowLogin(true)}
+                                    className="hidden sm:block text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black"
+                                >
+                                    Login
+                                </button>
                                 <button 
                                     onClick={() => navigateTo('planner')}
                                     className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95"
@@ -437,6 +510,25 @@
                             </div>
                         </footer>
                     )}
+
+                    {/* Login Modal Demo */}
+                    <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title="Đăng nhập">
+                        <div className="space-y-4">
+                            <p className="text-sm text-stone-500 mb-4">Chào mừng trở lại! Vui lòng nhập thông tin để tiếp tục quản lý đám cưới của bạn.</p>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Email</label>
+                                <input type="email" placeholder="name@example.com" className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black transition-colors" />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Mật khẩu</label>
+                                <input type="password" placeholder="••••••••" className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black transition-colors" />
+                            </div>
+                            <button className="w-full py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors mt-4">
+                                Đăng nhập ngay
+                            </button>
+                        </div>
+                    </Modal>
+
                 </div>
             );
         };
