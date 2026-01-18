@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weddy - Nền tảng quản lý đám cưới tinh tế</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#FBF9F7] text-[#1A1A1A]">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { 
+            Heart, Menu, X, ArrowRight, Search, Check, Star, 
+            Calendar, MapPin, Clock, Layout, PieChart, Users, 
+            Smartphone, ChevronRight, Plus, Filter, DollarSign,
+            ArrowUpRight, Circle, Coffee, Music, Camera, Bell, LogOut
+        } = lucideReact;
+
+        // --- SUB-COMPONENTS FOR PLANNER APP ---
+        
+        const PlannerOverview = () => (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-52">
+                            <div className="flex justify-between items-start">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5A896]">Tiến độ</span>
+                                <div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400"><Check size={18}/></div>
+                            </div>
+                            <div>
+                                <div className="flex items-baseline gap-2 mb-4">
+                                    <span className="text-6xl font-black">12</span>
+                                    <span className="text-stone-400 font-bold uppercase text-[11px]">/ 40 hoàn thành</span>
+                                </div>
+                                <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                                    <div className="h-full bg-black w-[30%]"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-52">
+                            <div className="flex justify-between items-start">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5A896]">Khách mời</span>
+                                <div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400"><Users size={18}/></div>
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-6xl font-black">350</span>
+                                <span className="text-emerald-500 font-bold uppercase text-[11px]">Đã xác nhận</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-black p-12 rounded-[3rem] text-white relative overflow-hidden shadow-2xl">
+                        <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-[150px] opacity-10 -translate-y-1/2 translate-x-1/2"></div>
+                        <div className="relative z-10">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-10">Tài chính tổng quát</h3>
+                            <div className="flex flex-col md:flex-row justify-between gap-12">
+                                <div className="flex-1">
+                                    <div className="text-[10px] uppercase font-black text-white/30 mb-2">Đã chi tiêu</div>
+                                    <div className="text-7xl font-black tracking-tighter">105.2<span className="text-xl text-white/20 ml-3">MIL</span></div>
+                                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4">
+                                        <div className="h-full bg-white w-[35%]"></div>
+                                    </div>
+                                    <p className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Hạn mức: 300.0 Triệu VNĐ</p>
+                                </div>
+                                <div className="md:w-48 flex flex-col gap-4 justify-center">
+                                    <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
+                                        <p className="text-[9px] font-black text-white/30 uppercase mb-1">Còn lại</p>
+                                        <p className="text-xl font-bold">194.8m</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-10 rounded-[2.5rem] border border-stone-100 shadow-sm">
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] mb-10 text-stone-900 border-b border-stone-50 pb-6">Hoạt động</h3>
+                    <div className="space-y-8">
+                        {["Ký hợp đồng Riverside Palace", "Cập nhật danh sách khách mời", "Thanh toán cọc áo cưới"].map((txt, i) => (
+                            <div key={i} className="flex gap-4 items-center">
+                                <div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0">
+                                    <ArrowUpRight size={16} className="text-stone-300" />
+                                </div>
+                                <div>
+                                    <p className="text-[13px] font-bold text-stone-800 leading-snug">{txt}</p>
+                                    <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mt-1">Vừa xong</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+        const PlannerTasks = () => (
+            <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
+                <div className="flex justify-between items-center px-4">
+                    <h3 className="text-2xl font-black uppercase tracking-tighter">Tasks</h3>
+                    <button className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 active:scale-95 transition-transform">
+                        <Plus size={16}/> Thêm việc
+                    </button>
+                </div>
+                <div className="bg-white rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">
+                    {[
+                        { title: "Ký hợp đồng địa điểm tiệc", tag: "Địa điểm", status: "done" },
+                        { title: "Duyệt danh sách khách mời chính thức", tag: "Khách mời", status: "urgent" },
+                        { title: "Gửi thiệp mời điện tử qua Zalo/Mess", tag: "Thiệp mời", status: "pending" },
+                        { title: "Thử váy cưới và Vest lần 2", tag: "Trang phục", status: "pending" },
+                    ].map((task, i) => (
+                        <div key={i} className="group p-6 flex items-center border-b border-stone-50 last:border-0 hover:bg-[#FBF9F7] transition-all cursor-pointer">
+                            <div className={`w-6 h-6 rounded-full border-2 mr-6 flex items-center justify-center ${task.status === 'done' ? 'bg-black border-black' : 'border-stone-200 group-hover:border-black'}`}>
+                                {task.status === 'done' && <Check size={12} className="text-white" />}
+                            </div>
+                            <div className="flex-1">
+                                <h4 className={`text-base font-bold ${task.status === 'done' ? 'text-stone-300 line-through' : 'text-stone-800'}`}>{task.title}</h4>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">{task.tag}</span>
+                            </div>
+                            {task.status === 'urgent' && <span className="text-[9px] font-black bg-rose-50 text-rose-500 px-3 py-1 rounded-full uppercase tracking-widest">Gấp</span>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const FullPlannerApp = () => {
+            const [subTab, setSubTab] = useState('overview');
+
+            return (
+                <div className="pt-32 pb-40 container mx-auto px-6 lg:px-12 max-w-7xl animate-in fade-in duration-1000">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
+                        <div>
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#B5A896] mb-3 block">Dashboard</span>
+                            <h2 className="text-5xl font-black tracking-tighter uppercase">Weddy Planner</h2>
+                        </div>
+                        <div className="flex gap-12 text-right">
+                            <div>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Wedding Day</p>
+                                <p className="text-xl font-bold">20.12.2024</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Status</p>
+                                <p className="text-xl font-bold text-rose-500">45 DAYS LEFT</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Sub-navigation Pill Bar */}
+                    <div className="flex justify-center mb-16">
+                        <div className="bg-[#EEECE8]/60 p-1.5 rounded-full flex gap-1 border border-[#EAE8E4] backdrop-blur-sm">
+                            {[
+                                { id: 'overview', label: 'Tổng quan', icon: Layout },
+                                { id: 'tasks', label: 'Công việc', icon: Check },
+                                { id: 'budget', label: 'Ngân sách', icon: DollarSign },
+                                { id: 'guests', label: 'Khách mời', icon: Users },
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setSubTab(tab.id)}
+                                    className={`
+                                        flex items-center gap-2 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all
+                                        ${subTab === tab.id ? 'bg-black text-white shadow-lg' : 'text-stone-400 hover:text-black'}
+                                    `}
+                                >
+                                    <tab.icon size={12} strokeWidth={3} />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        {subTab === 'overview' && <PlannerOverview />}
+                        {subTab === 'tasks' && <PlannerTasks />}
+                        {subTab === 'budget' && (
+                            <div className="text-center py-20 bg-white rounded-[3rem] border border-stone-100">
+                                <DollarSign size={48} className="mx-auto text-stone-200 mb-6" />
+                                <h3 className="text-xl font-black uppercase tracking-widest">Ngân sách chi tiết</h3>
+                                <p className="text-stone-400 mt-2">Dữ liệu tài chính đang được đồng bộ...</p>
+                            </div>
+                        )}
+                        {subTab === 'guests' && (
+                            <div className="text-center py-20 bg-white rounded-[3rem] border border-stone-100">
+                                <Users size={48} className="mx-auto text-stone-200 mb-6" />
+                                <h3 className="text-xl font-black uppercase tracking-widest">Danh sách khách mời</h3>
+                                <p className="text-stone-400 mt-2">Kết nối với thiệp điện tử để nhận thông tin RSVP.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const HomeView = ({ onNavigate }) => (
+            <section className="pt-64 pb-32 px-6 container mx-auto text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#EEECE8] text-[#7A7062] rounded-full text-[9px] font-bold uppercase tracking-[0.2em] mb-12 shadow-sm border border-white/50">
+                    <Smartphone size={12} strokeWidth={3} /> Pocket Wedding Assistant
+                </div>
+                <h1 className="text-6xl md:text-[140px] font-black tracking-[-0.06em] leading-[0.82] mb-12 uppercase animate-in fade-in slide-in-from-bottom-10 duration-700">
+                    WEDDING <br/>
+                    <span className="text-[#B5A896]">REDEFINED.</span>
+                </h1>
+                <p className="text-lg md:text-xl text-[#666] max-w-xl mx-auto mb-20 font-medium leading-relaxed opacity-80">
+                    Nền tảng tối ưu để tổ chức một đám cưới hiện đại. Tinh tế, chuyên nghiệp và nằm trọn trong túi bạn.
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-6">
+                    <button 
+                        onClick={() => onNavigate('planner')}
+                        className="px-12 py-5 bg-black text-white font-bold text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-stone-800 transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-black/20"
+                    >
+                        Khám phá Planner
+                    </button>
+                    <button 
+                        className="px-12 py-5 bg-white border border-[#DDD] text-black font-bold text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-gray-50 transition-all active:scale-95"
+                    >
+                        Xem mẫu thiệp
+                    </button>
+                </div>
+            </section>
+        );
+
+        // --- MAIN APP COMPONENT ---
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('home');
+            const [scrolled, setScrolled] = useState(false);
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 20);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const navigateTo = (tab) => {
+                setActiveTab(tab);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            return (
+                <div className="min-h-screen">
+                    {/* iOS Floating Navigation */}
+                    <div className="fixed top-6 left-0 w-full z-50 flex justify-center px-4 transition-all duration-500">
+                        <nav className={`
+                            flex items-center justify-between px-6 py-2 rounded-full transition-all duration-500
+                            ${scrolled 
+                                ? 'w-full max-w-5xl bg-white/75 backdrop-blur-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.08)]' 
+                                : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'
+                            }
+                        `}>
+                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigateTo('home')}>
+                                <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center">
+                                    <Heart size={16} fill="currentColor" />
+                                </div>
+                                <span className="text-lg font-black tracking-tighter uppercase">Weddy</span>
+                            </div>
+
+                            <div className="hidden md:flex items-center gap-1">
+                                {[
+                                    { id: 'home', label: 'Home' },
+                                    { id: 'planner', label: 'Planner' },
+                                    { id: 'invitation', label: 'Thiệp mời' },
+                                    { id: 'vendors', label: 'Dịch vụ' }
+                                ].map((item) => (
+                                    <button 
+                                        key={item.id}
+                                        onClick={() => navigateTo(item.id)}
+                                        className={`
+                                            text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-full transition-all duration-300
+                                            ${activeTab === item.id 
+                                                ? 'bg-black text-white shadow-lg' 
+                                                : 'text-stone-500 hover:text-black hover:bg-black/5'
+                                            }
+                                        `}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <button className="hidden sm:block text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black">Login</button>
+                                <button 
+                                    onClick={() => navigateTo('planner')}
+                                    className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95"
+                                >
+                                    Get App
+                                </button>
+                            </div>
+                        </nav>
+                    </div>
+
+                    <main>
+                        {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
+                        {activeTab === 'planner' && <FullPlannerApp />}
+                        {activeTab === 'invitation' && (
+                            <div className="py-60 text-center uppercase font-black tracking-widest text-stone-300 text-4xl">Digital Invitation Coming Soon</div>
+                        )}
+                        {activeTab === 'vendors' && (
+                            <div className="py-60 text-center uppercase font-black tracking-widest text-stone-300 text-4xl">Vendor Network Coming Soon</div>
+                        )}
+                    </main>
+
+                    {activeTab !== 'planner' && (
+                        <footer className="bg-white border-t border-stone-100 py-24 text-center">
+                            <div className="container mx-auto px-6">
+                                <span className="text-xl font-black tracking-tighter uppercase mb-6 block">Weddy Platform.</span>
+                                <div className="flex justify-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">
+                                    <span className="hover:text-black cursor-pointer">Instagram</span>
+                                    <span className="hover:text-black cursor-pointer">Tiktok</span>
+                                    <span className="hover:text-black cursor-pointer">Terms</span>
+                                </div>
+                                <p className="mt-12 text-[9px] font-bold text-stone-300 uppercase tracking-widest">© 2024 Weddy Tech Collective. All rights reserved.</p>
+                            </div>
+                        </footer>
+                    )}
+                </div>
+            );
+        };
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
