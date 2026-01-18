@@ -33,19 +33,35 @@
 <body class="bg-[#FBF9F7] text-[#1A1A1A]">
     <div id="root"></div>
 
+    <!-- Global Error Handler -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            document.getElementById('root').innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #E11D48; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">Đã xảy ra lỗi khởi chạy</h2>
+                    <p style="background: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); max-width: 80%; overflow: auto;">
+                        ${message}
+                    </p>
+                    <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #1A1A1A; color: white; border: none; border-radius: 0.25rem; cursor: pointer;">
+                        Tải lại trang
+                    </button>
+                </div>
+            `;
+            console.error("Global Error Caught:", error);
+        };
+    </script>
+
     <script type="text/babel">
         // Safety check for React
         if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
-            document.body.innerHTML = '<div style="padding: 20px; text-align: center; color: red;"><h1>Lỗi: React không tải được</h1><p>Vui lòng kiểm tra kết nối mạng của bạn.</p></div>';
-            throw new Error("React library missing");
+            throw new Error("React hoặc ReactDOM chưa được tải. Vui lòng kiểm tra kết nối mạng.");
         }
 
-        const { useState, useEffect, Fragment } = React;
+        const { useState, useEffect } = React;
 
-        // --- ICON SYSTEM (Simplified & Robust) ---
+        // --- ICON SYSTEM (Fixed: Using <g> instead of Fragment) ---
         
-        // Generic Icon Component to avoid repetitive component definitions
-        const Icon = ({ path, children, size = 24, color = "currentColor", className = "", ...props }) => {
+        const Icon = ({ children, size = 24, color = "currentColor", className = "", ...props }) => {
             return (
                 <svg 
                     xmlns="http://www.w3.org/2000/svg" 
@@ -60,38 +76,40 @@
                     className={className} 
                     {...props}
                 >
-                    {path ? path : children}
+                    {children}
                 </svg>
             );
         };
 
-        // Icon Data Dictionary - Uses Explicit React.Fragment
+        // Icon Definitions
+        // Note: Using <g> (SVG Group) allows multiple paths without needing React.Fragment,
+        // which fixes the "Element type is invalid" error in this environment.
         const Icons = {
             Heart: (props) => <Icon {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></Icon>,
             Check: (props) => <Icon {...props}><polyline points="20 6 9 17 4 12" /></Icon>,
-            Users: (props) => <Icon {...props}><Fragment><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></Fragment></Icon>,
-            ArrowUpRight: (props) => <Icon {...props}><Fragment><path d="M7 7h10v10" /><path d="M7 17 17 7" /></Fragment></Icon>,
-            Plus: (props) => <Icon {...props}><Fragment><path d="M5 12h14" /><path d="M12 5v14" /></Fragment></Icon>,
-            Smartphone: (props) => <Icon {...props}><Fragment><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" /></Fragment></Icon>,
-            Layout: (props) => <Icon {...props}><Fragment><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><path d="M3 9h18" /><path d="M9 21V9" /></Fragment></Icon>,
-            DollarSign: (props) => <Icon {...props}><Fragment><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></Fragment></Icon>,
-            Menu: (props) => <Icon {...props}><Fragment><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></Fragment></Icon>,
-            X: (props) => <Icon {...props}><Fragment><path d="M18 6 6 18" /><path d="m6 6 12 12" /></Fragment></Icon>,
-            ArrowRight: (props) => <Icon {...props}><Fragment><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></Fragment></Icon>,
-            Search: (props) => <Icon {...props}><Fragment><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></Fragment></Icon>,
+            Users: (props) => <Icon {...props}><g><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></g></Icon>,
+            ArrowUpRight: (props) => <Icon {...props}><g><path d="M7 7h10v10" /><path d="M7 17 17 7" /></g></Icon>,
+            Plus: (props) => <Icon {...props}><g><path d="M5 12h14" /><path d="M12 5v14" /></g></Icon>,
+            Smartphone: (props) => <Icon {...props}><g><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" /></g></Icon>,
+            Layout: (props) => <Icon {...props}><g><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><path d="M3 9h18" /><path d="M9 21V9" /></g></Icon>,
+            DollarSign: (props) => <Icon {...props}><g><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></g></Icon>,
+            Menu: (props) => <Icon {...props}><g><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></g></Icon>,
+            X: (props) => <Icon {...props}><g><path d="M18 6 6 18" /><path d="m6 6 12 12" /></g></Icon>,
+            ArrowRight: (props) => <Icon {...props}><g><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></g></Icon>,
+            Search: (props) => <Icon {...props}><g><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></g></Icon>,
             Star: (props) => <Icon {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></Icon>,
-            Calendar: (props) => <Icon {...props}><Fragment><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></Fragment></Icon>,
-            MapPin: (props) => <Icon {...props}><Fragment><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></Fragment></Icon>,
-            Clock: (props) => <Icon {...props}><Fragment><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></Fragment></Icon>,
-            PieChart: (props) => <Icon {...props}><Fragment><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10Z" /></Fragment></Icon>,
+            Calendar: (props) => <Icon {...props}><g><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></g></Icon>,
+            MapPin: (props) => <Icon {...props}><g><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></g></Icon>,
+            Clock: (props) => <Icon {...props}><g><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></g></Icon>,
+            PieChart: (props) => <Icon {...props}><g><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10Z" /></g></Icon>,
             ChevronRight: (props) => <Icon {...props}><path d="m9 18 6-6-6-6" /></Icon>,
             Filter: (props) => <Icon {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></Icon>,
             Circle: (props) => <Icon {...props}><circle cx="12" cy="12" r="10" /></Icon>,
-            Coffee: (props) => <Icon {...props}><Fragment><path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="1" y2="4" /><line x1="10" x2="10" y1="1" y2="4" /><line x1="14" x2="14" y1="1" y2="4" /></Fragment></Icon>,
-            Music: (props) => <Icon {...props}><Fragment><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></Fragment></Icon>,
-            Camera: (props) => <Icon {...props}><Fragment><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></Fragment></Icon>,
+            Coffee: (props) => <Icon {...props}><g><path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="1" y2="4" /><line x1="10" x2="10" y1="1" y2="4" /><line x1="14" x2="14" y1="1" y2="4" /></g></Icon>,
+            Music: (props) => <Icon {...props}><g><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></g></Icon>,
+            Camera: (props) => <Icon {...props}><g><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></g></Icon>,
             Bell: (props) => <Icon {...props}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /></Icon>,
-            LogOut: (props) => <Icon {...props}><Fragment><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="21" y1="12" y2="12" /></Fragment></Icon>,
+            LogOut: (props) => <Icon {...props}><g><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="21" y1="12" y2="12" /></g></Icon>,
         };
 
         // --- SUB-COMPONENTS FOR PLANNER APP ---
