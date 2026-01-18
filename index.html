@@ -145,13 +145,132 @@
             );
         };
 
+        // --- GETTING STARTED WIZARD ---
+        const GettingStartedWizard = ({ onComplete, onSkip }) => {
+            const [step, setStep] = useState(0);
+            const [data, setData] = useState({ role: "", date: "", location: "", budget: "" });
+
+            const handleNext = () => setStep(step + 1);
+            const handleFinish = () => onComplete(data);
+
+            const steps = [
+                {
+                    title: "Bạn là?",
+                    content: (
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                            {["Cô dâu", "Chú rể"].map((role) => (
+                                <button 
+                                    key={role}
+                                    onClick={() => setData({ ...data, role })}
+                                    className={`p-6 rounded-2xl border-2 transition-all ${data.role === role ? 'border-black bg-black text-white' : 'border-stone-100 hover:border-black'}`}
+                                >
+                                    <span className="block text-xl font-bold">{role}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )
+                },
+                {
+                    title: "Ngày trọng đại?",
+                    content: (
+                        <div className="mt-4">
+                            <input 
+                                type="date" 
+                                value={data.date} 
+                                onChange={(e) => setData({ ...data, date: e.target.value })}
+                                className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 text-lg font-bold focus:outline-none focus:border-black"
+                            />
+                        </div>
+                    )
+                },
+                {
+                    title: "Tổ chức ở đâu?",
+                    content: (
+                        <div className="mt-4">
+                            <input 
+                                type="text" 
+                                value={data.location} 
+                                onChange={(e) => setData({ ...data, location: e.target.value })}
+                                placeholder="Nhà hàng, Tại gia, Ngoài trời..."
+                                className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 text-lg font-bold focus:outline-none focus:border-black"
+                            />
+                        </div>
+                    )
+                },
+                {
+                    title: "Ngân sách dự trù?",
+                    content: (
+                        <div className="mt-4">
+                            <div className="relative">
+                                <input 
+                                    type="number" 
+                                    value={data.budget} 
+                                    onChange={(e) => setData({ ...data, budget: e.target.value })}
+                                    placeholder="300.000.000"
+                                    className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 pl-12 text-lg font-bold focus:outline-none focus:border-black"
+                                />
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold">VNĐ</div>
+                            </div>
+                            <p className="text-xs text-stone-400 mt-2 text-center">Đừng lo, bạn có thể thay đổi sau này.</p>
+                        </div>
+                    )
+                }
+            ];
+
+            const currentStep = steps[step];
+
+            return (
+                <div className="fixed inset-0 z-[200] bg-white flex flex-col animate-in fade-in">
+                    <div className="flex justify-end p-6">
+                        <button onClick={onSkip} className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-black">Bỏ qua</button>
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center px-8 max-w-lg mx-auto w-full">
+                        <div className="mb-8">
+                            <div className="flex gap-2 mb-6 justify-center">
+                                {steps.map((_, i) => (
+                                    <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= step ? 'bg-black w-8' : 'bg-stone-200 w-4'}`}></div>
+                                ))}
+                            </div>
+                            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-center mb-2">{currentStep.title}</h2>
+                        </div>
+                        {currentStep.content}
+                        <div className="mt-12">
+                            {step < steps.length - 1 ? (
+                                <button 
+                                    onClick={handleNext}
+                                    disabled={
+                                        (step === 0 && !data.role) || 
+                                        (step === 1 && !data.date) || 
+                                        (step === 2 && !data.location)
+                                    }
+                                    className="w-full py-4 bg-black text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-800 transition-all"
+                                >
+                                    Tiếp tục
+                                </button>
+                            ) : (
+                                <button 
+                                    onClick={handleFinish}
+                                    className="w-full py-4 bg-emerald-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl hover:bg-emerald-600 transition-all"
+                                >
+                                    Hoàn tất & Tạo Planner
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
         // --- SUB-COMPONENTS ---
         
-        const PlannerOverview = ({ spentAmount, completedTasks, totalTasks, guestCount, activities }) => {
-            const budgetLimit = 300.0;
-            const remaining = (budgetLimit - (spentAmount / 1000000)).toFixed(1);
-            const percentage = Math.min(((spentAmount / 1000000) / budgetLimit) * 100, 100);
+        const PlannerOverview = ({ spentAmount, completedTasks, totalTasks, guestCount, activities, budgetLimit, weddingDate, role }) => {
+            const displayBudgetLimit = budgetLimit || 300000000;
+            const remaining = (displayBudgetLimit - spentAmount);
+            const percentage = Math.min((spentAmount / displayBudgetLimit) * 100, 100);
             const taskPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+            
+            // Format numbers
+            const formatMoney = (amount) => (amount / 1000000).toFixed(1);
 
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 animate-in">
@@ -168,9 +287,9 @@
                         </div>
                         <div className="bg-black p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] text-white relative overflow-hidden shadow-2xl group cursor-pointer">
                             <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-30 transition-opacity duration-700"></div>
-                            <div className="relative z-10"><h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8 md:mb-10">Tài chính tổng quát</h3>
-                                <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-12"><div className="flex-1"><div className="text-[10px] uppercase font-black text-white/30 mb-2">Đã chi tiêu</div><div className="text-5xl md:text-7xl font-black tracking-tighter">{(spentAmount / 1000000).toFixed(1)}<span className="text-xl text-white/20 ml-3">MIL</span></div><div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><p className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Hạn mức: {budgetLimit}.0 Triệu VNĐ</p></div>
-                                <div className="md:w-48 flex flex-col gap-4 justify-center"><div className="bg-white/5 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p className="text-[9px] font-black text-white/30 uppercase mb-1">Còn lại</p><p className="text-xl font-bold">{remaining}m</p></div></div></div>
+                            <div className="relative z-10"><h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8 md:mb-10">Tài chính tổng quát ({role || 'Bạn'})</h3>
+                                <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-12"><div className="flex-1"><div className="text-[10px] uppercase font-black text-white/30 mb-2">Đã chi tiêu</div><div className="text-5xl md:text-7xl font-black tracking-tighter">{formatMoney(spentAmount)}<span className="text-xl text-white/20 ml-3">MIL</span></div><div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><p className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Hạn mức: {formatMoney(displayBudgetLimit)} Triệu VNĐ</p></div>
+                                <div className="md:w-48 flex flex-col gap-4 justify-center"><div className="bg-white/5 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p className="text-[9px] font-black text-white/30 uppercase mb-1">Còn lại</p><p className="text-xl font-bold">{formatMoney(remaining)}m</p></div></div></div>
                             </div>
                         </div>
                     </div>
@@ -294,6 +413,7 @@
                             },
                             status: 'Active',
                             plan: 'Free',
+                            isSetupComplete: false, // Default to false for new users
                             createdAt: new Date().toISOString()
                         });
                     }
@@ -301,7 +421,9 @@
 
                 const unsub = onSnapshot(userDocRef, (doc) => {
                     if (doc.exists()) {
-                        setUserData(doc.data().data);
+                        const data = doc.data();
+                        // Merge profile/settings with data for easier access
+                        setUserData({ ...data.data, isSetupComplete: data.isSetupComplete, profile: data.profile, budgetLimit: data.data.budgetLimit || 300000000 });
                     }
                 });
                 return () => unsub();
@@ -309,9 +431,38 @@
 
             if (!userData) return <div className="h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div></div>;
 
+            // Show Wizard if setup is not complete
+            if (!userData.isSetupComplete) {
+                const handleWizardComplete = async (wizardData) => {
+                    if (!firebase) return;
+                    const { db, doc, updateDoc } = firebase;
+                    const userRef = doc(db, "users", currentUser.uid);
+                    
+                    await updateDoc(userRef, {
+                        'profile.role': wizardData.role,
+                        'profile.weddingDate': wizardData.date,
+                        'profile.location': wizardData.location,
+                        'data.budgetLimit': wizardData.budget ? parseInt(wizardData.budget) : 300000000,
+                        'isSetupComplete': true
+                    });
+                };
+
+                const handleWizardSkip = async () => {
+                     if (!firebase) return;
+                    const { db, doc, updateDoc } = firebase;
+                    const userRef = doc(db, "users", currentUser.uid);
+                    await updateDoc(userRef, { 'isSetupComplete': true });
+                };
+
+                return <GettingStartedWizard onComplete={handleWizardComplete} onSkip={handleWizardSkip} />;
+            }
+
             const guests = userData.guests || [];
             const tasks = userData.tasks || [];
             const activities = userData.activities || [];
+            const budgetLimit = userData.budgetLimit;
+            const weddingDate = userData.profile?.weddingDate || "Chưa đặt";
+            const role = userData.profile?.role;
 
             const completedTasks = tasks.filter(t => t.status === 'done').length;
             const totalTasks = tasks.length;
@@ -371,21 +522,31 @@
                 addActivity(`Import ${importedGuests.length} khách mời từ Excel`);
             };
 
+            // Calculate days left
+            const calculateDaysLeft = (dateString) => {
+                if (!dateString || dateString === "Chưa đặt") return "---";
+                const eventDate = new Date(dateString);
+                const today = new Date();
+                const diffTime = eventDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                return diffDays > 0 ? `${diffDays} NGÀY NỮA` : "ĐÃ QUA";
+            };
+
             return (
                 <div className="pt-24 pb-32 md:pt-32 md:pb-40 container mx-auto px-4 md:px-12 max-w-7xl animate-in">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-16 gap-6">
                         <div><span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#B5A896] mb-3 block">Bảng điều khiển</span><h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase">Weddy Planner</h2></div>
-                        <div className="flex gap-8 md:gap-12 text-right"><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Ngày cưới</p><p className="text-lg md:text-xl font-bold">20.12.2024</p></div><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Trạng thái</p><p className="text-lg md:text-xl font-bold text-rose-500">45 NGÀY NỮA</p></div></div>
+                        <div className="flex gap-8 md:gap-12 text-right"><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Ngày cưới</p><p className="text-lg md:text-xl font-bold">{weddingDate}</p></div><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Trạng thái</p><p className="text-lg md:text-xl font-bold text-rose-500">{calculateDaysLeft(weddingDate)}</p></div></div>
                     </div>
                     <div className="flex justify-center mb-10 md:mb-16 overflow-x-auto hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
                         <div className="bg-[#EEECE8]/60 p-2 rounded-full flex gap-2 border border-[#EAE8E4] backdrop-blur-sm whitespace-nowrap">
                             {[{ id: 'overview', label: 'Tổng quan', icon: Icons.Layout }, { id: 'tasks', label: 'Công việc', icon: Icons.Check }, { id: 'budget', label: 'Ngân sách', icon: Icons.DollarSign }, { id: 'guests', label: 'Khách mời', icon: Icons.Users }].map((tab) => (
-                                <button key={tab.id} onClick={() => setSubTab(tab.id)} className={`flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 rounded-full text-xs md:text-sm font-black uppercase tracking-widest transition-all ${subTab === tab.id ? 'bg-black text-white shadow-lg' : 'text-stone-500 hover:text-black hover:bg-black/5'}`}><tab.icon size={16} strokeWidth={3} />{tab.label}</button>
+                                <button key={tab.id} onClick={() => setSubTab(tab.id)} className={`flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 rounded-full text-xs md:text-sm font-black uppercase tracking-widest transition-all ${subTab === tab.id ? 'bg-black text-white shadow-lg' : 'text-stone-400 hover:text-black hover:bg-black/5'}`}><tab.icon size={16} strokeWidth={3} />{tab.label}</button>
                             ))}
                         </div>
                     </div>
                     <div>
-                        {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={completedTasks} totalTasks={totalTasks} guestCount={guestCount} activities={activities} />}
+                        {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={completedTasks} totalTasks={totalTasks} guestCount={guestCount} activities={activities} budgetLimit={budgetLimit} role={role} />}
                         {subTab === 'tasks' && <PlannerTasks tasks={tasks} onAddTask={handleAddTask} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} />}
                         {subTab === 'budget' && <PlannerBudget tasks={tasks} onAddExpense={handleAddTask} />}
                         {subTab === 'guests' && <PlannerGuests guests={guests} onAddGuest={handleAddGuest} onImportGuests={handleImportGuests} onDeleteGuest={handleDeleteGuest} />}
@@ -468,6 +629,7 @@
                             },
                             status: 'Active',
                             plan: 'Free',
+                            isSetupComplete: false,
                             createdAt: new Date().toISOString()
                         };
                         await setDoc(userDocRef, initialData);
@@ -507,7 +669,7 @@
                     try {
                         if (!firebase) throw new Error("Đang kết nối server...");
                         const { user } = await firebase.createUserWithEmailAndPassword(firebase.auth, email, password);
-                        const initialData = { profile: { email }, data: { guests: [], tasks: [{ title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }], activities: [{ text: "Tạo tài khoản thành công", time: new Date().toLocaleTimeString('vi-VN') }] }, status: 'Active', plan: 'Free', createdAt: new Date().toISOString() };
+                        const initialData = { profile: { email }, data: { guests: [], tasks: [{ title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }], activities: [{ text: "Tạo tài khoản thành công", time: new Date().toLocaleTimeString('vi-VN') }] }, status: 'Active', plan: 'Free', isSetupComplete: false, createdAt: new Date().toISOString() };
                         await firebase.setDoc(firebase.doc(firebase.db, "users", user.uid), initialData);
                         setActiveTab('planner');
                     } catch (e) { setError("Đăng ký thất bại: " + e.message); }
