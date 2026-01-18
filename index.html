@@ -188,36 +188,64 @@
             </div>
         );
 
-        const PlannerTasks = () => (
-            <div className="max-w-4xl mx-auto space-y-8 animate-in">
-                <div className="flex justify-between items-center px-4">
-                    <h3 className="text-2xl font-black uppercase tracking-tighter">Tasks</h3>
-                    <button className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 active:scale-95 transition-transform hover:bg-stone-800">
-                        <Icons.Plus size={16}/> Thêm việc
-                    </button>
-                </div>
-                <div className="bg-white rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">
-                    {[
-                        { title: "Ký hợp đồng địa điểm tiệc", tag: "Địa điểm", status: "done" },
-                        { title: "Duyệt danh sách khách mời chính thức", tag: "Khách mời", status: "urgent" },
-                        { title: "Gửi thiệp mời điện tử qua Zalo/Mess", tag: "Thiệp mời", status: "pending" },
-                        { title: "Thử váy cưới và Vest lần 2", tag: "Trang phục", status: "pending" },
-                        { title: "Chọn menu thực đơn chính thức", tag: "Ẩm thực", status: "pending" },
-                    ].map((task, i) => (
-                        <div key={i} className="group p-6 flex items-center border-b border-stone-50 last:border-0 hover:bg-[#FBF9F7] transition-all cursor-pointer">
-                            <div className={`w-6 h-6 rounded-full border-2 mr-6 flex items-center justify-center transition-colors ${task.status === 'done' ? 'bg-black border-black' : 'border-stone-200 group-hover:border-black'}`}>
-                                {task.status === 'done' && <Icons.Check size={12} className="text-white" />}
+        const PlannerTasks = () => {
+            // Using useState to make the task list dynamic
+            const [tasks, setTasks] = useState([
+                { title: "Ký hợp đồng địa điểm tiệc", tag: "Địa điểm", status: "done" },
+                { title: "Duyệt danh sách khách mời chính thức", tag: "Khách mời", status: "urgent" },
+                { title: "Gửi thiệp mời điện tử qua Zalo/Mess", tag: "Thiệp mời", status: "pending" },
+                { title: "Thử váy cưới và Vest lần 2", tag: "Trang phục", status: "pending" },
+                { title: "Chọn menu thực đơn chính thức", tag: "Ẩm thực", status: "pending" },
+            ]);
+
+            const handleAddTask = () => {
+                const newTaskTitle = window.prompt("Nhập tên công việc mới cần làm:");
+                if (newTaskTitle && newTaskTitle.trim() !== "") {
+                    setTasks(prevTasks => [
+                        { title: newTaskTitle, tag: "Khác", status: "pending" },
+                        ...prevTasks
+                    ]);
+                }
+            };
+
+            const toggleStatus = (index) => {
+                setTasks(prevTasks => prevTasks.map((task, i) => 
+                    i === index ? { ...task, status: task.status === 'done' ? 'pending' : 'done' } : task
+                ));
+            };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-8 animate-in">
+                    <div className="flex justify-between items-center px-4">
+                        <h3 className="text-2xl font-black uppercase tracking-tighter">Tasks</h3>
+                        <button 
+                            onClick={handleAddTask}
+                            className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 active:scale-95 transition-transform hover:bg-stone-800"
+                        >
+                            <Icons.Plus size={16}/> Thêm việc
+                        </button>
+                    </div>
+                    <div className="bg-white rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">
+                        {tasks.map((task, i) => (
+                            <div 
+                                key={i} 
+                                onClick={() => toggleStatus(i)}
+                                className="group p-6 flex items-center border-b border-stone-50 last:border-0 hover:bg-[#FBF9F7] transition-all cursor-pointer"
+                            >
+                                <div className={`w-6 h-6 rounded-full border-2 mr-6 flex items-center justify-center transition-colors ${task.status === 'done' ? 'bg-black border-black' : 'border-stone-200 group-hover:border-black'}`}>
+                                    {task.status === 'done' && <Icons.Check size={12} className="text-white" />}
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className={`text-base font-bold transition-colors ${task.status === 'done' ? 'text-stone-300 line-through' : 'text-stone-800'}`}>{task.title}</h4>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">{task.tag}</span>
+                                </div>
+                                {task.status === 'urgent' && <span className="text-[9px] font-black bg-rose-50 text-rose-500 px-3 py-1 rounded-full uppercase tracking-widest">Gấp</span>}
                             </div>
-                            <div className="flex-1">
-                                <h4 className={`text-base font-bold transition-colors ${task.status === 'done' ? 'text-stone-300 line-through' : 'text-stone-800'}`}>{task.title}</h4>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">{task.tag}</span>
-                            </div>
-                            {task.status === 'urgent' && <span className="text-[9px] font-black bg-rose-50 text-rose-500 px-3 py-1 rounded-full uppercase tracking-widest">Gấp</span>}
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        };
 
         const FullPlannerApp = () => {
             const [subTab, setSubTab] = useState('overview');
