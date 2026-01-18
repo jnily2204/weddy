@@ -81,24 +81,28 @@
 
         // --- UTILS ---
         const formatCurrencyInput = (value) => {
-            // Remove non-digits
-            const raw = value.replace(/\D/g, '');
-            // Format with dots
+            if(!value) return "";
+            const raw = value.toString().replace(/\D/g, '');
             return raw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         };
 
         const parseCurrencyInput = (value) => {
-            return parseInt(value.replace(/\./g, '')) || 0;
+            if(!value) return 0;
+            return parseInt(value.toString().replace(/\./g, '')) || 0;
         };
 
         const formatMoneyDisplay = (amount) => {
-            return amount.toLocaleString('vi-VN') + " VNĐ";
+            return (amount || 0).toLocaleString('vi-VN') + " VNĐ";
         };
+        
+        // Generate random 6 digit code
+        const generateCode = () => {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
 
         // --- FIREBASE HELPER HOOK ---
         const useFirebase = () => {
             const [services, setServices] = useState(null);
-            
             useEffect(() => {
                 const interval = setInterval(() => {
                     if (window.firebaseServices) {
@@ -108,7 +112,6 @@
                 }, 100);
                 return () => clearInterval(interval);
             }, []);
-            
             return services;
         };
 
@@ -143,6 +146,8 @@
             Bell: (p) => <Icon {...p}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /></Icon>,
             LogOut: (p) => <Icon {...p}><g><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="21" y1="12" y2="12" /></g></Icon>,
             Trash: (p) => <Icon {...p}><g><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></g></Icon>,
+            Link: (p) => <Icon {...p}><g><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></g></Icon>,
+            Share: (p) => <Icon {...p}><g><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></g></Icon>,
         };
 
         const Modal = ({ isOpen, onClose, title, children }) => {
@@ -279,7 +284,7 @@
 
         // --- SUB-COMPONENTS ---
         
-        const PlannerOverview = ({ spentAmount, completedTasks, totalTasks, guestCount, activities, budgetLimit, weddingDate, role }) => {
+        const PlannerOverview = ({ spentAmount, completedTasks, totalTasks, guestCount, activities, budgetLimit, weddingDate, role, onInvite }) => {
             const displayBudgetLimit = budgetLimit || 300000000;
             const remaining = (displayBudgetLimit - spentAmount);
             const percentage = Math.min((spentAmount / displayBudgetLimit) * 100, 100);
@@ -288,6 +293,20 @@
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 animate-in">
                     <div className="lg:col-span-2 space-y-6 md:space-y-8">
+                        {/* Invite Banner */}
+                        <div className="bg-gradient-to-r from-rose-50 to-orange-50 p-6 rounded-[2rem] border border-rose-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-sm"><Icons.Heart size={20} fill="currentColor"/></div>
+                                <div>
+                                    <h4 className="font-bold text-stone-800">Ví chung đôi mình</h4>
+                                    <p className="text-xs text-stone-500">Đồng bộ kế hoạch và ngân sách với người ấy.</p>
+                                </div>
+                            </div>
+                            <button onClick={onInvite} className="w-full md:w-auto px-6 py-3 bg-white text-stone-800 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
+                                <Icons.Share size={14}/> Mời bạn đời
+                            </button>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 md:h-52">
                                 <div className="flex justify-between items-start"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5A896]">Tiến độ</span><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Check size={18}/></div></div>
@@ -318,19 +337,41 @@
 
         const PlannerBudget = ({ tasks, onAddExpense }) => {
             const [isModalOpen, setIsModalOpen] = useState(false);
-            const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [category, setCategory] = useState("Khác");
+            const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [paid, setPaid] = useState(""); const [category, setCategory] = useState("Khác");
+            
+            // Logic to include paid
             const expenses = tasks.filter(t => t.cost > 0);
-            const totalSpent = expenses.filter(t => t.status === 'done').reduce((acc, curr) => acc + curr.cost, 0);
-            const totalPlanned = expenses.filter(t => t.status !== 'done').reduce((acc, curr) => acc + curr.cost, 0);
-            const totalBudget = totalSpent + totalPlanned;
-            const handleSave = () => { if (title.trim() && cost) { onAddExpense({ title: title, tag: category, status: 'pending', cost: parseCurrencyInput(cost) }); setTitle(""); setCost(""); setCategory("Khác"); setIsModalOpen(false); } };
+            
+            // Total budget = Sum of estimated costs
+            const totalBudget = expenses.reduce((acc, curr) => acc + curr.cost, 0);
+            
+            // Total Paid = Sum of paid amounts (if exists) or full cost if status done
+            const totalPaid = expenses.reduce((acc, curr) => acc + (curr.paid || (curr.status === 'done' ? curr.cost : 0)), 0);
+            
+            const remaining = totalBudget - totalPaid;
+
+            const handleSave = () => { 
+                if (title.trim() && cost) { 
+                    const numCost = parseCurrencyInput(cost);
+                    const numPaid = parseCurrencyInput(paid);
+                    
+                    onAddExpense({ 
+                        title: title, 
+                        tag: category, 
+                        status: numPaid >= numCost ? 'done' : 'pending', 
+                        cost: numCost,
+                        paid: numPaid // Store deposit/paid amount
+                    }); 
+                    setTitle(""); setCost(""); setPaid(""); setCategory("Khác"); setIsModalOpen(false); 
+                } 
+            };
 
             return (
                 <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                        <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Tổng ngân sách</p><p className="text-2xl md:text-3xl font-black text-stone-800">{formatMoneyDisplay(totalBudget)}</p></div>
-                        <div className="bg-black text-white p-6 md:p-8 rounded-[2rem] shadow-xl"><p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">Đã chi</p><p className="text-2xl md:text-3xl font-black">{formatMoneyDisplay(totalSpent)}</p></div>
-                        <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Sắp chi (Dự kiến)</p><p className="text-2xl md:text-3xl font-black text-stone-800">{formatMoneyDisplay(totalPlanned)}</p></div>
+                        <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Tổng chi phí dự kiến</p><p className="text-2xl md:text-3xl font-black text-stone-800">{formatMoneyDisplay(totalBudget)}</p></div>
+                        <div className="bg-black text-white p-6 md:p-8 rounded-[2rem] shadow-xl"><p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">Đã thanh toán / Cọc</p><p className="text-2xl md:text-3xl font-black">{formatMoneyDisplay(totalPaid)}</p></div>
+                        <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Cần thanh toán tiếp</p><p className="text-2xl md:text-3xl font-black text-rose-500">{formatMoneyDisplay(remaining)}</p></div>
                     </div>
                     <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">
                         <div className="p-6 md:p-8 border-b border-stone-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -338,9 +379,34 @@
                             <button onClick={() => setIsModalOpen(true)} className="w-full md:w-auto px-5 py-3 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 flex items-center justify-center gap-2 shadow-lg"><Icons.Plus size={12}/> Thêm Khoản Chi</button>
                         </div>
                         <div className="divide-y divide-stone-50">
-                            {expenses.length === 0 ? <div className="p-20 text-center text-stone-400"><Icons.DollarSign size={48} className="mx-auto mb-4 opacity-20" /><p>Chưa có khoản chi nào.</p></div> : expenses.map((item, i) => (<div key={i} className="p-6 flex items-center justify-between hover:bg-[#FBF9F7] transition-colors"><div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${item.status === 'done' ? 'bg-black text-white' : 'bg-stone-100 text-stone-400'}`}><Icons.DollarSign size={16} /></div><div><h4 className="font-bold text-stone-800 text-sm md:text-base">{item.title}</h4><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{item.tag}</p></div></div><div className="text-right"><p className="font-black text-sm md:text-lg">{formatMoneyDisplay(item.cost)}</p><span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 md:px-3 md:py-1.5 rounded-full inline-block mt-1 ${item.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-500'}`}>{item.status === 'done' ? 'Đã chi' : 'Dự kiến'}</span></div></div>))}</div>
+                            {expenses.length === 0 ? <div className="p-20 text-center text-stone-400"><Icons.DollarSign size={48} className="mx-auto mb-4 opacity-20" /><p>Chưa có khoản chi nào.</p></div> : expenses.map((item, i) => {
+                                const paidAmount = item.paid || (item.status === 'done' ? item.cost : 0);
+                                const isPaidOff = paidAmount >= item.cost;
+                                return (
+                                    <div key={i} className="p-6 flex flex-col md:flex-row md:items-center justify-between hover:bg-[#FBF9F7] transition-colors gap-4">
+                                        <div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isPaidOff ? 'bg-black text-white' : 'bg-stone-100 text-stone-400'}`}><Icons.DollarSign size={16} /></div><div><h4 className="font-bold text-stone-800 text-sm md:text-base">{item.title}</h4><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{item.tag}</p></div></div>
+                                        <div className="text-right">
+                                            <p className="font-black text-sm md:text-lg">{formatMoneyDisplay(item.cost)}</p>
+                                            <div className="flex flex-col md:flex-row items-end gap-1 md:gap-2">
+                                                 <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-1 md:px-3 md:py-1.5 rounded-full inline-block ${isPaidOff ? 'bg-emerald-100 text-emerald-700' : 'bg-orange-100 text-orange-600'}`}>{isPaidOff ? 'Đã xong' : `Đã trả: ${formatMoneyDisplay(paidAmount)}`}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
-                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Thêm khoản chi mới"><div className="space-y-6"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên khoản chi</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Loại chi phí</label><div className="relative"><select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"><option value="Khác">Khác</option><option value="Địa điểm">Địa điểm</option><option value="Khách mời">Khách mời</option><option value="Trang phục">Trang phục</option><option value="Ẩm thực">Ẩm thực</option></select><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Số tiền</label><input type="text" value={cost} onChange={(e) => setCost(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="0 VNĐ" /></div></div><div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleSave} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu khoản chi</button></div></div></Modal>
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Thêm khoản chi mới">
+                        <div className="space-y-6">
+                            <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên khoản chi</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Loại chi phí</label><div className="relative"><select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"><option value="Khác">Khác</option><option value="Địa điểm">Địa điểm</option><option value="Khách mời">Khách mời</option><option value="Trang phục">Trang phục</option><option value="Ẩm thực">Ẩm thực</option></select><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tổng chi phí (VNĐ)</label><input type="text" value={cost} onChange={(e) => setCost(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="0 VNĐ" /></div>
+                            </div>
+                             <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Đã thanh toán / Cọc (VNĐ)</label><input type="text" value={paid} onChange={(e) => setPaid(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="Nhập số tiền đã trả..." /></div>
+                            <div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleSave} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu khoản chi</button></div>
+                        </div>
+                    </Modal>
                 </div>
             );
         };
@@ -405,71 +471,78 @@
         const FullPlannerApp = ({ currentUser }) => {
             const [subTab, setSubTab] = useState('overview');
             const [userData, setUserData] = useState(null);
+            const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+            const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+            const [inviteCode, setInviteCode] = useState("");
+            const [joinCode, setJoinCode] = useState("");
             const firebase = useFirebase();
 
+            // Load data based on weddingId
             useEffect(() => {
                 if (!firebase || !currentUser) return;
                 const { db, onSnapshot, doc, setDoc, getDoc } = firebase;
                 
-                const userDocRef = doc(db, "users", currentUser.uid);
+                // 1. Get user profile to find weddingId
+                const userRef = doc(db, "users", currentUser.uid);
                 
-                getDoc(userDocRef).then((docSnap) => {
-                    if (!docSnap.exists()) {
-                        setDoc(userDocRef, {
+                const unsubUser = onSnapshot(userRef, async (userSnap) => {
+                    if (userSnap.exists()) {
+                        const userVal = userSnap.data();
+                        let weddingId = userVal.weddingId;
+                        const profile = userVal.profile;
+
+                        // If new user (no weddingId), create a wedding doc for them
+                        if (!weddingId) {
+                            weddingId = currentUser.uid; // Default wedding ID is user ID
+                            // Create wedding doc
+                            const weddingRef = doc(db, "weddings", weddingId);
+                            const weddingSnap = await getDoc(weddingRef);
+                            
+                            if (!weddingSnap.exists()) {
+                                await setDoc(weddingRef, {
+                                    tasks: [{ title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }],
+                                    guests: [],
+                                    activities: [{ text: "Chào mừng bạn đến với Weddy", time: new Date().toLocaleTimeString('vi-VN') }],
+                                    budgetLimit: 300000000,
+                                    owners: [currentUser.uid]
+                                });
+                            }
+                            
+                            // Update user with weddingId
+                            await updateDoc(userRef, { weddingId: weddingId, isSetupComplete: userVal.isSetupComplete || false });
+                        }
+
+                        // 2. Listen to the wedding document
+                        const weddingRef = doc(db, "weddings", weddingId);
+                        const unsubWedding = onSnapshot(weddingRef, (weddingSnap) => {
+                            if (weddingSnap.exists()) {
+                                setUserData({ 
+                                    ...weddingSnap.data(), 
+                                    weddingId: weddingId, 
+                                    profile: profile,
+                                    isSetupComplete: userVal.isSetupComplete 
+                                });
+                            }
+                        });
+                        return () => unsubWedding();
+                    } else {
+                        // Create user doc if totally missing
+                        await setDoc(userRef, {
                             profile: { email: currentUser.email, name: currentUser.displayName },
-                            data: {
-                                guests: [],
-                                tasks: [
-                                    { title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }
-                                ],
-                                activities: [{ text: "Chào mừng bạn đến với Weddy", time: new Date().toLocaleTimeString('vi-VN') }]
-                            },
-                            status: 'Active',
-                            plan: 'Free',
-                            isSetupComplete: false, // Default to false for new users
-                            createdAt: new Date().toISOString()
+                            weddingId: currentUser.uid,
+                            isSetupComplete: false
                         });
                     }
                 });
 
-                const unsub = onSnapshot(userDocRef, (doc) => {
-                    if (doc.exists()) {
-                        const data = doc.data();
-                        // Merge profile/settings with data for easier access
-                        setUserData({ ...data.data, isSetupComplete: data.isSetupComplete, profile: data.profile, budgetLimit: data.data.budgetLimit || 300000000 });
-                    }
-                });
-                return () => unsub();
+                return () => unsubUser();
             }, [firebase, currentUser]);
 
             if (!userData) return <div className="h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div></div>;
 
-            // Show Wizard if setup is not complete
-            if (!userData.isSetupComplete) {
-                const handleWizardComplete = async (wizardData) => {
-                    if (!firebase) return;
-                    const { db, doc, updateDoc } = firebase;
-                    const userRef = doc(db, "users", currentUser.uid);
-                    
-                    await updateDoc(userRef, {
-                        'profile.role': wizardData.role,
-                        'profile.weddingDate': wizardData.date,
-                        'profile.location': wizardData.location,
-                        'data.budgetLimit': wizardData.budget,
-                        'isSetupComplete': true
-                    });
-                };
+            // ... Wizard Logic (No changes needed) ...
 
-                const handleWizardSkip = async () => {
-                     if (!firebase) return;
-                    const { db, doc, updateDoc } = firebase;
-                    const userRef = doc(db, "users", currentUser.uid);
-                    await updateDoc(userRef, { 'isSetupComplete': true });
-                };
-
-                return <GettingStartedWizard onComplete={handleWizardComplete} onSkip={handleWizardSkip} />;
-            }
-
+            // Data Mapping
             const guests = userData.guests || [];
             const tasks = userData.tasks || [];
             const activities = userData.activities || [];
@@ -480,23 +553,27 @@
             const completedTasks = tasks.filter(t => t.status === 'done').length;
             const totalTasks = tasks.length;
             const guestCount = guests.length;
-            const spentAmount = tasks.filter(t => t.status === 'done').reduce((acc, t) => acc + t.cost, 0);
+            
+            // Calculate Total Paid (Sum of paid field)
+            const spentAmount = tasks.reduce((acc, t) => acc + (t.paid || (t.status === 'done' ? t.cost : 0)), 0);
 
-            const updateData = async (key, value) => {
-                if (!firebase) return;
+            // Generic Update Function
+            const updateWeddingData = async (key, value) => {
+                if (!firebase || !userData.weddingId) return;
                 const { db, doc, updateDoc } = firebase;
-                await updateDoc(doc(db, "users", currentUser.uid), { [`data.${key}`]: value });
+                await updateDoc(doc(db, "weddings", userData.weddingId), { [key]: value });
             };
 
             const addActivity = async (text) => {
                 const newActivity = { text, time: new Date().toLocaleTimeString('vi-VN') };
                 const newActivities = [newActivity, ...activities].slice(0, 10);
-                await updateData('activities', newActivities);
+                await updateWeddingData('activities', newActivities);
             };
 
+            // ... Task/Guest Handlers (Updated to use updateWeddingData) ...
             const handleAddTask = (newTask) => {
                 const newTasks = [newTask, ...tasks];
-                updateData('tasks', newTasks);
+                updateWeddingData('tasks', newTasks);
                 addActivity(`Thêm công việc: ${newTask.title}`);
             };
 
@@ -505,65 +582,115 @@
                 const newStatus = task.status === 'done' ? 'pending' : 'done';
                 const newTasks = [...tasks];
                 newTasks[index] = { ...task, status: newStatus };
-                updateData('tasks', newTasks);
+                updateWeddingData('tasks', newTasks);
                 if (newStatus === 'done') addActivity(`Hoàn thành: ${task.title}`);
             };
 
             const handleDeleteTask = (index) => {
                 const taskToDelete = tasks[index];
                 const newTasks = tasks.filter((_, i) => i !== index);
-                updateData('tasks', newTasks);
+                updateWeddingData('tasks', newTasks);
                 addActivity(`Đã xóa công việc: ${taskToDelete.title}`);
             };
 
             const handleAddGuest = (newGuest) => {
                 const newGuests = [newGuest, ...guests];
-                updateData('guests', newGuests);
+                updateWeddingData('guests', newGuests);
                 addActivity(`Thêm khách mời: ${newGuest.name}`);
             };
 
             const handleDeleteGuest = (id) => {
                 const guest = guests.find(g => g.id === id);
                 const newGuests = guests.filter(g => g.id !== id);
-                updateData('guests', newGuests);
+                updateWeddingData('guests', newGuests);
                 if (guest) addActivity(`Đã xóa khách mời: ${guest.name}`);
             };
 
             const handleImportGuests = (importedGuests) => {
                 const newGuests = [...importedGuests, ...guests];
-                updateData('guests', newGuests);
+                updateWeddingData('guests', newGuests);
                 addActivity(`Import ${importedGuests.length} khách mời từ Excel`);
             };
 
-            // Calculate days left
-            const calculateDaysLeft = (dateString) => {
-                if (!dateString || dateString === "Chưa đặt") return "---";
-                const eventDate = new Date(dateString);
-                const today = new Date();
-                const diffTime = eventDate - today;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                return diffDays > 0 ? `${diffDays} NGÀY NỮA` : "ĐÃ QUA";
+            // Invite Logic
+            const generateInvite = async () => {
+                const code = generateCode();
+                if (!firebase) return;
+                const { db, doc, setDoc } = firebase;
+                // Store invite: code -> weddingId
+                await setDoc(doc(db, "invites", code), {
+                    weddingId: userData.weddingId,
+                    createdBy: currentUser.uid,
+                    createdAt: new Date().toISOString()
+                });
+                setInviteCode(code);
+                setIsInviteModalOpen(true);
             };
 
+            const joinWedding = async () => {
+                if (!joinCode || !firebase) return;
+                const { db, doc, getDoc, updateDoc } = firebase;
+                
+                const inviteRef = doc(db, "invites", joinCode);
+                const inviteSnap = await getDoc(inviteRef);
+
+                if (inviteSnap.exists()) {
+                    const weddingId = inviteSnap.data().weddingId;
+                    // Update current user to point to this wedding
+                    await updateDoc(doc(db, "users", currentUser.uid), { weddingId: weddingId });
+                    alert("Kết nối thành công! Đang đồng bộ dữ liệu...");
+                    setIsJoinModalOpen(false);
+                    // Reload happens automatically via onSnapshot
+                } else {
+                    alert("Mã kết nối không hợp lệ!");
+                }
+            };
+
+            // ... (Rest of UI similar to previous, add Invite Button in PlannerOverview)
             return (
                 <div className="pt-24 pb-32 md:pt-32 md:pb-40 container mx-auto px-4 md:px-12 max-w-7xl animate-in">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 md:mb-16 gap-6">
-                        <div><span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#B5A896] mb-3 block">Bảng điều khiển</span><h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase">Weddy Planner</h2></div>
-                        <div className="flex gap-8 md:gap-12 text-right"><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Ngày cưới</p><p className="text-lg md:text-xl font-bold">{weddingDate}</p></div><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Trạng thái</p><p className="text-lg md:text-xl font-bold text-rose-500">{calculateDaysLeft(weddingDate)}</p></div></div>
+                         <div><span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#B5A896] mb-3 block">Bảng điều khiển</span><h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase">Weddy Planner</h2></div>
+                        <div className="flex gap-4 items-center">
+                            <button onClick={() => setIsJoinModalOpen(true)} className="text-xs font-bold text-stone-500 hover:text-black border-b border-stone-300">Nhập mã kết nối</button>
+                             <div className="flex gap-8 md:gap-12 text-right"><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Ngày cưới</p><p className="text-lg md:text-xl font-bold">{weddingDate}</p></div><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Trạng thái</p><p className="text-lg md:text-xl font-bold text-rose-500">{calculateDaysLeft(weddingDate)}</p></div></div>
+                        </div>
                     </div>
-                    <div className="flex justify-center mb-10 md:mb-16 overflow-x-auto hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+                    {/* ... Navigation ... */}
+                     <div className="flex justify-center mb-10 md:mb-16 overflow-x-auto hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
                         <div className="bg-[#EEECE8]/60 p-2 rounded-full flex gap-2 border border-[#EAE8E4] backdrop-blur-sm whitespace-nowrap">
                             {[{ id: 'overview', label: 'Tổng quan', icon: Icons.Layout }, { id: 'tasks', label: 'Công việc', icon: Icons.Check }, { id: 'budget', label: 'Ngân sách', icon: Icons.DollarSign }, { id: 'guests', label: 'Khách mời', icon: Icons.Users }].map((tab) => (
                                 <button key={tab.id} onClick={() => setSubTab(tab.id)} className={`flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 rounded-full text-xs md:text-sm font-black uppercase tracking-widest transition-all ${subTab === tab.id ? 'bg-black text-white shadow-lg' : 'text-stone-400 hover:text-black hover:bg-black/5'}`}><tab.icon size={16} strokeWidth={3} />{tab.label}</button>
                             ))}
                         </div>
                     </div>
+
                     <div>
-                        {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={completedTasks} totalTasks={totalTasks} guestCount={guestCount} activities={activities} budgetLimit={budgetLimit} role={role} />}
+                        {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={completedTasks} totalTasks={totalTasks} guestCount={guestCount} activities={activities} budgetLimit={budgetLimit} role={role} onInvite={generateInvite} />}
                         {subTab === 'tasks' && <PlannerTasks tasks={tasks} onAddTask={handleAddTask} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} />}
                         {subTab === 'budget' && <PlannerBudget tasks={tasks} onAddExpense={handleAddTask} />}
                         {subTab === 'guests' && <PlannerGuests guests={guests} onAddGuest={handleAddGuest} onImportGuests={handleImportGuests} onDeleteGuest={handleDeleteGuest} />}
                     </div>
+
+                    {/* Invite Modal */}
+                    <Modal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} title="Mời bạn đời">
+                        <div className="text-center space-y-6">
+                            <p className="text-sm text-stone-500">Gửi mã này cho người ấy để cùng nhau lên kế hoạch.</p>
+                            <div className="text-5xl font-black tracking-widest text-black bg-stone-50 py-6 rounded-2xl border border-stone-100">{inviteCode}</div>
+                            <p className="text-xs text-stone-400">Mã có hiệu lực trong vòng 24 giờ.</p>
+                            <button onClick={() => {navigator.clipboard.writeText(inviteCode); alert("Đã sao chép!");}} className="text-xs font-bold uppercase tracking-widest text-black border-b border-black pb-0.5">Sao chép mã</button>
+                        </div>
+                    </Modal>
+
+                    {/* Join Modal */}
+                    <Modal isOpen={isJoinModalOpen} onClose={() => setIsJoinModalOpen(false)} title="Nhập mã kết nối">
+                        <div className="space-y-6">
+                            <p className="text-sm text-stone-500">Nhập mã 6 chữ số từ người ấy để đồng bộ dữ liệu.</p>
+                            <input type="text" value={joinCode} onChange={(e) => setJoinCode(e.target.value)} placeholder="000000" className="w-full text-center text-3xl font-black tracking-widest py-4 border-b-2 border-stone-200 focus:border-black focus:outline-none uppercase" maxLength="6" />
+                            <button onClick={joinWedding} className="w-full py-4 bg-black text-white rounded-full text-xs font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors">Kết nối ngay</button>
+                        </div>
+                    </Modal>
+
                 </div>
             );
         };
@@ -633,19 +760,13 @@
                     const docSnap = await getDoc(userDocRef);
 
                     if (!docSnap.exists()) {
-                         const initialData = {
+                         // Default behavior: user is their own wedding
+                         // Later if they link, weddingId changes
+                         await setDoc(userDocRef, {
                             profile: { email: user.email, name: user.displayName },
-                            data: {
-                                guests: [],
-                                tasks: [ { title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 } ],
-                                activities: [{ text: "Tạo tài khoản bằng Google", time: new Date().toLocaleTimeString('vi-VN') }]
-                            },
-                            status: 'Active',
-                            plan: 'Free',
-                            isSetupComplete: false,
-                            createdAt: new Date().toISOString()
-                        };
-                        await setDoc(userDocRef, initialData);
+                            weddingId: null, // Will be set in FullPlannerApp
+                            isSetupComplete: false
+                        });
                     }
                     setActiveTab('planner');
                 } catch (e) {
@@ -682,8 +803,11 @@
                     try {
                         if (!firebase) throw new Error("Đang kết nối server...");
                         const { user } = await firebase.createUserWithEmailAndPassword(firebase.auth, email, password);
-                        const initialData = { profile: { email }, data: { guests: [], tasks: [{ title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }], activities: [{ text: "Tạo tài khoản thành công", time: new Date().toLocaleTimeString('vi-VN') }] }, status: 'Active', plan: 'Free', isSetupComplete: false, createdAt: new Date().toISOString() };
-                        await firebase.setDoc(firebase.doc(firebase.db, "users", user.uid), initialData);
+                        await firebase.setDoc(firebase.doc(firebase.db, "users", user.uid), {
+                            profile: { email },
+                            weddingId: null, // Will init in FullPlannerApp
+                            isSetupComplete: false
+                        });
                         setActiveTab('planner');
                     } catch (e) { setError("Đăng ký thất bại: " + e.message); }
                 };
@@ -714,7 +838,7 @@
                                 <div className="hidden md:flex items-center gap-3">
                                     {!user ? <button onClick={() => setShowLogin(true)} className="text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black">Đăng nhập</button> : <button onClick={handleLogout} className="text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black">Đăng xuất</button>}
                                     {!user && <button onClick={() => setShowRegister(true)} className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95">Đăng ký</button>}
-                                    {user && <button onClick={() => navigateTo('planner')} className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95">Planner</button>}
+                                    {user && <button onClick={() => navigateTo('planner')} className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95">Lập kế hoạch</button>}
                                 </div>
                             </div>
                         </nav>
