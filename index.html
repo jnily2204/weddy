@@ -95,7 +95,6 @@
             return (amount || 0).toLocaleString('vi-VN') + " VNĐ";
         };
         
-        // Generate random 6 digit code
         const generateCode = () => {
             return Math.floor(100000 + Math.random() * 900000).toString();
         }
@@ -103,6 +102,7 @@
         // --- FIREBASE HELPER HOOK ---
         const useFirebase = () => {
             const [services, setServices] = useState(null);
+            
             useEffect(() => {
                 const interval = setInterval(() => {
                     if (window.firebaseServices) {
@@ -112,6 +112,7 @@
                 }, 100);
                 return () => clearInterval(interval);
             }, []);
+            
             return services;
         };
 
@@ -290,6 +291,9 @@
             const percentage = Math.min((spentAmount / displayBudgetLimit) * 100, 100);
             const taskPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
             
+            // Format numbers
+            const formatMoney = (amount) => (amount / 1000000).toFixed(1);
+
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 animate-in">
                     <div className="lg:col-span-2 space-y-6 md:space-y-8">
@@ -320,8 +324,8 @@
                         <div className="bg-black p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] text-white relative overflow-hidden shadow-2xl group cursor-pointer">
                             <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-30 transition-opacity duration-700"></div>
                             <div className="relative z-10"><h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8 md:mb-10">Tài chính tổng quát ({role || 'Bạn'})</h3>
-                                <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-12"><div className="flex-1"><div className="text-[10px] uppercase font-black text-white/30 mb-2">Đã chi tiêu</div><div className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter mb-4">{formatMoneyDisplay(spentAmount)}</div><div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><p className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Hạn mức: {formatMoneyDisplay(displayBudgetLimit)}</p></div>
-                                <div className="md:w-48 flex flex-col gap-4 justify-center"><div className="bg-white/5 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p className="text-[9px] font-black text-white/30 uppercase mb-1">Còn lại</p><p className="text-xl font-bold">{formatMoneyDisplay(remaining)}</p></div></div></div>
+                                <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-12"><div className="flex-1"><div className="text-[10px] uppercase font-black text-white/30 mb-2">Đã chi tiêu</div><div className="text-5xl md:text-7xl font-black tracking-tighter">{formatMoney(spentAmount)}<span className="text-xl text-white/20 ml-3">MIL</span></div><div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><p className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Hạn mức: {formatMoney(displayBudgetLimit)} Triệu VNĐ</p></div>
+                                <div className="md:w-48 flex flex-col gap-4 justify-center"><div className="bg-white/5 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p className="text-[9px] font-black text-white/30 uppercase mb-1">Còn lại</p><p className="text-xl font-bold">{formatMoney(remaining)}m</p></div></div></div>
                             </div>
                         </div>
                     </div>
@@ -338,33 +342,11 @@
         const PlannerBudget = ({ tasks, onAddExpense }) => {
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [paid, setPaid] = useState(""); const [category, setCategory] = useState("Khác");
-            
-            // Logic to include paid
             const expenses = tasks.filter(t => t.cost > 0);
-            
-            // Total budget = Sum of estimated costs
-            const totalBudget = expenses.reduce((acc, curr) => acc + curr.cost, 0);
-            
-            // Total Paid = Sum of paid amounts (if exists) or full cost if status done
-            const totalPaid = expenses.reduce((acc, curr) => acc + (curr.paid || (curr.status === 'done' ? curr.cost : 0)), 0);
-            
-            const remaining = totalBudget - totalPaid;
-
-            const handleSave = () => { 
-                if (title.trim() && cost) { 
-                    const numCost = parseCurrencyInput(cost);
-                    const numPaid = parseCurrencyInput(paid);
-                    
-                    onAddExpense({ 
-                        title: title, 
-                        tag: category, 
-                        status: numPaid >= numCost ? 'done' : 'pending', 
-                        cost: numCost,
-                        paid: numPaid // Store deposit/paid amount
-                    }); 
-                    setTitle(""); setCost(""); setPaid(""); setCategory("Khác"); setIsModalOpen(false); 
-                } 
-            };
+            const totalSpent = expenses.filter(t => t.status === 'done').reduce((acc, curr) => acc + curr.cost, 0);
+            const totalPlanned = expenses.filter(t => t.status !== 'done').reduce((acc, curr) => acc + curr.cost, 0);
+            const totalBudget = totalSpent + totalPlanned;
+            const handleSave = () => { if (title.trim() && cost) { onAddExpense({ title: title, tag: category, status: 'pending', cost: parseCurrencyInput(cost) }); setTitle(""); setCost(""); setCategory("Khác"); setIsModalOpen(false); } };
 
             return (
                 <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in">
@@ -480,67 +462,112 @@
             // Load data based on weddingId
             useEffect(() => {
                 if (!firebase || !currentUser) return;
-                const { db, onSnapshot, doc, setDoc, getDoc } = firebase;
+                const { db, onSnapshot, doc, setDoc, getDoc, updateDoc } = firebase;
                 
                 // 1. Get user profile to find weddingId
                 const userRef = doc(db, "users", currentUser.uid);
                 
-                const unsubUser = onSnapshot(userRef, async (userSnap) => {
-                    if (userSnap.exists()) {
-                        const userVal = userSnap.data();
-                        let weddingId = userVal.weddingId;
-                        const profile = userVal.profile;
+                // --- FIX: Logic to handle user data fetching securely without double setting state ---
+                let unsubscribeUser = null;
+                let unsubscribeWedding = null;
 
-                        // If new user (no weddingId), create a wedding doc for them
-                        if (!weddingId) {
-                            weddingId = currentUser.uid; // Default wedding ID is user ID
-                            // Create wedding doc
+                const setupListeners = async () => {
+                     unsubscribeUser = onSnapshot(userRef, async (userSnap) => {
+                        if (userSnap.exists()) {
+                            const userVal = userSnap.data();
+                            let weddingId = userVal.weddingId;
+                            const profile = userVal.profile;
+                            const isSetupComplete = userVal.isSetupComplete;
+
+                            // If new user (no weddingId), create a wedding doc for them
+                            if (!weddingId) {
+                                weddingId = currentUser.uid; // Default wedding ID is user ID
+                                // Create wedding doc
+                                const weddingRef = doc(db, "weddings", weddingId);
+                                const weddingSnap = await getDoc(weddingRef);
+                                
+                                if (!weddingSnap.exists()) {
+                                    await setDoc(weddingRef, {
+                                        tasks: [{ title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }],
+                                        guests: [],
+                                        activities: [{ text: "Chào mừng bạn đến với Weddy", time: new Date().toLocaleTimeString('vi-VN') }],
+                                        budgetLimit: 300000000,
+                                        owners: [currentUser.uid]
+                                    });
+                                }
+                                
+                                // Update user with weddingId (will trigger snapshot again)
+                                await updateDoc(userRef, { weddingId: weddingId, isSetupComplete: isSetupComplete || false });
+                                return; // Stop here, wait for next snapshot update
+                            }
+
+                            // 2. Listen to the wedding document
+                            if (unsubscribeWedding) unsubscribeWedding(); // Clear previous listener if any
+
                             const weddingRef = doc(db, "weddings", weddingId);
-                            const weddingSnap = await getDoc(weddingRef);
-                            
-                            if (!weddingSnap.exists()) {
-                                await setDoc(weddingRef, {
-                                    tasks: [{ title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }],
-                                    guests: [],
-                                    activities: [{ text: "Chào mừng bạn đến với Weddy", time: new Date().toLocaleTimeString('vi-VN') }],
-                                    budgetLimit: 300000000,
-                                    owners: [currentUser.uid]
-                                });
-                            }
-                            
-                            // Update user with weddingId
-                            await updateDoc(userRef, { weddingId: weddingId, isSetupComplete: userVal.isSetupComplete || false });
+                            unsubscribeWedding = onSnapshot(weddingRef, (weddingSnap) => {
+                                if (weddingSnap.exists()) {
+                                    setUserData({ 
+                                        ...weddingSnap.data(), 
+                                        weddingId: weddingId, 
+                                        profile: profile,
+                                        isSetupComplete: isSetupComplete 
+                                    });
+                                }
+                            });
+                        } else {
+                            // Create user doc if totally missing
+                            await setDoc(userRef, {
+                                profile: { email: currentUser.email, name: currentUser.displayName },
+                                weddingId: null, // Will trigger creation logic above
+                                isSetupComplete: false
+                            });
                         }
+                    });
+                };
 
-                        // 2. Listen to the wedding document
-                        const weddingRef = doc(db, "weddings", weddingId);
-                        const unsubWedding = onSnapshot(weddingRef, (weddingSnap) => {
-                            if (weddingSnap.exists()) {
-                                setUserData({ 
-                                    ...weddingSnap.data(), 
-                                    weddingId: weddingId, 
-                                    profile: profile,
-                                    isSetupComplete: userVal.isSetupComplete 
-                                });
-                            }
-                        });
-                        return () => unsubWedding();
-                    } else {
-                        // Create user doc if totally missing
-                        await setDoc(userRef, {
-                            profile: { email: currentUser.email, name: currentUser.displayName },
-                            weddingId: currentUser.uid,
-                            isSetupComplete: false
-                        });
-                    }
-                });
+                setupListeners();
 
-                return () => unsubUser();
+                return () => {
+                    if (unsubscribeUser) unsubscribeUser();
+                    if (unsubscribeWedding) unsubscribeWedding();
+                };
             }, [firebase, currentUser]);
 
             if (!userData) return <div className="h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div></div>;
 
             // ... Wizard Logic (No changes needed) ...
+            if (!userData.isSetupComplete) {
+                const handleWizardComplete = async (wizardData) => {
+                    if (!firebase) return;
+                    const { db, doc, updateDoc } = firebase;
+                    // Update User Profile
+                    const userRef = doc(db, "users", currentUser.uid);
+                    await updateDoc(userRef, {
+                        'profile.role': wizardData.role,
+                        'profile.weddingDate': wizardData.date,
+                        'profile.location': wizardData.location,
+                        'isSetupComplete': true
+                    });
+
+                    // Update Wedding Data (Budget)
+                    if (userData.weddingId) {
+                         const weddingRef = doc(db, "weddings", userData.weddingId);
+                         await updateDoc(weddingRef, {
+                            'budgetLimit': wizardData.budget ? parseInt(wizardData.budget) : 300000000
+                         });
+                    }
+                };
+
+                const handleWizardSkip = async () => {
+                     if (!firebase) return;
+                    const { db, doc, updateDoc } = firebase;
+                    const userRef = doc(db, "users", currentUser.uid);
+                    await updateDoc(userRef, { 'isSetupComplete': true });
+                };
+
+                return <GettingStartedWizard onComplete={handleWizardComplete} onSkip={handleWizardSkip} />;
+            }
 
             // Data Mapping
             const guests = userData.guests || [];
@@ -644,6 +671,16 @@
                 } else {
                     alert("Mã kết nối không hợp lệ!");
                 }
+            };
+
+            // Calculate days left
+            const calculateDaysLeft = (dateString) => {
+                if (!dateString || dateString === "Chưa đặt") return "---";
+                const eventDate = new Date(dateString);
+                const today = new Date();
+                const diffTime = eventDate - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                return diffDays > 0 ? `${diffDays} NGÀY NỮA` : "ĐÃ QUA";
             };
 
             // ... (Rest of UI similar to previous, add Invite Button in PlannerOverview)
@@ -838,7 +875,7 @@
                                 <div className="hidden md:flex items-center gap-3">
                                     {!user ? <button onClick={() => setShowLogin(true)} className="text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black">Đăng nhập</button> : <button onClick={handleLogout} className="text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black">Đăng xuất</button>}
                                     {!user && <button onClick={() => setShowRegister(true)} className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95">Đăng ký</button>}
-                                    {user && <button onClick={() => navigateTo('planner')} className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95">Lập kế hoạch</button>}
+                                    {user && <button onClick={() => navigateTo('planner')} className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95">Planner</button>}
                                 </div>
                             </div>
                         </nav>
