@@ -343,10 +343,27 @@
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [paid, setPaid] = useState(""); const [category, setCategory] = useState("Khác");
             const expenses = tasks.filter(t => t.cost > 0);
-            const totalSpent = expenses.filter(t => t.status === 'done').reduce((acc, curr) => acc + curr.cost, 0);
-            const totalPlanned = expenses.filter(t => t.status !== 'done').reduce((acc, curr) => acc + curr.cost, 0);
-            const totalBudget = totalSpent + totalPlanned;
-            const handleSave = () => { if (title.trim() && cost) { onAddExpense({ title: title, tag: category, status: 'pending', cost: parseCurrencyInput(cost) }); setTitle(""); setCost(""); setCategory("Khác"); setIsModalOpen(false); } };
+            
+            // Calculate totals
+            const totalBudget = expenses.reduce((acc, curr) => acc + curr.cost, 0);
+            const totalPaid = expenses.reduce((acc, curr) => acc + (curr.paid || (curr.status === 'done' ? curr.cost : 0)), 0);
+            const remaining = totalBudget - totalPaid;
+
+            const handleSave = () => { 
+                if (title.trim() && cost) { 
+                    const numCost = parseCurrencyInput(cost);
+                    const numPaid = parseCurrencyInput(paid);
+                    
+                    onAddExpense({ 
+                        title: title, 
+                        tag: category, 
+                        status: numPaid >= numCost ? 'done' : 'pending', 
+                        cost: numCost,
+                        paid: numPaid
+                    }); 
+                    setTitle(""); setCost(""); setPaid(""); setCategory("Khác"); setIsModalOpen(false); 
+                } 
+            };
 
             return (
                 <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in">
@@ -903,8 +920,11 @@
                     try {
                         if (!firebase) throw new Error("Đang kết nối server...");
                         const { user } = await firebase.createUserWithEmailAndPassword(firebase.auth, email, password);
-                        const initialData = { profile: { email }, data: { guests: [], tasks: [{ title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }], activities: [{ text: "Tạo tài khoản thành công", time: new Date().toLocaleTimeString('vi-VN') }] }, status: 'Active', plan: 'Free', isSetupComplete: false, createdAt: new Date().toISOString() };
-                        await firebase.setDoc(firebase.doc(firebase.db, "users", user.uid), initialData);
+                        await firebase.setDoc(firebase.doc(firebase.db, "users", user.uid), {
+                            profile: { email },
+                            weddingId: null, // Will init in FullPlannerApp
+                            isSetupComplete: false
+                        });
                         setActiveTab('planner');
                     } catch (e) { setError("Đăng ký thất bại: " + e.message); }
                 };
