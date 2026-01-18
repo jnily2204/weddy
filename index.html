@@ -4,445 +4,385 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weddy - Nền tảng quản lý đám cưới tinh tế</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React & ReactDOM CDN -->
+    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+    <!-- SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Custom Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-in {
-            animation: fadeIn 0.8s ease-out forwards;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.8s ease-out forwards; }
     </style>
 </head>
 <body class="bg-[#FBF9F7] text-[#1A1A1A]">
     <div id="root"></div>
 
-    <!-- Global Error Handler -->
-    <script>
-        window.onerror = function(message, source, lineno, colno, error) {
-            document.getElementById('root').innerHTML = `
-                <div style="padding: 20px; text-align: center; color: #E11D48; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">Đã xảy ra lỗi khởi chạy</h2>
-                    <p style="background: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); max-width: 80%; overflow: auto;">
-                        ${message}
-                    </p>
-                    <button onclick="window.location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #1A1A1A; color: white; border: none; border-radius: 0.25rem; cursor: pointer;">
-                        Tải lại trang
-                    </button>
-                </div>
-            `;
-            console.error("Global Error Caught:", error);
+    <!-- FIREBASE SETUP -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+
+        // Cấu hình Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD_F3OI5GexlAqgC8TZ1CN1JB5O3RacQqs",
+            authDomain: "weddyvn.firebaseapp.com",
+            projectId: "weddyvn",
+            storageBucket: "weddyvn.firebasestorage.app",
+            messagingSenderId: "504927899297",
+            appId: "1:504927899297:web:1a3d3a1b6cfafe0716aae0",
+            measurementId: "G-KK4B3RXVNV"
         };
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            
+            // Expose services to window for React
+            window.firebaseServices = { 
+                auth, 
+                db, 
+                createUserWithEmailAndPassword, 
+                signInWithEmailAndPassword, 
+                signOut, 
+                onAuthStateChanged, 
+                doc, 
+                setDoc, 
+                updateDoc, 
+                onSnapshot, 
+                getDoc 
+            };
+            console.log("Firebase initialized successfully");
+        } catch (e) {
+            console.error("Firebase init error:", e);
+        }
     </script>
 
     <script type="text/babel">
-        // Safety check for React
-        if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
-            throw new Error("React hoặc ReactDOM chưa được tải. Vui lòng kiểm tra kết nối mạng.");
-        }
+        const { useState, useEffect, useRef } = React;
 
-        const { useState, useEffect } = React;
-
-        // --- ICON SYSTEM (Fixed: Using <g> instead of Fragment) ---
-        
-        const Icon = ({ children, size = 24, color = "currentColor", className = "", ...props }) => {
-            return (
-                <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width={size} 
-                    height={size} 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke={color} 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    className={className} 
-                    {...props}
-                >
-                    {children}
-                </svg>
-            );
+        // --- FIREBASE HELPER HOOK ---
+        const useFirebase = () => {
+            const [services, setServices] = useState(null);
+            
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    if (window.firebaseServices) {
+                        setServices(window.firebaseServices);
+                        clearInterval(interval);
+                    }
+                }, 100);
+                return () => clearInterval(interval);
+            }, []);
+            
+            return services;
         };
 
-        // Icon Definitions
+        // --- ICON SYSTEM ---
+        const Icon = ({ children, size = 24, color = "currentColor", className = "", ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
+        );
         const Icons = {
-            Heart: (props) => <Icon {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></Icon>,
-            Check: (props) => <Icon {...props}><polyline points="20 6 9 17 4 12" /></Icon>,
-            Users: (props) => <Icon {...props}><g><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></g></Icon>,
-            ArrowUpRight: (props) => <Icon {...props}><g><path d="M7 7h10v10" /><path d="M7 17 17 7" /></g></Icon>,
-            Plus: (props) => <Icon {...props}><g><path d="M5 12h14" /><path d="M12 5v14" /></g></Icon>,
-            Smartphone: (props) => <Icon {...props}><g><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" /></g></Icon>,
-            Layout: (props) => <Icon {...props}><g><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><path d="M3 9h18" /><path d="M9 21V9" /></g></Icon>,
-            DollarSign: (props) => <Icon {...props}><g><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></g></Icon>,
-            Menu: (props) => <Icon {...props}><g><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></g></Icon>,
-            X: (props) => <Icon {...props}><g><path d="M18 6 6 18" /><path d="m6 6 12 12" /></g></Icon>,
-            ArrowRight: (props) => <Icon {...props}><g><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></g></Icon>,
-            Search: (props) => <Icon {...props}><g><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></g></Icon>,
-            Star: (props) => <Icon {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></Icon>,
-            Calendar: (props) => <Icon {...props}><g><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></g></Icon>,
-            MapPin: (props) => <Icon {...props}><g><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></g></Icon>,
-            Clock: (props) => <Icon {...props}><g><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></g></Icon>,
-            PieChart: (props) => <Icon {...props}><g><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10Z" /></g></Icon>,
-            ChevronRight: (props) => <Icon {...props}><path d="m9 18 6-6-6-6" /></Icon>,
-            Filter: (props) => <Icon {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></Icon>,
-            Circle: (props) => <Icon {...props}><circle cx="12" cy="12" r="10" /></Icon>,
-            Coffee: (props) => <Icon {...props}><g><path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="1" y2="4" /><line x1="10" x2="10" y1="1" y2="4" /><line x1="14" x2="14" y1="1" y2="4" /></g></Icon>,
-            Music: (props) => <Icon {...props}><g><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></g></Icon>,
-            Camera: (props) => <Icon {...props}><g><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></g></Icon>,
-            Bell: (props) => <Icon {...props}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /></Icon>,
-            LogOut: (props) => <Icon {...props}><g><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="21" y1="12" y2="12" /></g></Icon>,
+            Heart: (p) => <Icon {...p}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></Icon>,
+            Check: (p) => <Icon {...p}><polyline points="20 6 9 17 4 12" /></Icon>,
+            Users: (p) => <Icon {...p}><g><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></g></Icon>,
+            ArrowUpRight: (p) => <Icon {...p}><g><path d="M7 7h10v10" /><path d="M7 17 17 7" /></g></Icon>,
+            Plus: (p) => <Icon {...p}><g><path d="M5 12h14" /><path d="M12 5v14" /></g></Icon>,
+            Smartphone: (p) => <Icon {...p}><g><rect width="14" height="20" x="5" y="2" rx="2" ry="2" /><path d="M12 18h.01" /></g></Icon>,
+            Layout: (p) => <Icon {...p}><g><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><path d="M3 9h18" /><path d="M9 21V9" /></g></Icon>,
+            DollarSign: (p) => <Icon {...p}><g><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></g></Icon>,
+            Menu: (p) => <Icon {...p}><g><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></g></Icon>,
+            X: (p) => <Icon {...p}><g><path d="M18 6 6 18" /><path d="m6 6 12 12" /></g></Icon>,
+            ArrowRight: (p) => <Icon {...p}><g><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></g></Icon>,
+            Search: (p) => <Icon {...p}><g><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></g></Icon>,
+            Star: (p) => <Icon {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></Icon>,
+            Calendar: (p) => <Icon {...p}><g><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></g></Icon>,
+            MapPin: (p) => <Icon {...p}><g><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></g></Icon>,
+            Clock: (p) => <Icon {...p}><g><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></g></Icon>,
+            PieChart: (p) => <Icon {...p}><g><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10Z" /></g></Icon>,
+            ChevronRight: (p) => <Icon {...p}><path d="m9 18 6-6-6-6" /></Icon>,
+            Filter: (p) => <Icon {...p}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></Icon>,
+            Circle: (p) => <Icon {...p}><circle cx="12" cy="12" r="10" /></Icon>,
+            Coffee: (p) => <Icon {...p}><g><path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="1" y2="4" /><line x1="10" x2="10" y1="1" y2="4" /><line x1="14" x2="14" y1="1" y2="4" /></g></Icon>,
+            Music: (p) => <Icon {...p}><g><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></g></Icon>,
+            Camera: (p) => <Icon {...p}><g><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></g></Icon>,
+            Bell: (p) => <Icon {...p}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /></Icon>,
+            LogOut: (p) => <Icon {...p}><g><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="21" y1="12" y2="12" /></g></Icon>,
+            Trash: (p) => <Icon {...p}><g><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></g></Icon>,
         };
 
-        // --- REUSABLE COMPONENTS ---
-        
         const Modal = ({ isOpen, onClose, title, children }) => {
             if (!isOpen) return null;
-            
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    {/* Backdrop */}
-                    <div 
-                        className="absolute inset-0 bg-stone-900/20 backdrop-blur-sm transition-opacity animate-in fade-in duration-300"
-                        onClick={onClose}
-                    ></div>
-                    
-                    {/* Modal Content */}
-                    <div className="relative bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl border border-stone-100 animate-in zoom-in-95 duration-300 flex flex-col">
+                    <div className="absolute inset-0 bg-stone-900/20 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" onClick={onClose}></div>
+                    <div className="relative bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl border border-stone-100 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-black uppercase tracking-widest">{title}</h3>
-                            <button 
-                                onClick={onClose}
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-black transition-colors"
-                            >
-                                <Icons.X size={16} />
-                            </button>
+                            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-black transition-colors"><Icons.X size={16} /></button>
                         </div>
-                        <div>
-                            {children}
-                        </div>
+                        <div>{children}</div>
                     </div>
                 </div>
             );
         };
 
-        // --- SUB-COMPONENTS FOR PLANNER APP ---
+        // --- SUB-COMPONENTS ---
         
-        const PlannerOverview = ({ spentAmount }) => {
+        const PlannerOverview = ({ spentAmount, completedTasks, totalTasks, guestCount, activities }) => {
             const budgetLimit = 300.0;
-            const remaining = (budgetLimit - spentAmount).toFixed(1);
-            const percentage = Math.min((spentAmount / budgetLimit) * 100, 100);
+            const remaining = (budgetLimit - (spentAmount / 1000000)).toFixed(1);
+            const percentage = Math.min(((spentAmount / 1000000) / budgetLimit) * 100, 100);
+            const taskPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in">
                     <div className="lg:col-span-2 space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-white p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-52 hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5A896]">Tiến độ</span>
-                                    <div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Check size={18}/></div>
-                                </div>
-                                <div>
-                                    <div className="flex items-baseline gap-2 mb-4">
-                                        <span className="text-6xl font-black">12</span>
-                                        <span className="text-stone-400 font-bold uppercase text-[11px]">/ 40 hoàn thành</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                                        <div className="h-full bg-black w-[30%]"></div>
-                                    </div>
-                                </div>
+                                <div className="flex justify-between items-start"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5A896]">Tiến độ</span><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Check size={18}/></div></div>
+                                <div><div className="flex items-baseline gap-2 mb-4"><span className="text-6xl font-black">{completedTasks}</span><span className="text-stone-400 font-bold uppercase text-[11px]">/ {totalTasks} hoàn thành</span></div><div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-black transition-all duration-700" style={{width: `${taskPercentage}%`}}></div></div></div>
                             </div>
                             <div className="bg-white p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-52 hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5A896]">Khách mời</span>
-                                    <div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={18}/></div>
-                                </div>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-6xl font-black">350</span>
-                                    <span className="text-emerald-500 font-bold uppercase text-[11px]">Đã xác nhận</span>
-                                </div>
+                                <div className="flex justify-between items-start"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5A896]">Khách mời</span><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={18}/></div></div>
+                                <div className="flex items-baseline gap-2"><span className="text-6xl font-black">{guestCount}</span><span className="text-emerald-500 font-bold uppercase text-[11px]">Người</span></div>
                             </div>
                         </div>
-
                         <div className="bg-black p-12 rounded-[3rem] text-white relative overflow-hidden shadow-2xl group cursor-pointer">
                             <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-30 transition-opacity duration-700"></div>
-                            <div className="relative z-10">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-10">Tài chính tổng quát</h3>
-                                <div className="flex flex-col md:flex-row justify-between gap-12">
-                                    <div className="flex-1">
-                                        <div className="text-[10px] uppercase font-black text-white/30 mb-2">Đã chi tiêu</div>
-                                        <div className="text-7xl font-black tracking-tighter">
-                                            {spentAmount}<span className="text-xl text-white/20 ml-3">MIL</span>
-                                        </div>
-                                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4">
-                                            <div className="h-full bg-white" style={{width: `${percentage}%`}}></div>
-                                        </div>
-                                        <p className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Hạn mức: {budgetLimit}.0 Triệu VNĐ</p>
-                                    </div>
-                                    <div className="md:w-48 flex flex-col gap-4 justify-center">
-                                        <div className="bg-white/5 p-6 rounded-3xl border border-white/5 backdrop-blur-sm">
-                                            <p className="text-[9px] font-black text-white/30 uppercase mb-1">Còn lại</p>
-                                            <p className="text-xl font-bold">{remaining}m</p>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className="relative z-10"><h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-10">Tài chính tổng quát</h3>
+                                <div className="flex flex-col md:flex-row justify-between gap-12"><div className="flex-1"><div className="text-[10px] uppercase font-black text-white/30 mb-2">Đã chi tiêu</div><div className="text-7xl font-black tracking-tighter">{(spentAmount / 1000000).toFixed(1)}<span className="text-xl text-white/20 ml-3">MIL</span></div><div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><p className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Hạn mức: {budgetLimit}.0 Triệu VNĐ</p></div>
+                                <div className="md:w-48 flex flex-col gap-4 justify-center"><div className="bg-white/5 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p className="text-[9px] font-black text-white/30 uppercase mb-1">Còn lại</p><p className="text-xl font-bold">{remaining}m</p></div></div></div>
                             </div>
                         </div>
                     </div>
-
                     <div className="bg-white p-10 rounded-[2.5rem] border border-stone-100 shadow-sm h-full">
                         <h3 className="text-[11px] font-black uppercase tracking-[0.2em] mb-10 text-stone-900 border-b border-stone-50 pb-6">Hoạt động</h3>
-                        <div className="space-y-8">
-                            {["Ký hợp đồng Riverside Palace", "Cập nhật danh sách khách mời", "Thanh toán cọc áo cưới"].map((txt, i) => (
-                                <div key={i} className="flex gap-4 items-center group cursor-pointer">
-                                    <div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white transition-colors">
-                                        <Icons.ArrowUpRight size={16} className="text-stone-300 group-hover:text-white" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[13px] font-bold text-stone-800 leading-snug">{txt}</p>
-                                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mt-1">Vừa xong</p>
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="space-y-8">{activities.map((act, i) => (<div key={i} className="flex gap-4 items-center group cursor-pointer animate-in slide-in-from-right-4" style={{animationDelay: `${i * 0.1}s`}}><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white transition-colors"><Icons.ArrowUpRight size={16} className="text-stone-300 group-hover:text-white" /></div><div><p className="text-[13px] font-bold text-stone-800 leading-snug">{act.text}</p><p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mt-1">{act.time}</p></div></div>))}
+                        {activities.length === 0 && <p className="text-sm text-stone-400 italic">Chưa có hoạt động mới.</p>}
                         </div>
                     </div>
                 </div>
             );
         };
 
-        const PlannerTasks = ({ onAddToBudget }) => {
-            const [tasks, setTasks] = useState([
-                { title: "Ký hợp đồng địa điểm tiệc", tag: "Địa điểm", status: "done" },
-                { title: "Duyệt danh sách khách mời chính thức", tag: "Khách mời", status: "urgent" },
-                { title: "Gửi thiệp mời điện tử qua Zalo/Mess", tag: "Thiệp mời", status: "pending" },
-                { title: "Thử váy cưới và Vest lần 2", tag: "Trang phục", status: "pending" },
-                { title: "Chọn menu thực đơn chính thức", tag: "Ẩm thực", status: "pending" },
-            ]);
+        const PlannerBudget = ({ tasks, onAddExpense }) => {
             const [isModalOpen, setIsModalOpen] = useState(false);
-            const [newTaskTitle, setNewTaskTitle] = useState("");
-            const [newTaskCategory, setNewTaskCategory] = useState("Khác");
-            const [newTaskCost, setNewTaskCost] = useState("");
-
-            const handleAddTask = () => {
-                if (newTaskTitle && newTaskTitle.trim() !== "") {
-                    const cost = newTaskCost ? parseInt(newTaskCost) : 0;
-                    
-                    setTasks(prevTasks => [
-                        { title: newTaskTitle, tag: newTaskCategory, status: "pending", cost: cost },
-                        ...prevTasks
-                    ]);
-
-                    // Link money to budget if cost > 0
-                    if (cost > 0) {
-                        onAddToBudget(cost);
-                    }
-
-                    // Reset form
-                    setNewTaskTitle("");
-                    setNewTaskCategory("Khác");
-                    setNewTaskCost("");
-                    setIsModalOpen(false);
-                }
-            };
-
-            const toggleStatus = (index) => {
-                setTasks(prevTasks => prevTasks.map((task, i) => 
-                    i === index ? { ...task, status: task.status === 'done' ? 'pending' : 'done' } : task
-                ));
-            };
+            const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [category, setCategory] = useState("Khác");
+            const expenses = tasks.filter(t => t.cost > 0);
+            const totalSpent = expenses.filter(t => t.status === 'done').reduce((acc, curr) => acc + curr.cost, 0);
+            const totalPlanned = expenses.filter(t => t.status !== 'done').reduce((acc, curr) => acc + curr.cost, 0);
+            const totalBudget = totalSpent + totalPlanned;
+            const handleSave = () => { if (title.trim() && cost) { onAddExpense({ title: title, tag: category, status: 'pending', cost: parseInt(cost) }); setTitle(""); setCost(""); setCategory("Khác"); setIsModalOpen(false); } };
 
             return (
                 <div className="max-w-4xl mx-auto space-y-8 animate-in">
-                    <div className="flex justify-between items-center px-4">
-                        <h3 className="text-2xl font-black uppercase tracking-tighter">Tasks</h3>
-                        <button 
-                            onClick={() => setIsModalOpen(true)}
-                            className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 active:scale-95 transition-transform hover:bg-stone-800"
-                        >
-                            <Icons.Plus size={16}/> Thêm việc
-                        </button>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white p-8 rounded-[2rem] border border-stone-100 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Tổng ngân sách</p><p className="text-3xl font-black text-stone-800">{(totalBudget / 1000000).toFixed(1)}M</p></div>
+                        <div className="bg-black text-white p-8 rounded-[2rem] shadow-xl"><p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">Đã chi</p><p className="text-3xl font-black">{(totalSpent / 1000000).toFixed(1)}M</p></div>
+                        <div className="bg-white p-8 rounded-[2rem] border border-stone-100 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Sắp chi (Dự kiến)</p><p className="text-3xl font-black text-stone-800">{(totalPlanned / 1000000).toFixed(1)}M</p></div>
                     </div>
-                    
                     <div className="bg-white rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">
-                        {tasks.map((task, i) => (
-                            <div 
-                                key={i} 
-                                onClick={() => toggleStatus(i)}
-                                className="group p-6 flex items-center border-b border-stone-50 last:border-0 hover:bg-[#FBF9F7] transition-all cursor-pointer"
-                            >
-                                <div className={`w-6 h-6 rounded-full border-2 mr-6 flex items-center justify-center transition-colors ${task.status === 'done' ? 'bg-black border-black' : 'border-stone-200 group-hover:border-black'}`}>
-                                    {task.status === 'done' && <Icons.Check size={12} className="text-white" />}
-                                </div>
-                                <div className="flex-1">
-                                    <h4 className={`text-base font-bold transition-colors ${task.status === 'done' ? 'text-stone-300 line-through' : 'text-stone-800'}`}>{task.title}</h4>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">{task.tag}</span>
-                                    {task.cost > 0 && (
-                                        <span className="ml-2 text-[10px] font-bold text-stone-300">
-                                            - {(task.cost).toLocaleString('vi-VN')}đ
-                                        </span>
-                                    )}
-                                </div>
-                                {task.status === 'urgent' && <span className="text-[9px] font-black bg-rose-50 text-rose-500 px-3 py-1 rounded-full uppercase tracking-widest">Gấp</span>}
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Add Task Modal */}
-                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Thêm công việc mới">
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên công việc</label>
-                                <input 
-                                    type="text" 
-                                    value={newTaskTitle}
-                                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                                    placeholder="Ví dụ: Đặt lịch chụp hình..."
-                                    className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black transition-colors"
-                                    autoFocus
-                                />
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tính chất</label>
-                                    <div className="relative">
-                                        <select 
-                                            value={newTaskCategory}
-                                            onChange={(e) => setNewTaskCategory(e.target.value)}
-                                            className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black transition-colors appearance-none"
-                                        >
-                                            <option value="Khác">Khác</option>
-                                            <option value="Địa điểm">Địa điểm</option>
-                                            <option value="Khách mời">Khách mời</option>
-                                            <option value="Thiệp mời">Thiệp mời</option>
-                                            <option value="Trang phục">Trang phục</option>
-                                            <option value="Ẩm thực">Ẩm thực</option>
-                                            <option value="Trang trí">Trang trí</option>
-                                        </select>
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
-                                            <Icons.ChevronRight size={14} className="rotate-90" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Chi phí dự kiến</label>
-                                    <input 
-                                        type="number" 
-                                        value={newTaskCost}
-                                        onChange={(e) => setNewTaskCost(e.target.value)}
-                                        placeholder="0 VNĐ"
-                                        className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black transition-colors"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-2">
-                                <button 
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100 transition-colors"
-                                >
-                                    Hủy
-                                </button>
-                                <button 
-                                    onClick={handleAddTask}
-                                    className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors"
-                                >
-                                    Lưu công việc
-                                </button>
-                            </div>
+                        <div className="p-8 border-b border-stone-50 flex justify-between items-center">
+                            <div><h3 className="text-xl font-black uppercase tracking-widest">Chi tiết khoản chi</h3><span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Tự động từ Tasks</span></div>
+                            <button onClick={() => setIsModalOpen(true)} className="px-5 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 flex items-center gap-2 shadow-lg"><Icons.Plus size={12}/> Thêm Khoản Chi</button>
                         </div>
-                    </Modal>
+                        <div className="divide-y divide-stone-50">
+                            {expenses.length === 0 ? <div className="p-20 text-center text-stone-400"><Icons.DollarSign size={48} className="mx-auto mb-4 opacity-20" /><p>Chưa có khoản chi nào.</p></div> : expenses.map((item, i) => (<div key={i} className="p-6 flex items-center justify-between hover:bg-[#FBF9F7] transition-colors"><div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.status === 'done' ? 'bg-black text-white' : 'bg-stone-100 text-stone-400'}`}><Icons.DollarSign size={16} /></div><div><h4 className="font-bold text-stone-800">{item.title}</h4><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{item.tag}</p></div></div><div className="text-right"><p className="font-black text-lg">{item.cost.toLocaleString('vi-VN')}đ</p><span className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full inline-block mt-1 ${item.status === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-500'}`}>{item.status === 'done' ? 'Đã thanh toán' : 'Dự kiến'}</span></div></div>))}</div>
+                    </div>
+                    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Thêm khoản chi mới"><div className="space-y-6"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên khoản chi</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Loại chi phí</label><div className="relative"><select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"><option value="Khác">Khác</option><option value="Địa điểm">Địa điểm</option><option value="Khách mời">Khách mời</option><option value="Trang phục">Trang phục</option><option value="Ẩm thực">Ẩm thực</option></select><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Số tiền (VNĐ)</label><input type="number" value={cost} onChange={(e) => setCost(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div></div><div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleSave} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu khoản chi</button></div></div></Modal>
                 </div>
             );
         };
 
-        const FullPlannerApp = () => {
-            const [subTab, setSubTab] = useState('overview');
-            const [spentAmount, setSpentAmount] = useState(105.2); // Initial spent amount in Millions
+        const PlannerTasks = ({ tasks, onAddTask, onToggleTask, onDeleteTask }) => {
+            const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+            const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+            const [taskToDeleteIndex, setTaskToDeleteIndex] = useState(null);
+            const [newTaskTitle, setNewTaskTitle] = useState(""); const [newTaskCategory, setNewTaskCategory] = useState("Khác"); const [newTaskCost, setNewTaskCost] = useState("");
 
-            const handleAddToBudget = (amountVND) => {
-                // Convert VND to Millions (assuming input is raw VND)
-                // e.g., 5,000,000 VND = 5.0 Million
-                const amountInMillions = amountVND / 1000000;
-                setSpentAmount(prev => +(prev + amountInMillions).toFixed(2));
+            const pendingTasks = tasks.map((task, index) => ({...task, originalIndex: index})).filter(t => t.status !== 'done');
+            const completedTasks = tasks.map((task, index) => ({...task, originalIndex: index})).filter(t => t.status === 'done');
+
+            const handleAddTask = () => { if (newTaskTitle && newTaskTitle.trim() !== "") { onAddTask({ title: newTaskTitle, tag: newTaskCategory, status: "pending", cost: newTaskCost ? parseInt(newTaskCost) : 0 }); setNewTaskTitle(""); setNewTaskCategory("Khác"); setNewTaskCost(""); setIsAddModalOpen(false); } };
+            const confirmDelete = (index) => { setTaskToDeleteIndex(index); setIsDeleteModalOpen(true); };
+            const executeDelete = () => { if (taskToDeleteIndex !== null) { onDeleteTask(taskToDeleteIndex); setIsDeleteModalOpen(false); setTaskToDeleteIndex(null); } };
+
+            const renderTaskItem = (task) => (
+                <div key={task.originalIndex} onClick={() => onToggleTask(task.originalIndex)} className="group p-6 flex items-center border-b border-stone-50 last:border-0 hover:bg-[#FBF9F7] transition-all cursor-pointer relative">
+                    <div className={`w-6 h-6 rounded-full border-2 mr-6 flex items-center justify-center transition-colors ${task.status === 'done' ? 'bg-black border-black' : 'border-stone-200 group-hover:border-black'}`}>{task.status === 'done' && <Icons.Check size={12} className="text-white" />}</div>
+                    <div className="flex-1"><h4 className={`text-base font-bold transition-colors ${task.status === 'done' ? 'text-stone-300 line-through' : 'text-stone-800'}`}>{task.title}</h4><span className="text-[10px] font-black uppercase tracking-widest text-stone-400">{task.tag}</span>{task.cost > 0 && <span className="ml-2 text-[10px] font-bold text-stone-300">- {(task.cost).toLocaleString('vi-VN')}đ</span>}</div>
+                    {task.status === 'urgent' && <span className="text-[9px] font-black bg-rose-50 text-rose-500 px-3 py-1 rounded-full uppercase tracking-widest mr-4">Gấp</span>}
+                    <button onClick={(e) => { e.stopPropagation(); confirmDelete(task.originalIndex); }} className="p-2 text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Icons.Trash size={18} /></button>
+                </div>
+            );
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-8 animate-in">
+                    <div className="flex justify-between items-center px-4"><h3 className="text-2xl font-black uppercase tracking-tighter">Tasks</h3><button onClick={() => setIsAddModalOpen(true)} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 active:scale-95 transition-transform hover:bg-stone-800"><Icons.Plus size={16}/> Thêm việc</button></div>
+                    <div><h4 className="px-4 mb-4 text-[10px] font-black uppercase tracking-widest text-stone-400">Cần làm ({pendingTasks.length})</h4><div className="bg-white rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">{pendingTasks.length > 0 ? pendingTasks.map(renderTaskItem) : <div className="p-8 text-center text-stone-400 text-sm">Tuyệt vời! Bạn đã hoàn thành hết các việc cần làm.</div>}</div></div>
+                    {completedTasks.length > 0 && (<div><h4 className="px-4 mb-4 text-[10px] font-black uppercase tracking-widest text-stone-400 mt-8">Đã hoàn thành ({completedTasks.length})</h4><div className="bg-white rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm opacity-60 hover:opacity-100 transition-opacity">{completedTasks.map(renderTaskItem)}</div></div>)}
+                    <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Thêm công việc mới"><div className="space-y-6"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên công việc</label><input type="text" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tính chất</label><div className="relative"><select value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"><option value="Khác">Khác</option><option value="Địa điểm">Địa điểm</option><option value="Khách mời">Khách mời</option><option value="Thiệp mời">Thiệp mời</option><option value="Trang phục">Trang phục</option><option value="Ẩm thực">Ẩm thực</option><option value="Trang trí">Trang trí</option></select><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Chi phí dự kiến</label><input type="number" value={newTaskCost} onChange={(e) => setNewTaskCost(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div></div><div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleAddTask} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu công việc</button></div></div></Modal>
+                    <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Xóa công việc?"><div className="space-y-6"><p className="text-sm text-stone-600 font-medium">Bạn có chắc chắn muốn xóa công việc này không?<br/><span className="text-xs text-stone-400 mt-2 block">Hành động này không thể hoàn tác.</span></p><div className="flex justify-end gap-3"><button onClick={() => setIsDeleteModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={executeDelete} className="px-8 py-3 bg-red-500 text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-red-600">Xóa ngay</button></div></div></Modal>
+                </div>
+            );
+        };
+
+        const PlannerGuests = ({ guests, onAddGuest, onImportGuests, onDeleteGuest }) => {
+            const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+            const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+            const [guestToDeleteId, setGuestToDeleteId] = useState(null);
+            const [name, setName] = useState(""); const [relationship, setRelationship] = useState("Bạn chú rể"); const [phone, setPhone] = useState("");
+            const fileInputRef = useRef(null);
+
+            const handleAdd = () => { if (name.trim()) { onAddGuest({ name, relationship, phone, id: Date.now() }); setName(""); setPhone(""); setIsAddModalOpen(false); } };
+            const confirmDelete = (id) => { setGuestToDeleteId(id); setIsDeleteModalOpen(true); };
+            const executeDelete = () => { if (guestToDeleteId !== null) { onDeleteGuest(guestToDeleteId); setIsDeleteModalOpen(false); setGuestToDeleteId(null); } };
+            const handleFileChange = (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (evt) => { try { const bstr = evt.target.result; const wb = XLSX.read(bstr, { type: 'binary' }); const wsname = wb.SheetNames[0]; const ws = wb.Sheets[wsname]; const data = XLSX.utils.sheet_to_json(ws, { header: 1 }); const importedGuests = data.slice(1).map((row, idx) => ({ id: Date.now() + idx, name: row[0] || "Khách mời", relationship: row[1] || "Khác", phone: row[2] || "" })).filter(g => g.name); onImportGuests(importedGuests); } catch (err) { alert("Lỗi đọc file Excel."); } }; reader.readAsBinaryString(file); } };
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-8 animate-in">
+                    <div className="flex justify-between items-center px-4"><h3 className="text-2xl font-black uppercase tracking-tighter">Danh sách ({guests.length})</h3><div className="flex gap-2"><input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls, .csv" /><button onClick={() => fileInputRef.current.click()} className="px-5 py-3 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-stone-50 flex items-center gap-2"><Icons.Layout size={14}/> Import Excel</button><button onClick={() => setIsAddModalOpen(true)} className="px-6 py-3 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 hover:bg-stone-800"><Icons.Plus size={14}/> Thêm thủ công</button></div></div>
+                    <div className="bg-white rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm min-h-[300px]">
+                        {guests.length === 0 ? <div className="text-center py-20 text-stone-400"><Icons.Users size={48} className="mx-auto mb-4 opacity-20" /><p>Chưa có khách mời nào.</p></div> : <div className="divide-y divide-stone-50">{guests.map((g) => (<div key={g.id} className="p-6 flex items-center justify-between hover:bg-[#FBF9F7] transition-colors group relative"><div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 font-bold text-xs">{g.name.charAt(0).toUpperCase()}</div><div><h4 className="font-bold text-stone-800">{g.name}</h4><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{g.relationship}</p></div></div><div className="text-stone-400"><button onClick={() => confirmDelete(g.id)} className="p-2 text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"><Icons.Trash size={18} /></button></div></div>))}</div>}
+                    </div>
+                    <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Thêm khách mời"><div className="space-y-4"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Họ và tên</label><input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Mối quan hệ</label><div className="relative"><select value={relationship} onChange={(e) => setRelationship(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"><option value="Gia đình chú rể">Gia đình chú rể</option><option value="Gia đình cô dâu">Gia đình cô dâu</option><option value="Bạn chú rể">Bạn chú rể</option><option value="Bạn cô dâu">Bạn cô dâu</option><option value="Bạn chung">Bạn chung</option><option value="Đồng nghiệp">Đồng nghiệp</option><option value="Khác">Khác</option></select><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Số điện thoại (Tuỳ chọn)</label><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div><button onClick={handleAdd} className="w-full py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors mt-2">Lưu lại</button></div></Modal>
+                    <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Xóa khách mời?"><div className="space-y-6"><p className="text-sm text-stone-600 font-medium">Bạn có chắc chắn muốn xóa khách mời này không? <br/><span className="text-xs text-stone-400 mt-2 block">Hành động này không thể hoàn tác.</span></p><div className="flex justify-end gap-3"><button onClick={() => setIsDeleteModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={executeDelete} className="px-8 py-3 bg-red-500 text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-red-600">Xóa ngay</button></div></div></Modal>
+                </div>
+            );
+        };
+
+        const FullPlannerApp = ({ currentUser }) => {
+            const [subTab, setSubTab] = useState('overview');
+            const [userData, setUserData] = useState(null);
+            const firebase = useFirebase();
+
+            useEffect(() => {
+                if (!firebase || !currentUser) return;
+                const { db, onSnapshot, doc, setDoc, getDoc } = firebase;
+                
+                const userDocRef = doc(db, "users", currentUser.uid);
+                
+                getDoc(userDocRef).then((docSnap) => {
+                    if (!docSnap.exists()) {
+                        setDoc(userDocRef, {
+                            profile: { email: currentUser.email },
+                            data: {
+                                guests: [],
+                                tasks: [
+                                    { title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }
+                                ],
+                                activities: [{ text: "Chào mừng bạn đến với Weddy", time: new Date().toLocaleTimeString('vi-VN') }]
+                            },
+                            status: 'Active',
+                            plan: 'Free',
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+                });
+
+                const unsub = onSnapshot(userDocRef, (doc) => {
+                    if (doc.exists()) {
+                        setUserData(doc.data().data);
+                    }
+                });
+                return () => unsub();
+            }, [firebase, currentUser]);
+
+            if (!userData) return <div className="h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div></div>;
+
+            const guests = userData.guests || [];
+            const tasks = userData.tasks || [];
+            const activities = userData.activities || [];
+
+            const completedTasks = tasks.filter(t => t.status === 'done').length;
+            const totalTasks = tasks.length;
+            const guestCount = guests.length;
+            const spentAmount = tasks.filter(t => t.status === 'done').reduce((acc, t) => acc + t.cost, 0);
+
+            const updateData = async (key, value) => {
+                if (!firebase) return;
+                const { db, doc, updateDoc } = firebase;
+                await updateDoc(doc(db, "users", currentUser.uid), { [`data.${key}`]: value });
+            };
+
+            const addActivity = async (text) => {
+                const newActivity = { text, time: new Date().toLocaleTimeString('vi-VN') };
+                const newActivities = [newActivity, ...activities].slice(0, 10);
+                await updateData('activities', newActivities);
+            };
+
+            const handleAddTask = (newTask) => {
+                const newTasks = [newTask, ...tasks];
+                updateData('tasks', newTasks);
+                addActivity(`Thêm công việc: ${newTask.title}`);
+            };
+
+            const handleToggleTask = (index) => {
+                const task = tasks[index];
+                const newStatus = task.status === 'done' ? 'pending' : 'done';
+                const newTasks = [...tasks];
+                newTasks[index] = { ...task, status: newStatus };
+                updateData('tasks', newTasks);
+                if (newStatus === 'done') addActivity(`Hoàn thành: ${task.title}`);
+            };
+
+            const handleDeleteTask = (index) => {
+                const taskToDelete = tasks[index];
+                const newTasks = tasks.filter((_, i) => i !== index);
+                updateData('tasks', newTasks);
+                addActivity(`Đã xóa công việc: ${taskToDelete.title}`);
+            };
+
+            const handleAddGuest = (newGuest) => {
+                const newGuests = [newGuest, ...guests];
+                updateData('guests', newGuests);
+                addActivity(`Thêm khách mời: ${newGuest.name}`);
+            };
+
+            const handleDeleteGuest = (id) => {
+                const guest = guests.find(g => g.id === id);
+                const newGuests = guests.filter(g => g.id !== id);
+                updateData('guests', newGuests);
+                if (guest) addActivity(`Đã xóa khách mời: ${guest.name}`);
+            };
+
+            const handleImportGuests = (importedGuests) => {
+                const newGuests = [...importedGuests, ...guests];
+                updateData('guests', newGuests);
+                addActivity(`Import ${importedGuests.length} khách mời từ Excel`);
             };
 
             return (
                 <div className="pt-32 pb-40 container mx-auto px-6 lg:px-12 max-w-7xl animate-in">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
-                        <div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#B5A896] mb-3 block">Dashboard</span>
-                            <h2 className="text-5xl font-black tracking-tighter uppercase">Weddy Planner</h2>
-                        </div>
-                        <div className="flex gap-12 text-right">
-                            <div>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Wedding Day</p>
-                                <p className="text-xl font-bold">20.12.2024</p>
-                            </div>
-                            <div>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Status</p>
-                                <p className="text-xl font-bold text-rose-500">45 DAYS LEFT</p>
-                            </div>
-                        </div>
+                        <div><span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#B5A896] mb-3 block">Dashboard</span><h2 className="text-5xl font-black tracking-tighter uppercase">Weddy Planner</h2></div>
+                        <div className="flex gap-12 text-right"><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Wedding Day</p><p className="text-xl font-bold">20.12.2024</p></div><div><p className="text-[9px] font-black uppercase tracking-widest text-stone-400 mb-1">Status</p><p className="text-xl font-bold text-rose-500">45 DAYS LEFT</p></div></div>
                     </div>
-
-                    {/* Sub-navigation Pill Bar */}
                     <div className="flex justify-center mb-16">
                         <div className="bg-[#EEECE8]/60 p-1.5 rounded-full flex gap-1 border border-[#EAE8E4] backdrop-blur-sm overflow-x-auto max-w-full">
-                            {[
-                                { id: 'overview', label: 'Tổng quan', icon: Icons.Layout },
-                                { id: 'tasks', label: 'Công việc', icon: Icons.Check },
-                                { id: 'budget', label: 'Ngân sách', icon: Icons.DollarSign },
-                                { id: 'guests', label: 'Khách mời', icon: Icons.Users },
-                            ].map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setSubTab(tab.id)}
-                                    className={`
-                                        flex items-center gap-2 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap
-                                        ${subTab === tab.id ? 'bg-black text-white shadow-lg' : 'text-stone-400 hover:text-black'}
-                                    `}
-                                >
-                                    <tab.icon size={12} strokeWidth={3} />
-                                    {tab.label}
-                                </button>
+                            {[{ id: 'overview', label: 'Tổng quan', icon: Icons.Layout }, { id: 'tasks', label: 'Công việc', icon: Icons.Check }, { id: 'budget', label: 'Ngân sách', icon: Icons.DollarSign }, { id: 'guests', label: 'Khách mời', icon: Icons.Users }].map((tab) => (
+                                <button key={tab.id} onClick={() => setSubTab(tab.id)} className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${subTab === tab.id ? 'bg-black text-white shadow-lg' : 'text-stone-400 hover:text-black'}`}><tab.icon size={12} strokeWidth={3} />{tab.label}</button>
                             ))}
                         </div>
                     </div>
-
                     <div>
-                        {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} />}
-                        {subTab === 'tasks' && <PlannerTasks onAddToBudget={handleAddToBudget} />}
-                        {subTab === 'budget' && (
-                            <div className="text-center py-20 bg-white rounded-[3rem] border border-stone-100 animate-in">
-                                <Icons.DollarSign size={48} className="mx-auto text-stone-200 mb-6" />
-                                <h3 className="text-xl font-black uppercase tracking-widest">Ngân sách chi tiết</h3>
-                                <p className="text-stone-400 mt-2">Dữ liệu tài chính đang được đồng bộ...</p>
-                            </div>
-                        )}
-                        {subTab === 'guests' && (
-                            <div className="text-center py-20 bg-white rounded-[3rem] border border-stone-100 animate-in">
-                                <Icons.Users size={48} className="mx-auto text-stone-200 mb-6" />
-                                <h3 className="text-xl font-black uppercase tracking-widest">Danh sách khách mời</h3>
-                                <p className="text-stone-400 mt-2">Kết nối với thiệp điện tử để nhận thông tin RSVP.</p>
-                            </div>
-                        )}
+                        {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={completedTasks} totalTasks={totalTasks} guestCount={guestCount} activities={activities} />}
+                        {subTab === 'tasks' && <PlannerTasks tasks={tasks} onAddTask={handleAddTask} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} />}
+                        {subTab === 'budget' && <PlannerBudget tasks={tasks} onAddExpense={handleAddTask} />}
+                        {subTab === 'guests' && <PlannerGuests guests={guests} onAddGuest={handleAddGuest} onImportGuests={handleImportGuests} onDeleteGuest={handleDeleteGuest} />}
                     </div>
                 </div>
             );
@@ -450,39 +390,23 @@
 
         const HomeView = ({ onNavigate }) => (
             <section className="pt-64 pb-32 px-6 container mx-auto text-center">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#EEECE8] text-[#7A7062] rounded-full text-[9px] font-bold uppercase tracking-[0.2em] mb-12 shadow-sm border border-white/50">
-                    <Icons.Smartphone size={12} strokeWidth={3} /> Pocket Wedding Assistant
-                </div>
-                <h1 className="text-6xl md:text-[140px] font-black tracking-[-0.06em] leading-[0.82] mb-12 uppercase animate-in">
-                    WEDDING <br/>
-                    <span className="text-[#B5A896]">REDEFINED.</span>
-                </h1>
-                <p className="text-lg md:text-xl text-[#666] max-w-xl mx-auto mb-20 font-medium leading-relaxed opacity-80 animate-in" style={{animationDelay: '0.1s'}}>
-                    Nền tảng tối ưu để tổ chức một đám cưới hiện đại. Tinh tế, chuyên nghiệp và nằm trọn trong túi bạn.
-                </p>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#EEECE8] text-[#7A7062] rounded-full text-[9px] font-bold uppercase tracking-[0.2em] mb-12 shadow-sm border border-white/50"><Icons.Smartphone size={12} strokeWidth={3} /> Pocket Wedding Assistant</div>
+                <h1 className="text-6xl md:text-[140px] font-black tracking-[-0.06em] leading-[0.82] mb-12 uppercase animate-in">WEDDING <br/><span className="text-[#B5A896]">REDEFINED.</span></h1>
+                <p className="text-lg md:text-xl text-[#666] max-w-xl mx-auto mb-20 font-medium leading-relaxed opacity-80 animate-in" style={{animationDelay: '0.1s'}}>Nền tảng tối ưu để tổ chức một đám cưới hiện đại. Tinh tế, chuyên nghiệp và nằm trọn trong túi bạn.</p>
                 <div className="flex flex-col sm:flex-row justify-center gap-6 animate-in" style={{animationDelay: '0.2s'}}>
-                    <button 
-                        onClick={() => onNavigate('planner')}
-                        className="px-12 py-5 bg-black text-white font-bold text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-stone-800 transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-black/20"
-                    >
-                        Khám phá Planner
-                    </button>
-                    <button 
-                        className="px-12 py-5 bg-white border border-[#DDD] text-black font-bold text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-gray-50 transition-all active:scale-95"
-                    >
-                        Xem mẫu thiệp
-                    </button>
+                    <button onClick={() => onNavigate('planner')} className="px-12 py-5 bg-black text-white font-bold text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-stone-800 transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-black/20">Khám phá Planner</button>
+                    <button className="px-12 py-5 bg-white border border-[#DDD] text-black font-bold text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-gray-50 transition-all active:scale-95">Xem mẫu thiệp</button>
                 </div>
             </section>
         );
 
-        // --- MAIN APP COMPONENT ---
-
         const App = () => {
             const [activeTab, setActiveTab] = useState('home');
             const [scrolled, setScrolled] = useState(false);
-            // State for login modal demo
             const [showLogin, setShowLogin] = useState(false);
+            const [showRegister, setShowRegister] = useState(false);
+            const [user, setUser] = useState(null);
+            const firebase = useFirebase();
 
             useEffect(() => {
                 const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -490,149 +414,117 @@
                 return () => window.removeEventListener('scroll', handleScroll);
             }, []);
 
+            useEffect(() => {
+                if (firebase) {
+                    const { auth, onAuthStateChanged } = firebase;
+                    const unsub = onAuthStateChanged(auth, (u) => {
+                        setUser(u);
+                        if (u) { setShowLogin(false); setShowRegister(false); }
+                    });
+                    return () => unsub();
+                }
+            }, [firebase]);
+
             const navigateTo = (tab) => {
-                setActiveTab(tab);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (tab !== 'home' && !user) { setShowLogin(true); return; }
+                setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            const handleLogout = async () => {
+                if (firebase) {
+                    await firebase.signOut(firebase.auth);
+                    setActiveTab('home');
+                }
+            };
+
+            const LoginForm = () => {
+                const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [error, setError] = useState("");
+                const handleLogin = async () => {
+                    try {
+                        if (!firebase) throw new Error("Đang kết nối server...");
+                        await firebase.signInWithEmailAndPassword(firebase.auth, email, password);
+                        setActiveTab('planner');
+                    } catch (e) { setError("Đăng nhập thất bại: " + e.message); }
+                };
+                return (
+                    <div className="space-y-4">
+                        <p className="text-sm text-stone-500 mb-4">Chào mừng trở lại!</p>
+                        <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Email</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div>
+                        <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Mật khẩu</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div>
+                        {error && <p className="text-red-500 text-xs">{error}</p>}
+                        <button onClick={handleLogin} className="w-full py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors mt-4">Đăng nhập ngay</button>
+                        <div className="text-center mt-4"><button onClick={() => {setShowLogin(false); setShowRegister(true);}} className="text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-black">Chưa có tài khoản? Đăng ký</button></div>
+                    </div>
+                );
+            };
+
+            const RegisterForm = () => {
+                const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [error, setError] = useState("");
+                const handleRegister = async () => {
+                    try {
+                        if (!firebase) throw new Error("Đang kết nối server...");
+                        const { user } = await firebase.createUserWithEmailAndPassword(firebase.auth, email, password);
+                        // Setup default data immediately after register
+                        const initialData = {
+                            profile: { email },
+                            data: {
+                                guests: [],
+                                tasks: [
+                                    { title: "Lên danh sách khách mời", tag: "Khách mời", status: "pending", cost: 0 }
+                                ],
+                                activities: [{ text: "Tạo tài khoản thành công", time: new Date().toLocaleTimeString('vi-VN') }]
+                            },
+                            status: 'Active',
+                            plan: 'Free',
+                            createdAt: new Date().toISOString()
+                        };
+                        await firebase.setDoc(firebase.doc(firebase.db, "users", user.uid), initialData);
+                        setActiveTab('planner');
+                    } catch (e) { setError("Đăng ký thất bại: " + e.message); }
+                };
+                return (
+                    <div className="space-y-4">
+                        <p className="text-sm text-stone-500 mb-4">Tạo tài khoản mới.</p>
+                        <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Email</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div>
+                        <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Mật khẩu</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div>
+                        {error && <p className="text-red-500 text-xs">{error}</p>}
+                        <button onClick={handleRegister} className="w-full py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors mt-4">Đăng ký ngay</button>
+                        <div className="text-center mt-4"><button onClick={() => {setShowRegister(false); setShowLogin(true);}} className="text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-black">Đã có tài khoản? Đăng nhập</button></div>
+                    </div>
+                );
             };
 
             return (
                 <div className="min-h-screen">
-                    {/* iOS Floating Navigation */}
                     <div className="fixed top-6 left-0 w-full z-50 flex justify-center px-4 transition-all duration-500">
-                        <nav className={`
-                            flex items-center justify-between px-6 py-2 rounded-full transition-all duration-500
-                            ${scrolled 
-                                ? 'w-full max-w-5xl bg-white/75 backdrop-blur-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.08)]' 
-                                : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'
-                            }
-                        `}>
-                            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigateTo('home')}>
-                                <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-transform group-hover:scale-110">
-                                    <Icons.Heart size={16} fill="currentColor" />
-                                </div>
-                                <span className="text-lg font-black tracking-tighter uppercase">Weddy</span>
-                            </div>
-
-                            <div className="hidden md:flex items-center gap-1">
-                                {[
-                                    { id: 'home', label: 'Home' },
-                                    { id: 'planner', label: 'Planner' },
-                                    { id: 'invitation', label: 'Thiệp mời' },
-                                    { id: 'vendors', label: 'Dịch vụ' }
-                                ].map((item) => (
-                                    <button 
-                                        key={item.id}
-                                        onClick={() => navigateTo(item.id)}
-                                        className={`
-                                            text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-full transition-all duration-300
-                                            ${activeTab === item.id 
-                                                ? 'bg-black text-white shadow-lg' 
-                                                : 'text-stone-500 hover:text-black hover:bg-black/5'
-                                            }
-                                        `}
-                                    >
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-
+                        <nav className={`flex items-center justify-between px-6 py-2 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/75 backdrop-blur-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.08)]' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
+                            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigateTo('home')}><div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center transition-transform group-hover:scale-110"><Icons.Heart size={16} fill="currentColor" /></div><span className="text-lg font-black tracking-tighter uppercase">Weddy</span></div>
+                            <div className="hidden md:flex items-center gap-1">{[{ id: 'home', label: 'Home' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (
+                                <button key={item.id} onClick={() => navigateTo(item.id)} className={`text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-full transition-all duration-300 ${activeTab === item.id ? 'bg-black text-white shadow-lg' : 'text-stone-500 hover:text-black hover:bg-black/5'}`}>{item.label}</button>
+                            ))}</div>
                             <div className="flex items-center gap-3">
-                                <button 
-                                    onClick={() => setShowLogin(true)}
-                                    className="hidden sm:block text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black"
-                                >
-                                    Login
-                                </button>
-                                <button 
-                                    onClick={() => navigateTo('planner')}
-                                    className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95"
-                                >
-                                    Get App
-                                </button>
+                                {!user ? <button onClick={() => setShowLogin(true)} className="hidden sm:block text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black">Login</button> : <button onClick={handleLogout} className="hidden sm:block text-[10px] font-bold uppercase tracking-widest text-stone-500 px-3 hover:text-black">Logout</button>}
+                                {!user && <button onClick={() => setShowRegister(true)} className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95">Đăng ký</button>}
+                                {user && <button onClick={() => navigateTo('planner')} className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] hover:bg-stone-800 transition-all shadow-xl shadow-black/10 active:scale-95">Planner</button>}
                             </div>
                         </nav>
                     </div>
-
                     <main>
                         {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
-                        {activeTab === 'planner' && <FullPlannerApp />}
-                        {activeTab === 'invitation' && (
-                            <div className="py-60 text-center uppercase font-black tracking-widest text-stone-300 text-4xl animate-in">Digital Invitation Coming Soon</div>
-                        )}
-                        {activeTab === 'vendors' && (
-                            <div className="py-60 text-center uppercase font-black tracking-widest text-stone-300 text-4xl animate-in">Vendor Network Coming Soon</div>
-                        )}
+                        {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} /> : <div className="h-screen flex items-center justify-center text-stone-400">Vui lòng đăng nhập để sử dụng Planner</div>)}
+                        {activeTab === 'invitation' && <div className="py-60 text-center uppercase font-black tracking-widest text-stone-300 text-4xl animate-in">Digital Invitation Coming Soon</div>}
+                        {activeTab === 'vendors' && <div className="py-60 text-center uppercase font-black tracking-widest text-stone-300 text-4xl animate-in">Vendor Network Coming Soon</div>}
                     </main>
-
-                    {activeTab !== 'planner' && (
-                        <footer className="bg-white border-t border-stone-100 py-24 text-center">
-                            <div className="container mx-auto px-6">
-                                <span className="text-xl font-black tracking-tighter uppercase mb-6 block">Weddy Platform.</span>
-                                <div className="flex justify-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-stone-400">
-                                    <span className="hover:text-black cursor-pointer transition-colors">Instagram</span>
-                                    <span className="hover:text-black cursor-pointer transition-colors">Tiktok</span>
-                                    <span className="hover:text-black cursor-pointer transition-colors">Terms</span>
-                                </div>
-                                <p className="mt-12 text-[9px] font-bold text-stone-300 uppercase tracking-widest">© 2024 Weddy Tech Collective. All rights reserved.</p>
-                            </div>
-                        </footer>
-                    )}
-
-                    {/* Login Modal Demo */}
-                    <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title="Đăng nhập">
-                        <div className="space-y-4">
-                            <p className="text-sm text-stone-500 mb-4">Chào mừng trở lại! Vui lòng nhập thông tin để tiếp tục quản lý đám cưới của bạn.</p>
-                            <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Email</label>
-                                <input type="email" placeholder="name@example.com" className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black transition-colors" />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Mật khẩu</label>
-                                <input type="password" placeholder="••••••••" className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black transition-colors" />
-                            </div>
-                            <button className="w-full py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors mt-4">
-                                Đăng nhập ngay
-                            </button>
-                        </div>
-                    </Modal>
-
+                    {activeTab !== 'planner' && <footer className="bg-white border-t border-stone-100 py-24 text-center"><div className="container mx-auto px-6"><span className="text-xl font-black tracking-tighter uppercase mb-6 block">Weddy Platform.</span><div className="flex justify-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-stone-400"><span className="hover:text-black cursor-pointer transition-colors">Instagram</span><span className="hover:text-black cursor-pointer transition-colors">Tiktok</span><span className="hover:text-black cursor-pointer transition-colors">Terms</span></div><p className="mt-12 text-[9px] font-bold text-stone-300 uppercase tracking-widest">© 2024 Weddy Tech Collective. All rights reserved.</p></div></footer>}
+                    <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title="Đăng nhập"><LoginForm /></Modal>
+                    <Modal isOpen={showRegister} onClose={() => setShowRegister(false)} title="Đăng ký tài khoản"><RegisterForm /></Modal>
                 </div>
             );
         };
 
-        // --- ERROR BOUNDARY WRAPPER ---
-        class ErrorBoundary extends React.Component {
-            constructor(props) {
-                super(props);
-                this.state = { hasError: false };
-            }
-            static getDerivedStateFromError(error) {
-                return { hasError: true };
-            }
-            componentDidCatch(error, errorInfo) {
-                console.error("React Error:", error, errorInfo);
-            }
-            render() {
-                if (this.state.hasError) {
-                    return <div className="p-10 text-center"><h1>Đã có lỗi xảy ra.</h1><button className="bg-black text-white px-4 py-2 mt-4 rounded" onClick={()=>window.location.reload()}>Tải lại trang</button></div>;
-                }
-                return this.props.children;
-            }
-        }
-
         const container = document.getElementById('root');
         const root = ReactDOM.createRoot(container);
-        
-        try {
-            root.render(
-                <ErrorBoundary>
-                    <App />
-                </ErrorBoundary>
-            );
-        } catch (error) {
-            console.error("Root Render Error:", error);
-            document.body.innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Lỗi khởi chạy ứng dụng</h1></div>';
-        }
+        try { root.render(<App />); } catch (error) { console.error("Root Render Error:", error); }
     </script>
 </body>
 </html>
