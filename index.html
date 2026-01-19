@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Weddy - Nền tảng quản lý đám cưới tinh tế</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -25,6 +25,8 @@
         }
         @keyframes subtle-zoom { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
         .bg-zoom { animation: subtle-zoom 20s infinite alternate; }
+        /* Safe area for iPhone X+ */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
 <body class="bg-[#F0EBE5] text-stone-700 transition-colors duration-500 overflow-x-hidden">
@@ -95,7 +97,8 @@
             Menu: (p) => <Icon {...p}><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></Icon>,
             Edit: (p) => <Icon {...p}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></Icon>,
             ArrowUpRight: (p) => <Icon {...p}><path d="M7 7h10v10" /><path d="M7 17 17 7" /></Icon>,
-            Star: (p) => <Icon {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></Icon>
+            Star: (p) => <Icon {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></Icon>,
+            Home: (p) => <Icon {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></Icon>
         };
 
         // --- 2. HOOKS ---
@@ -318,7 +321,7 @@
                                 <button 
                                     key={f.id}
                                     onClick={() => setActiveFilter(f.id)}
-                                    className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-white shadow-md text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}
+                                    className={`px-4 md:px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-white shadow-md text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}
                                 >
                                     {f.label}
                                 </button>
@@ -408,7 +411,7 @@
                                 <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên khoản chi</label>
                                 <input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-sm font-bold uppercase shadow-inner" placeholder="VD: CHỤP ẢNH CƯỚI" autoFocus />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Hạng mục</label>
                                     <div className="relative">
@@ -498,7 +501,7 @@
                                 <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên công việc</label>
                                 <input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-sm font-bold shadow-inner uppercase" placeholder="VD: ĐẶT HOA CƯỚI" autoFocus />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Phân loại</label>
                                     <div className="relative">
@@ -615,7 +618,7 @@
                                     />
                                 </div>
                                 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Mối quan hệ</label>
                                         <div className="relative">
@@ -661,6 +664,20 @@
                 </div>
             );
         };
+
+        // --- NEW: Mobile Bottom Navigation Component ---
+        const MobileNav = ({ activeTab, onNavigate }) => (
+            <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-stone-200 p-2 md:hidden z-50 pb-safe">
+                <div className="flex justify-around items-center">
+                    {[{id: 'home', icon: Icons.Home, label: 'Home'}, {id: 'planner', icon: Icons.Layout, label: 'Planner'}, {id: 'invitation', icon: Icons.Link, label: 'Thiệp'}, {id: 'vendors', icon: Icons.Star, label: 'Dịch vụ'}].map(item => (
+                        <button key={item.id} onClick={() => onNavigate(item.id)} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === item.id ? 'text-stone-800 bg-stone-100' : 'text-stone-400'}`}>
+                            <item.icon size={20} fill={activeTab === item.id ? "currentColor" : "none"} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+                            <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
 
         // --- 6. LOGIC WRAPPER FOR PLANNER ---
         const FullPlannerApp = ({ currentUser, firebase }) => {
@@ -1094,12 +1111,14 @@
                         </nav>
                     </div>
 
-                    <main>
+                    <main className="pb-safe">
                         {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
                         {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} firebase={firebase} /> : <div className="h-screen flex flex-col gap-4 items-center justify-center text-stone-400 p-6 text-center animate-in font-bold uppercase font-black uppercase font-bold"><Icons.Users size={48} className="opacity-10" /><p className="font-medium text-sm text-stone-300 font-bold uppercase tracking-widest uppercase uppercase font-black uppercase font-bold">Vui lòng đăng nhập Planner.</p><button onClick={() => setShowLogin(true)} className="px-8 py-3 bg-stone-500 text-white rounded-full text-xs font-bold uppercase shadow-lg font-bold transition-all active:scale-95 font-bold uppercase font-black uppercase font-bold">Đăng nhập ngay</button></div>)}
                         {activeTab === 'invitation' && <ComingSoon title="Thiệp Mời Online" desc="Tính năng thiết kế và gửi thiệp mời trực tuyến đang được phát triển." />}
                         {activeTab === 'vendors' && <ComingSoon title="Dịch Vụ Cưới" desc="Hệ thống kết nối nhà cung cấp dịch vụ uy tín sẽ sớm ra mắt." />}
                     </main>
+
+                    {user && <MobileNav activeTab={activeTab} onNavigate={navigateTo} />}
 
                     <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title={null}>
                         <AuthForm />
