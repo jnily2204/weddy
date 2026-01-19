@@ -113,11 +113,13 @@
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in">
-                    <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-md" onClick={onClose}></div>
+                    {/* UPDATED: Nền đen đậm full màn hình */}
+                    <div className="absolute inset-0 bg-stone-950/90 backdrop-blur-sm transition-all" onClick={onClose}></div>
+                    
                     <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-stone-100 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar text-stone-700">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-black uppercase tracking-widest text-stone-600">{title}</h3>
-                            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100"><Icons.X size={16} /></button>
+                            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-colors"><Icons.X size={16} /></button>
                         </div>
                         {children}
                     </div>
