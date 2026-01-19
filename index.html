@@ -131,20 +131,11 @@
 
         const formatMoneyDisplay = (amount) => {
             if (!amount || amount === 0) return "0 VNĐ";
-            // Quy tắc: 1 tỷ trở lên là Tỷ, Dưới 1 tỷ là Triệu, Dưới 1 triệu là Trăm, Dưới 100k là Ngàn
+            // Quy tắc mới: 1 tỷ trở lên hiển thị Tỷ, còn lại hiển thị Triệu VNĐ
             if (amount >= 1000000000) {
-                return (amount / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + " Tỷ VNĐ";
+                return (amount / 1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + " Tỷ VNĐ";
             }
-            if (amount >= 1000000) {
-                return (amount / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + " Triệu VNĐ";
-            }
-            if (amount >= 100000) {
-                return (amount / 100000).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + " Trăm VNĐ";
-            }
-            if (amount >= 1000) {
-                return (amount / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + " Ngàn VNĐ";
-            }
-            return amount.toLocaleString('vi-VN') + " VNĐ";
+            return (amount / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + " Triệu VNĐ";
         };
         
         const generateCode = () => {
