@@ -200,7 +200,7 @@
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    {/* Darker background and stronger blur */}
+                    {/* Darker background and stronger blur to cover the whole page */}
                     <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300" onClick={onClose}></div>
                     <div className="relative bg-white rounded-[2rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-stone-100 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar">
                         <div className="flex justify-between items-center mb-6">
@@ -374,6 +374,7 @@
                                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4">
                                             <div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div>
                                         </div>
+                                        {/* Updated Budget Display with Edit functionality */}
                                         <div className="flex items-center gap-2 group/budget inline-flex cursor-pointer" onClick={onEditBudget}>
                                             <p className="text-[12px] font-black text-white/80 uppercase tracking-widest">Ngân sách: {formatMoneyDisplay(displayBudgetLimit)}</p>
                                             <Icons.Edit size={14} className="text-white/20 group-hover/budget:text-white transition-colors" />
@@ -419,6 +420,7 @@
                     const numCost = parseCurrencyInput(cost);
                     const numPaid = parseCurrencyInput(paid);
                     
+                    // Logic for custom category
                     const finalCategory = category === "Khác" ? (customCategory || "Khác") : category;
 
                     onAddExpense({ 
