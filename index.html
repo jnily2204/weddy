@@ -200,7 +200,8 @@
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-300" onClick={onClose}></div>
+                    {/* Darker background and stronger blur */}
+                    <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300" onClick={onClose}></div>
                     <div className="relative bg-white rounded-[2rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-stone-100 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-black uppercase tracking-widest">{title}</h3>
@@ -400,7 +401,12 @@
 
         const PlannerBudget = ({ tasks, onAddExpense }) => {
             const [isModalOpen, setIsModalOpen] = useState(false);
-            const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [paid, setPaid] = useState(""); const [category, setCategory] = useState("Khác");
+            const [title, setTitle] = useState(""); 
+            const [cost, setCost] = useState(""); 
+            const [paid, setPaid] = useState(""); 
+            const [category, setCategory] = useState("Đặt tiệc cưới");
+            const [customCategory, setCustomCategory] = useState("");
+            
             const expenses = tasks.filter(t => t.cost > 0);
             
             // Calculate totals
@@ -413,14 +419,16 @@
                     const numCost = parseCurrencyInput(cost);
                     const numPaid = parseCurrencyInput(paid);
                     
+                    const finalCategory = category === "Khác" ? (customCategory || "Khác") : category;
+
                     onAddExpense({ 
                         title: title, 
-                        tag: category, 
+                        tag: finalCategory, 
                         status: numPaid >= numCost ? 'done' : 'pending', 
                         cost: numCost,
                         paid: numPaid
                     }); 
-                    setTitle(""); setCost(""); setPaid(""); setCategory("Khác"); setIsModalOpen(false); 
+                    setTitle(""); setCost(""); setPaid(""); setCategory("Đặt tiệc cưới"); setCustomCategory(""); setIsModalOpen(false); 
                 } 
             };
 
@@ -456,11 +464,46 @@
                     </div>
                     <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Thêm khoản chi mới">
                         <div className="space-y-6">
-                            <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên khoản chi</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Loại chi phí</label><div className="relative"><select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"><option value="Khác">Khác</option><option value="Địa điểm">Địa điểm</option><option value="Khách mời">Khách mời</option><option value="Trang phục">Trang phục</option><option value="Ẩm thực">Ẩm thực</option></select><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div>
+                            <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên khoản chi</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="Ví dụ: Đặt cọc nhà hàng" /></div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Loại chi phí</label>
+                                    <div className="relative">
+                                        <select 
+                                            value={category} 
+                                            onChange={(e) => setCategory(e.target.value)} 
+                                            className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"
+                                        >
+                                            <option value="Đặt tiệc cưới">Đặt tiệc cưới</option>
+                                            <option value="Tiệc đám hỏi">Tiệc đám hỏi</option>
+                                            <option value="Chụp ảnh & Quay phim">Chụp ảnh & Quay phim</option>
+                                            <option value="Decor & Trang trí">Decor & Trang trí</option>
+                                            <option value="Trang phục & Make-up">Trang phục & Make-up</option>
+                                            <option value="Nhẫn & Trang sức">Nhẫn & Trang sức</option>
+                                            <option value="Thiệp mời">Thiệp mời</option>
+                                            <option value="Khách mời">Khách mời</option>
+                                            <option value="Khác">Khác...</option>
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div>
+                                    </div>
+                                </div>
                                 <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tổng chi phí (VNĐ)</label><input type="text" value={cost} onChange={(e) => setCost(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="0 VNĐ" /></div>
                             </div>
+                            
+                            {/* Conditional Input for Custom Category */}
+                            {category === "Khác" && (
+                                <div className="animate-in slide-in-from-top-2">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên hạng mục riêng</label>
+                                    <input 
+                                        type="text" 
+                                        value={customCategory} 
+                                        onChange={(e) => setCustomCategory(e.target.value)} 
+                                        className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" 
+                                        placeholder="Nhập loại chi phí của bạn..."
+                                    />
+                                </div>
+                            )}
+
                              <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Đã thanh toán / Cọc (VNĐ)</label><input type="text" value={paid} onChange={(e) => setPaid(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="Nhập số tiền đã trả..." /></div>
                             <div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleSave} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu khoản chi</button></div>
                         </div>
