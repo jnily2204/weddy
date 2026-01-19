@@ -205,7 +205,7 @@
                     <div className="relative bg-white rounded-[2rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-stone-100 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-black uppercase tracking-widest">{title}</h3>
-                            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-black transition-colors"><Icons.X size={16} /></button>
+                            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 text-stone-400 hover:bg-stone-100 hover:text-stone-900 transition-colors"><Icons.X size={16} /></button>
                         </div>
                         <div>{children}</div>
                     </div>
@@ -230,7 +230,7 @@
                                 <button 
                                     key={role}
                                     onClick={() => setData({ ...data, role })}
-                                    className={`p-6 rounded-2xl border-2 transition-all ${data.role === role ? 'border-black bg-black text-white' : 'border-stone-100 hover:border-black'}`}
+                                    className={`p-6 rounded-2xl border-2 transition-all ${data.role === role ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-100 hover:border-stone-900'}`}
                                 >
                                     <span className="block text-xl font-bold">{role}</span>
                                 </button>
@@ -246,7 +246,7 @@
                                 type="date" 
                                 value={data.date} 
                                 onChange={(e) => setData({ ...data, date: e.target.value })}
-                                className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 text-lg font-bold focus:outline-none focus:border-black"
+                                className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 text-lg font-bold focus:outline-none focus:border-stone-900"
                             />
                         </div>
                     )
@@ -260,7 +260,7 @@
                                 value={data.location} 
                                 onChange={(e) => setData({ ...data, location: e.target.value })}
                                 placeholder="Nhà hàng, Tại gia, Ngoài trời..."
-                                className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 text-lg font-bold focus:outline-none focus:border-black"
+                                className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 text-lg font-bold focus:outline-none focus:border-stone-900"
                             />
                         </div>
                     )
@@ -275,7 +275,7 @@
                                     value={data.budget} 
                                     onChange={(e) => setData({ ...data, budget: formatCurrencyInput(e.target.value) })}
                                     placeholder="300.000.000"
-                                    className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 pl-4 pr-16 text-lg font-bold focus:outline-none focus:border-black"
+                                    className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-5 py-4 pl-4 pr-16 text-lg font-bold focus:outline-none focus:border-stone-900"
                                 />
                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold">VNĐ</div>
                             </div>
@@ -290,13 +290,13 @@
             return (
                 <div className="fixed inset-0 z-[200] bg-white flex flex-col animate-in fade-in">
                     <div className="flex justify-end p-6">
-                        <button onClick={onSkip} className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-black">Bỏ qua</button>
+                        <button onClick={onSkip} className="text-xs font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900">Bỏ qua</button>
                     </div>
                     <div className="flex-1 flex flex-col justify-center px-8 max-w-lg mx-auto w-full">
                         <div className="mb-8">
                             <div className="flex gap-2 mb-6 justify-center">
                                 {steps.map((_, i) => (
-                                    <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= step ? 'bg-black w-8' : 'bg-stone-200 w-4'}`}></div>
+                                    <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= step ? 'bg-stone-900 w-8' : 'bg-stone-200 w-4'}`}></div>
                                 ))}
                             </div>
                             <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-center mb-2">{currentStep.title}</h2>
@@ -311,7 +311,7 @@
                                         (step === 1 && !data.date) || 
                                         (step === 2 && !data.location)
                                     }
-                                    className="w-full py-4 bg-black text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-800 transition-all"
+                                    className="w-full py-4 bg-stone-900 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-800 transition-all"
                                 >
                                     Tiếp tục
                                 </button>
@@ -357,14 +357,14 @@
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 md:h-52">
                                 <div className="flex justify-between items-start"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5A896]">Tiến độ</span><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Check size={18}/></div></div>
-                                <div><div className="flex items-baseline gap-2 mb-4"><span className="text-4xl md:text-6xl font-black">{completedTasks}</span><span className="text-stone-400 font-bold uppercase text-[11px]">/ {totalTasks} hoàn thành</span></div><div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-black transition-all duration-700" style={{width: `${taskPercentage}%`}}></div></div></div>
+                                <div><div className="flex items-baseline gap-2 mb-4"><span className="text-4xl md:text-6xl font-black">{completedTasks}</span><span className="text-stone-400 font-bold uppercase text-[11px]">/ {totalTasks} hoàn thành</span></div><div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-stone-900 transition-all duration-700" style={{width: `${taskPercentage}%`}}></div></div></div>
                             </div>
                             <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 md:h-52">
                                 <div className="flex justify-between items-start"><span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#B5A896]">Khách mời</span><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={18}/></div></div>
                                 <div className="flex items-baseline gap-2"><span className="text-4xl md:text-6xl font-black">{guestCount}</span><span className="text-emerald-500 font-bold uppercase text-[11px]">Người</span></div>
                             </div>
                         </div>
-                        <div className="bg-black p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] text-white relative overflow-hidden shadow-2xl group cursor-pointer">
+                        <div className="bg-stone-900 p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] text-white relative overflow-hidden shadow-2xl group cursor-pointer">
                             <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-30 transition-opacity duration-700"></div>
                             <div className="relative z-10"><h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-8 md:mb-10">Tài chính tổng quát ({role || 'Bạn'})</h3>
                                 <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-12">
@@ -391,7 +391,7 @@
                     </div>
                     <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 shadow-sm h-full">
                         <h3 className="text-[11px] font-black uppercase tracking-[0.2em] mb-8 md:mb-10 text-stone-900 border-b border-stone-50 pb-6">Hoạt động</h3>
-                        <div className="space-y-6 md:space-y-8">{activities.map((act, i) => (<div key={i} className="flex gap-4 items-center group cursor-pointer animate-in slide-in-from-right-4" style={{animationDelay: `${i * 0.1}s`}}><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-black group-hover:text-white transition-colors"><Icons.ArrowUpRight size={16} className="text-stone-300 group-hover:text-white" /></div><div><p className="text-[13px] font-bold text-stone-800 leading-snug">{act.text}</p><p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mt-1">{act.time}</p></div></div>))}
+                        <div className="space-y-6 md:space-y-8">{activities.map((act, i) => (<div key={i} className="flex gap-4 items-center group cursor-pointer animate-in slide-in-from-right-4" style={{animationDelay: `${i * 0.1}s`}}><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-stone-900 group-hover:text-white transition-colors"><Icons.ArrowUpRight size={16} className="text-stone-300 group-hover:text-white" /></div><div><p className="text-[13px] font-bold text-stone-800 leading-snug">{act.text}</p><p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mt-1">{act.time}</p></div></div>))}
                         {activities.length === 0 && <p className="text-sm text-stone-400 italic">Chưa có hoạt động mới.</p>}
                         </div>
                     </div>
@@ -436,13 +436,13 @@
                 <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                         <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Tổng chi phí dự kiến</p><p className="text-2xl md:text-3xl font-black text-stone-800">{formatMoneyDisplay(totalBudget)}</p></div>
-                        <div className="bg-black text-white p-6 md:p-8 rounded-[2rem] shadow-xl"><p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">Đã thanh toán / Cọc</p><p className="text-2xl md:text-3xl font-black">{formatMoneyDisplay(totalPaid)}</p></div>
+                        <div className="bg-stone-900 text-white p-6 md:p-8 rounded-[2rem] shadow-xl"><p className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-2">Đã thanh toán / Cọc</p><p className="text-2xl md:text-3xl font-black">{formatMoneyDisplay(totalPaid)}</p></div>
                         <div className="bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm"><p className="text-[10px] font-black uppercase tracking-widest text-stone-400 mb-2">Cần thanh toán tiếp</p><p className="text-2xl md:text-3xl font-black text-rose-500">{formatMoneyDisplay(remaining)}</p></div>
                     </div>
                     <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">
                         <div className="p-6 md:p-8 border-b border-stone-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div><h3 className="text-xl font-black uppercase tracking-widest">Chi tiết khoản chi</h3><span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Tự động từ công việc</span></div>
-                            <button onClick={() => setIsModalOpen(true)} className="w-full md:w-auto px-5 py-3 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 flex items-center justify-center gap-2 shadow-lg"><Icons.Plus size={12}/> Thêm Khoản Chi</button>
+                            <button onClick={() => setIsModalOpen(true)} className="w-full md:w-auto px-5 py-3 bg-stone-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 flex items-center justify-center gap-2 shadow-lg"><Icons.Plus size={12}/> Thêm Khoản Chi</button>
                         </div>
                         <div className="divide-y divide-stone-50">
                             {expenses.length === 0 ? <div className="p-20 text-center text-stone-400"><Icons.DollarSign size={48} className="mx-auto mb-4 opacity-20" /><p>Chưa có khoản chi nào.</p></div> : expenses.map((item, i) => {
@@ -450,7 +450,7 @@
                                 const isPaidOff = paidAmount >= item.cost;
                                 return (
                                     <div key={i} className="p-6 flex flex-col md:flex-row md:items-center justify-between hover:bg-[#FBF9F7] transition-colors gap-4">
-                                        <div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isPaidOff ? 'bg-black text-white' : 'bg-stone-100 text-stone-400'}`}><Icons.DollarSign size={16} /></div><div><h4 className="font-bold text-stone-800 text-sm md:text-base">{item.title}</h4><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{item.tag}</p></div></div>
+                                        <div className="flex items-center gap-4"><div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isPaidOff ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-400'}`}><Icons.DollarSign size={16} /></div><div><h4 className="font-bold text-stone-800 text-sm md:text-base">{item.title}</h4><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{item.tag}</p></div></div>
                                         <div className="text-right">
                                             <p className="font-black text-sm md:text-lg">{formatMoneyDisplay(item.cost)}</p>
                                             <div className="flex flex-col md:flex-row items-end gap-1 md:gap-2">
@@ -464,7 +464,7 @@
                     </div>
                     <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Thêm khoản chi mới">
                         <div className="space-y-6">
-                            <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên khoản chi</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="Ví dụ: Đặt cọc nhà hàng" /></div>
+                            <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên khoản chi</label><input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" placeholder="Ví dụ: Đặt cọc nhà hàng" /></div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Loại chi phí</label>
@@ -472,7 +472,7 @@
                                         <select 
                                             value={category} 
                                             onChange={(e) => setCategory(e.target.value)} 
-                                            className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"
+                                            className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900 appearance-none"
                                         >
                                             <option value="Đặt tiệc cưới">Đặt tiệc cưới</option>
                                             <option value="Tiệc đám hỏi">Tiệc đám hỏi</option>
@@ -487,7 +487,7 @@
                                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div>
                                     </div>
                                 </div>
-                                <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tổng chi phí (VNĐ)</label><input type="text" value={cost} onChange={(e) => setCost(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="0 VNĐ" /></div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tổng chi phí (VNĐ)</label><input type="text" value={cost} onChange={(e) => setCost(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" placeholder="0 VNĐ" /></div>
                             </div>
                             
                             {/* Conditional Input for Custom Category */}
@@ -498,14 +498,14 @@
                                         type="text" 
                                         value={customCategory} 
                                         onChange={(e) => setCustomCategory(e.target.value)} 
-                                        className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" 
+                                        className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" 
                                         placeholder="Nhập loại chi phí của bạn..."
                                     />
                                 </div>
                             )}
 
-                             <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Đã thanh toán / Cọc (VNĐ)</label><input type="text" value={paid} onChange={(e) => setPaid(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="Nhập số tiền đã trả..." /></div>
-                            <div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleSave} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu khoản chi</button></div>
+                             <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Đã thanh toán / Cọc (VNĐ)</label><input type="text" value={paid} onChange={(e) => setPaid(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" placeholder="Nhập số tiền đã trả..." /></div>
+                            <div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleSave} className="px-8 py-3 bg-stone-900 text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu khoản chi</button></div>
                         </div>
                     </Modal>
                 </div>
@@ -541,7 +541,7 @@
 
             const renderTaskItem = (task) => (
                 <div key={task.originalIndex} onClick={() => onToggleTask(task.originalIndex)} className="group p-4 md:p-6 flex items-start md:items-center border-b border-stone-50 last:border-0 hover:bg-[#FBF9F7] transition-all cursor-pointer relative">
-                    <div className={`w-6 h-6 rounded-full border-2 mr-4 md:mr-6 flex items-center justify-center shrink-0 transition-colors ${task.status === 'done' ? 'bg-black border-black' : 'border-stone-200 group-hover:border-black'}`}>{task.status === 'done' && <Icons.Check size={12} className="text-white" />}</div>
+                    <div className={`w-6 h-6 rounded-full border-2 mr-4 md:mr-6 flex items-center justify-center shrink-0 transition-colors ${task.status === 'done' ? 'bg-stone-900 border-stone-900' : 'border-stone-200 group-hover:border-stone-900'}`}>{task.status === 'done' && <Icons.Check size={12} className="text-white" />}</div>
                     <div className="flex-1 pr-8"><h4 className={`text-sm md:text-base font-bold transition-colors ${task.status === 'done' ? 'text-stone-300 line-through' : 'text-stone-800'}`}>{task.title}</h4><div className="flex flex-wrap gap-2 mt-1"><span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-stone-400">{task.tag}</span>{task.cost > 0 && <span className="text-[9px] md:text-[10px] font-bold text-stone-300">- {formatMoneyDisplay(task.cost)}</span>}</div></div>
                     {task.status === 'urgent' && <span className="text-[9px] font-black bg-rose-50 text-rose-500 px-2 py-1 rounded-full uppercase tracking-widest mr-2 md:mr-4 shrink-0">Gấp</span>}
                     <button onClick={(e) => { e.stopPropagation(); confirmDelete(task.originalIndex); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-stone-300 hover:text-red-500 transition-colors md:opacity-0 group-hover:opacity-100" title="Xóa công việc"><Icons.Trash size={18} /></button>
@@ -550,12 +550,12 @@
 
             return (
                 <div className="max-w-4xl mx-auto space-y-8 animate-in">
-                    <div className="flex justify-between items-center px-4"><h3 className="text-2xl font-black uppercase tracking-tighter">Công việc</h3><button onClick={() => setIsAddModalOpen(true)} className="px-6 md:px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 active:scale-95 transition-transform hover:bg-stone-800"><Icons.Plus size={16}/> <span className="hidden md:inline">Thêm việc</span><span className="md:hidden">Thêm</span></button></div>
+                    <div className="flex justify-between items-center px-4"><h3 className="text-2xl font-black uppercase tracking-tighter">Công việc</h3><button onClick={() => setIsAddModalOpen(true)} className="px-6 md:px-8 py-3 bg-stone-900 text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl shadow-stone-900/10 flex items-center gap-2 active:scale-95 transition-transform hover:bg-stone-800"><Icons.Plus size={16}/> <span className="hidden md:inline">Thêm việc</span><span className="md:hidden">Thêm</span></button></div>
                     <div><h4 className="px-4 mb-4 text-[10px] font-black uppercase tracking-widest text-stone-400">Cần làm ({pendingTasks.length})</h4><div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">{pendingTasks.length > 0 ? pendingTasks.map(renderTaskItem) : <div className="p-8 text-center text-stone-400 text-sm">Tuyệt vời! Bạn đã hoàn thành hết các việc cần làm.</div>}</div></div>
                     {completedTasks.length > 0 && (<div><h4 className="px-4 mb-4 text-[10px] font-black uppercase tracking-widest text-stone-400 mt-8">Đã hoàn thành ({completedTasks.length})</h4><div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm opacity-60 hover:opacity-100 transition-opacity">{completedTasks.map(renderTaskItem)}</div></div>)}
                     <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Thêm công việc mới">
                         <div className="space-y-6">
-                            <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên công việc</label><input type="text" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="Ví dụ: Thuê váy cưới" /></div>
+                            <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên công việc</label><input type="text" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" placeholder="Ví dụ: Thuê váy cưới" /></div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Hạng mục</label>
@@ -563,7 +563,7 @@
                                         <select 
                                             value={newTaskCategory} 
                                             onChange={(e) => setNewTaskCategory(e.target.value)} 
-                                            className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"
+                                            className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900 appearance-none"
                                         >
                                             <option value="Đặt tiệc cưới">Đặt tiệc cưới</option>
                                             <option value="Tiệc đám hỏi">Tiệc đám hỏi</option>
@@ -578,7 +578,7 @@
                                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div>
                                     </div>
                                 </div>
-                                <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Chi phí dự kiến</label><input type="text" value={newTaskCost} onChange={(e) => setNewTaskCost(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="0 VNĐ" /></div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Chi phí dự kiến</label><input type="text" value={newTaskCost} onChange={(e) => setNewTaskCost(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" placeholder="0 VNĐ" /></div>
                             </div>
 
                             {/* Conditional Input for Custom Task Category */}
@@ -589,13 +589,13 @@
                                         type="text" 
                                         value={customTaskCategory} 
                                         onChange={(e) => setCustomTaskCategory(e.target.value)} 
-                                        className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" 
+                                        className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" 
                                         placeholder="Tự điền hạng mục..."
                                     />
                                 </div>
                             )}
 
-                            <div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleAddTask} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu công việc</button></div>
+                            <div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleAddTask} className="px-8 py-3 bg-stone-900 text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu công việc</button></div>
                         </div>
                     </Modal>
                     <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Xóa công việc?"><div className="space-y-6"><p className="text-sm text-stone-600 font-medium">Bạn có chắc chắn muốn xóa công việc này không?<br/><span className="text-xs text-stone-400 mt-2 block">Hành động này không thể hoàn tác.</span></p><div className="flex justify-end gap-3"><button onClick={() => setIsDeleteModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={executeDelete} className="px-8 py-3 bg-red-500 text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-red-600">Xóa ngay</button></div></div></Modal>
@@ -617,11 +617,11 @@
 
             return (
                 <div className="max-w-4xl mx-auto space-y-8 animate-in">
-                    <div className="flex justify-between items-center px-4"><h3 className="text-2xl font-black uppercase tracking-tighter">Danh sách ({guests.length})</h3><div className="flex gap-2"><input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls, .csv" /><button onClick={() => fileInputRef.current.click()} className="px-5 py-3 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-stone-50 flex items-center gap-2"><Icons.Layout size={14}/> <span className="hidden md:inline">Import Excel</span><span className="md:hidden">Excel</span></button><button onClick={() => setIsAddModalOpen(true)} className="px-6 py-3 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 hover:bg-stone-800"><Icons.Plus size={14}/> <span className="hidden md:inline">Thêm thủ công</span><span className="md:hidden">Thêm</span></button></div></div>
+                    <div className="flex justify-between items-center px-4"><h3 className="text-2xl font-black uppercase tracking-tighter">Danh sách ({guests.length})</h3><div className="flex gap-2"><input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls, .csv" /><button onClick={() => fileInputRef.current.click()} className="px-5 py-3 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-stone-50 flex items-center gap-2"><Icons.Layout size={14}/> <span className="hidden md:inline">Import Excel</span><span className="md:hidden">Excel</span></button><button onClick={() => setIsAddModalOpen(true)} className="px-6 py-3 bg-stone-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl shadow-stone-900/10 flex items-center gap-2 hover:bg-stone-800"><Icons.Plus size={14}/> <span className="hidden md:inline">Thêm thủ công</span><span className="md:hidden">Thêm</span></button></div></div>
                     <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm min-h-[300px]">
                         {guests.length === 0 ? <div className="text-center py-20 text-stone-400"><Icons.Users size={48} className="mx-auto mb-4 opacity-20" /><p>Chưa có khách mời nào.</p></div> : <div className="divide-y divide-stone-50">{guests.map((g) => (<div key={g.id} className="p-4 md:p-6 flex items-center justify-between hover:bg-[#FBF9F7] transition-colors group relative"><div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-stone-500 font-bold text-xs shrink-0">{g.name.charAt(0).toUpperCase()}</div><div><h4 className="font-bold text-stone-800 text-sm md:text-base">{g.name}</h4><p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">{g.relationship}</p></div></div><div className="text-stone-400"><button onClick={() => confirmDelete(g.id)} className="p-2 text-stone-300 hover:text-red-500 transition-colors md:opacity-0 group-hover:opacity-100"><Icons.Trash size={18} /></button></div></div>))}</div>}
                     </div>
-                    <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Thêm khách mời"><div className="space-y-4"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Họ và tên</label><input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Mối quan hệ</label><div className="relative"><select value={relationship} onChange={(e) => setRelationship(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"><option value="Gia đình chú rể">Gia đình chú rể</option><option value="Gia đình cô dâu">Gia đình cô dâu</option><option value="Bạn chú rể">Bạn chú rể</option><option value="Bạn cô dâu">Bạn cô dâu</option><option value="Bạn chung">Bạn chung</option><option value="Đồng nghiệp">Đồng nghiệp</option><option value="Khác">Khác</option></select><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Số điện thoại (Tuỳ chọn)</label><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div><button onClick={handleAdd} className="w-full py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors mt-2">Lưu lại</button></div></Modal>
+                    <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Thêm khách mời"><div className="space-y-4"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Họ và tên</label><input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" /></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Mối quan hệ</label><div className="relative"><select value={relationship} onChange={(e) => setRelationship(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900 appearance-none"><option value="Gia đình chú rể">Gia đình chú rể</option><option value="Gia đình cô dâu">Gia đình cô dâu</option><option value="Bạn chú rể">Bạn chú rể</option><option value="Bạn cô dâu">Bạn cô dâu</option><option value="Bạn chung">Bạn chung</option><option value="Đồng nghiệp">Đồng nghiệp</option><option value="Khác">Khác</option></select><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Số điện thoại (Tuỳ chọn)</label><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" /></div><button onClick={handleAdd} className="w-full py-3 bg-stone-900 text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-colors mt-2">Lưu lại</button></div></Modal>
                     <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Xóa khách mời?"><div className="space-y-6"><p className="text-sm text-stone-600 font-medium">Bạn có chắc chắn muốn xóa khách mời này không? <br/><span className="text-xs text-stone-400 mt-2 block">Hành động này không thể hoàn tác.</span></p><div className="flex justify-end gap-3"><button onClick={() => setIsDeleteModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={executeDelete} className="px-8 py-3 bg-red-500 text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-red-600">Xóa ngay</button></div></div></Modal>
                 </div>
             );
@@ -713,7 +713,7 @@
                 };
             }, [firebase, currentUser]);
 
-            if (!userData) return <div className="h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div></div>;
+            if (!userData) return <div className="h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-stone-900 border-t-transparent rounded-full animate-spin"></div></div>;
 
             // ... Wizard Logic (No changes needed) ...
             if (!userData.isSetupComplete) {
@@ -889,7 +889,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => setIsJoinModalOpen(true)} className="bg-black text-white p-6 rounded-[2rem] shadow-xl hover:bg-stone-800 transition-all flex items-center justify-center gap-4 active:scale-95 group">
+                            <button onClick={() => setIsJoinModalOpen(true)} className="bg-stone-900 text-white p-6 rounded-[2rem] shadow-xl hover:bg-stone-800 transition-all flex items-center justify-center gap-4 active:scale-95 group">
                                 <Icons.Link size={20} className="group-hover:rotate-12 transition-transform"/>
                                 <span className="text-xs font-black uppercase tracking-widest">Nhập mã kết nối</span>
                             </button>
@@ -900,7 +900,7 @@
                      <div className="flex justify-center mb-10 md:mb-16 -mx-4 px-4 md:mx-0 md:px-0">
                         <div className="bg-[#EEECE8]/60 p-2 rounded-full flex w-full max-w-6xl border border-[#EAE8E4] backdrop-blur-sm overflow-x-auto hide-scrollbar">
                             {[{ id: 'overview', label: 'Tổng quan', icon: Icons.Layout }, { id: 'tasks', label: 'Công việc', icon: Icons.Check }, { id: 'budget', label: 'Ngân sách', icon: Icons.DollarSign }, { id: 'guests', label: 'Khách mời', icon: Icons.Users }].map((tab) => (
-                                <button key={tab.id} onClick={() => setSubTab(tab.id)} className={`flex-1 flex items-center justify-center gap-3 px-6 md:px-10 py-5 rounded-full text-xs md:text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${subTab === tab.id ? 'bg-black text-white shadow-xl scale-105' : 'text-stone-500 hover:text-black hover:bg-black/5'}`}><tab.icon size={18} strokeWidth={3} />{tab.label}</button>
+                                <button key={tab.id} onClick={() => setSubTab(tab.id)} className={`flex-1 flex items-center justify-center gap-3 px-6 md:px-10 py-5 rounded-full text-xs md:text-sm font-black uppercase tracking-widest transition-all whitespace-nowrap ${subTab === tab.id ? 'bg-stone-900 text-white shadow-xl scale-105' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-900/5'}`}><tab.icon size={18} strokeWidth={3} />{tab.label}</button>
                             ))}
                         </div>
                     </div>
@@ -926,7 +926,7 @@
                                 <p className="text-xs text-stone-500 max-w-[80%] mx-auto leading-relaxed">Gửi mã này cho người ấy để cùng nhau lên kế hoạch.</p>
                             </div>
                             <div className="relative group cursor-pointer" onClick={() => {navigator.clipboard.writeText(inviteCode); alert("Đã sao chép mã!");}}>
-                                <div className="w-full text-center text-5xl font-black tracking-[0.3em] py-8 bg-stone-50 border-2 border-transparent rounded-3xl group-hover:bg-white group-hover:border-black transition-all text-stone-900">{inviteCode}</div>
+                                <div className="w-full text-center text-5xl font-black tracking-[0.3em] py-8 bg-stone-50 border-2 border-transparent rounded-3xl group-hover:bg-white group-hover:border-stone-900 transition-all text-stone-900">{inviteCode}</div>
                             </div>
                             <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Mã có hiệu lực trong 24 giờ</p>
                         </div>
@@ -945,11 +945,11 @@
                                     value={joinCode} 
                                     onChange={(e) => setJoinCode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} 
                                     placeholder="000000" 
-                                    className="w-full text-center text-5xl font-black tracking-[0.3em] py-8 bg-stone-50 border-2 border-dashed border-stone-200 rounded-3xl focus:border-black focus:bg-white focus:outline-none transition-all placeholder:text-stone-200 text-stone-900" 
+                                    className="w-full text-center text-5xl font-black tracking-[0.3em] py-8 bg-stone-50 border-2 border-dashed border-stone-200 rounded-3xl focus:border-stone-900 focus:bg-white focus:outline-none transition-all placeholder:text-stone-200 text-stone-900" 
                                     maxLength="6"
                                 />
                             </div>
-                            <button onClick={joinWedding} disabled={joinCode.length !== 6} className="w-full py-5 bg-black text-white rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-800 active:scale-95 transition-all disabled:opacity-50">Xác nhận kết nối</button>
+                            <button onClick={joinWedding} disabled={joinCode.length !== 6} className="w-full py-5 bg-stone-900 text-white rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-800 active:scale-95 transition-all disabled:opacity-50">Xác nhận kết nối</button>
                         </div>
                     </Modal>
 
@@ -962,14 +962,14 @@
                                     type="text" 
                                     value={tempBudget} 
                                     onChange={(e) => setTempBudget(formatCurrencyInput(e.target.value))} 
-                                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:border-black font-bold text-lg" 
+                                    className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:border-stone-900 font-bold text-lg" 
                                     placeholder="0"
                                 />
                             </div>
                             <div className="p-4 bg-stone-50 rounded-2xl border border-stone-100">
                                 <p className="text-xs text-stone-500 leading-relaxed italic">Hệ thống sẽ dựa vào con số này để tính toán phần trăm chi tiêu và tiến độ tài chính của bạn.</p>
                             </div>
-                            <button onClick={handleSaveBudget} className="w-full py-4 bg-black text-white rounded-full font-black uppercase text-xs shadow-lg hover:bg-stone-800 active:scale-95 transition-all">Lưu ngân sách</button>
+                            <button onClick={handleSaveBudget} className="w-full py-4 bg-stone-900 text-white rounded-full font-black uppercase text-xs shadow-lg hover:bg-stone-800 active:scale-95 transition-all">Lưu ngân sách</button>
                         </div>
                     </Modal>
                 </div>
@@ -999,8 +999,8 @@
                         Nền tảng tối ưu để tổ chức một đám cưới hiện đại. Tinh tế, chuyên nghiệp và nằm trọn trong tay bạn.
                     </p>
                     <div className="flex flex-col sm:flex-row justify-center gap-4 md:gap-6 animate-in" style={{animationDelay: '0.2s'}}>
-                        <button onClick={() => onNavigate('planner')} className="px-10 md:px-12 py-4 md:py-5 bg-black text-white font-bold text-[10px] md:text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-stone-800 transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-black/20">Khám phá Planner</button>
-                        <button className="px-10 md:px-12 py-4 md:py-5 bg-white/90 backdrop-blur-sm border border-[#DDD] text-black font-bold text-[10px] md:text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-white transition-all active:scale-95">Xem mẫu thiệp</button>
+                        <button onClick={() => onNavigate('planner')} className="px-10 md:px-12 py-4 md:py-5 bg-stone-900 text-white font-bold text-[10px] md:text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-stone-800 transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-stone-900/20">Khám phá Planner</button>
+                        <button className="px-10 md:px-12 py-4 md:py-5 bg-white/90 backdrop-blur-sm border border-[#DDD] text-stone-900 font-bold text-[10px] md:text-[11px] uppercase tracking-[0.3em] rounded-full hover:bg-white transition-all active:scale-95">Xem mẫu thiệp</button>
                     </div>
                 </div>
             </section>
@@ -1079,17 +1079,17 @@
                 return (
                     <div className="space-y-4 pt-4">
                         <div className="space-y-2">
-                            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:border-black" />
-                            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mật khẩu" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:border-black" />
+                            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:border-stone-900" />
+                            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mật khẩu" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:border-stone-900" />
                         </div>
                         {error && <p className="text-red-500 text-xs text-center font-bold">{error}</p>}
-                        <button onClick={handleLogin} className="w-full py-4 bg-black text-white rounded-full font-black uppercase text-xs shadow-lg hover:bg-stone-800">Đăng nhập ngay</button>
+                        <button onClick={handleLogin} className="w-full py-4 bg-stone-900 text-white rounded-full font-black uppercase text-xs shadow-lg hover:bg-stone-800">Đăng nhập ngay</button>
                         <div className="relative flex py-2 items-center"><div className="flex-grow border-t border-stone-100"></div><span className="flex-shrink-0 mx-4 text-stone-400 text-[10px] font-bold uppercase tracking-widest">Hoặc</span><div className="flex-grow border-t border-stone-100"></div></div>
                         <button onClick={handleGoogleLogin} className="w-full py-4 bg-white border border-stone-200 text-stone-700 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-stone-50 transition-colors shadow-sm">
                             <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                             Google Login
                         </button>
-                        <button onClick={() => {setShowLogin(false); setShowRegister(true);}} className="w-full text-center text-xs font-bold text-stone-400 mt-2 hover:text-black">Chưa có tài khoản? Đăng ký</button>
+                        <button onClick={() => {setShowLogin(false); setShowRegister(true);}} className="w-full text-center text-xs font-bold text-stone-400 mt-2 hover:text-stone-900">Chưa có tài khoản? Đăng ký</button>
                     </div>
                 );
             };
@@ -1106,12 +1106,12 @@
                 return (
                     <div className="space-y-4 pt-4">
                         <div className="space-y-2">
-                            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
-                            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mật khẩu" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
+                            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:border-stone-900" />
+                            <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mật khẩu" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900" />
                         </div>
                         {error && <p className="text-red-500 text-xs text-center font-bold">{error}</p>}
-                        <button onClick={handleRegister} className="w-full py-4 bg-black text-white rounded-full font-black uppercase text-xs shadow-lg">Đăng ký tài khoản</button>
-                        <button onClick={() => {setShowRegister(false); setShowLogin(true);}} className="w-full text-center text-xs font-bold text-stone-400 mt-2 hover:text-black">Đã có tài khoản? Đăng nhập</button>
+                        <button onClick={handleRegister} className="w-full py-4 bg-stone-900 text-white rounded-full font-black uppercase text-xs shadow-lg">Đăng ký tài khoản</button>
+                        <button onClick={() => {setShowRegister(false); setShowLogin(true);}} className="w-full text-center text-xs font-bold text-stone-400 mt-2 hover:text-stone-900">Đã có tài khoản? Đăng nhập</button>
                     </div>
                 );
             };
@@ -1120,20 +1120,20 @@
                 <div className="min-h-screen">
                     <div className="fixed top-6 left-0 w-full z-50 flex justify-center px-4 transition-all">
                         <nav className={`flex items-center justify-between px-6 py-2 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/75 backdrop-blur-2xl border border-white/20 shadow-lg' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
-                            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigateTo('home')}><div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center"><Icons.Heart size={16} fill="currentColor" /></div><span className="text-lg font-black tracking-tighter uppercase">Weddy</span></div>
-                            <div className="hidden md:flex items-center gap-1">{[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Lập kế hoạch' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (<button key={item.id} onClick={() => navigateTo(item.id)} className={`text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-full transition-all ${activeTab === item.id ? 'bg-black text-white shadow-lg' : 'text-stone-500 hover:text-black hover:bg-black/5'}`}>{item.label}</button>))}</div>
+                            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigateTo('home')}><div className="w-8 h-8 bg-stone-900 text-white rounded-full flex items-center justify-center"><Icons.Heart size={16} fill="currentColor" /></div><span className="text-lg font-black tracking-tighter uppercase">Weddy</span></div>
+                            <div className="hidden md:flex items-center gap-1">{[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Lập kế hoạch' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (<button key={item.id} onClick={() => navigateTo(item.id)} className={`text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-full transition-all ${activeTab === item.id ? 'bg-stone-900 text-white shadow-lg' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-900/5'}`}>{item.label}</button>))}</div>
                             <div className="flex items-center gap-3">
-                                {user ? <button onClick={handleLogout} className="px-6 py-2.5 bg-white border border-stone-200 text-stone-800 rounded-full text-[10px] font-black uppercase tracking-[0.25em] shadow-sm active:scale-95">Đăng xuất</button> : <button onClick={() => setShowLogin(true)} className="px-6 py-2.5 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] shadow-xl active:scale-95">Đăng nhập</button>}
+                                {user ? <button onClick={handleLogout} className="px-6 py-2.5 bg-white border border-stone-200 text-stone-800 rounded-full text-[10px] font-black uppercase tracking-[0.25em] shadow-sm active:scale-95">Đăng xuất</button> : <button onClick={() => setShowLogin(true)} className="px-6 py-2.5 bg-stone-900 text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] shadow-xl active:scale-95">Đăng nhập</button>}
                             </div>
                         </nav>
                     </div>
                     <main>
                         {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
-                        {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} /> : <div className="h-screen flex flex-col gap-4 items-center justify-center text-stone-400 p-6 text-center"><Icons.Users size={48} className="opacity-20" /><p>Vui lòng đăng nhập để sử dụng tính năng Planner.</p><button onClick={() => setShowLogin(true)} className="px-8 py-3 bg-black text-white rounded-full text-xs font-bold uppercase shadow-lg">Đăng nhập ngay</button></div>)}
+                        {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} /> : <div className="h-screen flex flex-col gap-4 items-center justify-center text-stone-400 p-6 text-center"><Icons.Users size={48} className="opacity-20" /><p>Vui lòng đăng nhập để sử dụng tính năng Planner.</p><button onClick={() => setShowLogin(true)} className="px-8 py-3 bg-stone-900 text-white rounded-full text-xs font-bold uppercase shadow-lg">Đăng nhập ngay</button></div>)}
                         {activeTab === 'invitation' && <div className="py-60 text-center px-6"><p className="text-2xl font-black uppercase tracking-widest text-stone-300">Thiệp mời điện tử</p><p className="text-stone-400 mt-2">Tính năng đang được phát triển</p></div>}
                         {activeTab === 'vendors' && <div className="py-60 text-center px-6"><p className="text-2xl font-black uppercase tracking-widest text-stone-300">Mạng lưới dịch vụ</p><p className="text-stone-400 mt-2">Tính năng đang được phát triển</p></div>}
                     </main>
-                    {activeTab !== 'planner' && <footer className="bg-white border-t border-stone-100 py-24 text-center"><div className="container mx-auto px-6"><span className="text-xl font-black tracking-tighter uppercase mb-6 block">Weddy Platform.</span><div className="flex flex-wrap justify-center gap-6 md:gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-stone-400"><span className="hover:text-black cursor-pointer transition-colors">Instagram</span><span className="hover:text-black cursor-pointer transition-colors">Tiktok</span><span className="hover:text-black cursor-pointer transition-colors">Điều khoản</span></div><p className="mt-12 text-[9px] font-bold text-stone-300 uppercase tracking-widest">© 2024 Weddy Tech Collective. All rights reserved.</p></div></footer>}
+                    {activeTab !== 'planner' && <footer className="bg-white border-t border-stone-100 py-24 text-center"><div className="container mx-auto px-6"><span className="text-xl font-black tracking-tighter uppercase mb-6 block">Weddy Platform.</span><div className="flex flex-wrap justify-center gap-6 md:gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-stone-400"><span className="hover:text-stone-900 cursor-pointer transition-colors">Instagram</span><span className="hover:text-stone-900 cursor-pointer transition-colors">Tiktok</span><span className="hover:text-stone-900 cursor-pointer transition-colors">Điều khoản</span></div><p className="mt-12 text-[9px] font-bold text-stone-300 uppercase tracking-widest">© 2024 Weddy Tech Collective. All rights reserved.</p></div></footer>}
                     <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title="Đăng nhập"><LoginForm /></Modal>
                     <Modal isOpen={showRegister} onClose={() => setShowRegister(false)} title="Đăng ký tài khoản"><RegisterForm /></Modal>
                 </div>
