@@ -10,8 +10,8 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Dosis:wght@200;300;400;500;600;700;800&display=swap');
-        body { font-family: 'Dosis', sans-serif; -webkit-tap-highlight-color: transparent; }
+        @import url('https://fonts.googleapis.com/css2?family=Dosis:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Dosis', sans-serif; -webkit-tap-highlight-color: transparent; font-size: 16px; } /* Base font size increased */
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -29,7 +29,7 @@
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
-<body class="bg-[#F0EBE5] text-stone-700 transition-colors duration-500 overflow-x-hidden">
+<body class="bg-[#F0EBE5] text-stone-700 transition-colors duration-500 overflow-x-hidden text-base">
     <div id="root"></div>
 
     <script type="module">
@@ -116,15 +116,12 @@
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in">
-                    {/* Backdrop: Đã loại bỏ màu nền đen và hiệu ứng mờ, hoàn toàn trong suốt */}
                     <div className="absolute inset-0 transition-all" onClick={onClose}></div>
-                    
-                    {/* Popup: Dạng Card nằm giữa, bo tròn sang trọng, thêm shadow đậm để tách biệt */}
                     <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-stone-100 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar text-stone-700">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-black uppercase tracking-widest text-stone-600">{title}</h3>
-                            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-colors shrink-0">
-                                <Icons.X size={16} />
+                            <h3 className="text-xl font-black uppercase tracking-widest text-stone-600">{title}</h3>
+                            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-colors shrink-0">
+                                <Icons.X size={20} />
                             </button>
                         </div>
                         {children}
@@ -133,7 +130,7 @@
             );
         };
 
-        // --- FIXED: GettingStartedWizard (Redesigned & Logic Fix) ---
+        // --- FIXED: GettingStartedWizard ---
         const GettingStartedWizard = ({ onComplete }) => {
             const [step, setStep] = useState(0);
             const [data, setData] = useState({ role: "", date: "", location: "", budget: "" });
@@ -148,17 +145,17 @@
                 { 
                     title: "Ngày trọng đại?", 
                     subtitle: "Ngày mà hai bạn về chung một nhà.",
-                    content: (<div className="mt-8"><input type="date" value={data.date} onChange={e => setData({ ...data, date: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div>) 
+                    content: (<div className="mt-8"><input type="date" value={data.date} onChange={e => setData({ ...data, date: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-2xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div>) 
                 },
                 { 
                     title: "Tổ chức ở đâu?", 
                     subtitle: "Địa điểm diễn ra hôn lễ.",
-                    content: (<div className="mt-8"><input type="text" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Vd: White Palace, Tại gia..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 uppercase text-center"/></div>) 
+                    content: (<div className="mt-8"><input type="text" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Vd: White Palace, Tại gia..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 uppercase text-center"/></div>) 
                 },
                 { 
                     title: "Ngân sách dự kiến?", 
                     subtitle: "Con số ước tính cho đám cưới.",
-                    content: (<div className="mt-8"><div className="relative"><input type="text" value={data.budget} onChange={e => setData({ ...data, budget: utils.formatInput(e.target.value) })} placeholder="300.000.000" className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 pl-8 pr-20 text-2xl font-black text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-200 text-center"/><div className="absolute right-8 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-xs uppercase tracking-widest">VNĐ</div></div></div>) 
+                    content: (<div className="mt-8"><div className="relative"><input type="text" value={data.budget} onChange={e => setData({ ...data, budget: utils.formatInput(e.target.value) })} placeholder="300.000.000" className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 pl-8 pr-20 text-3xl font-black text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-200 text-center"/><div className="absolute right-8 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm uppercase tracking-widest">VNĐ</div></div></div>) 
                 }
             ];
 
@@ -185,8 +182,8 @@
                                     <div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-stone-800 w-8' : 'bg-stone-300/50 w-2'}`}></div>
                                 ))}
                             </div>
-                            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-stone-800 mb-2">{current.title}</h2>
-                            <p className="text-stone-500 text-sm font-medium">{current.subtitle}</p>
+                            <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-stone-800 mb-4">{current.title}</h2>
+                            <p className="text-stone-500 text-base font-medium">{current.subtitle}</p>
                         </div>
                         
                         <div className="min-h-[200px] flex flex-col justify-center">
@@ -198,7 +195,7 @@
                                 <button 
                                     onClick={() => setStep(step + 1)} 
                                     disabled={(step === 0 && !data.role) || (step === 1 && !data.date) || (step === 2 && !data.location)} 
-                                    className="w-full py-5 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+                                    className="w-full py-5 bg-stone-800 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
                                 >
                                     Tiếp tục
                                 </button>
@@ -206,7 +203,7 @@
                                 <button 
                                     onClick={handleFinish} 
                                     disabled={isSubmitting}
-                                    className="w-full py-5 bg-emerald-700 text-white rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-800 disabled:opacity-70 transition-all active:scale-95 flex items-center justify-center gap-3"
+                                    className="w-full py-5 bg-emerald-700 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-800 disabled:opacity-70 transition-all active:scale-95 flex items-center justify-center gap-3"
                                 >
                                     {isSubmitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null}
                                     {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất thiết lập'}
@@ -224,48 +221,48 @@
                 <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 text-left px-2 md:px-0">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                         <div className="lg:col-span-2 space-y-6 md:space-y-8">
-                            <div className="bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-stone-200/50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm text-stone-800 text-sm">
+                            <div className="bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-stone-200/50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm text-stone-800">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-rose-100/50 rounded-full flex items-center justify-center text-rose-500 shrink-0"><Icons.Heart size={20} fill="currentColor"/></div>
-                                    <div><h4 className="font-bold">Ví chung đôi mình</h4><p className="text-xs text-stone-400">Kết nối và đồng bộ kế hoạch với bạn đời.</p></div>
+                                    <div className="w-12 h-12 bg-rose-100/50 rounded-full flex items-center justify-center text-rose-500 shrink-0"><Icons.Heart size={24} fill="currentColor"/></div>
+                                    <div><h4 className="font-bold text-lg">Ví chung đôi mình</h4><p className="text-sm text-stone-400">Kết nối và đồng bộ kế hoạch với bạn đời.</p></div>
                                 </div>
-                                <button onClick={onInvite} className="w-full md:w-auto px-6 py-3 bg-stone-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-stone-600 transition-all flex items-center justify-center gap-2"><Icons.Share size={14}/> Mời bạn đời</button>
+                                <button onClick={onInvite} className="w-full md:w-auto px-8 py-4 bg-stone-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-sm hover:bg-stone-600 transition-all flex items-center justify-center gap-2"><Icons.Share size={16}/> Mời bạn đời</button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-44 md:h-48 text-left">
-                                    <div className="flex justify-between items-start text-left uppercase tracking-widest text-[10px] font-bold text-stone-400"><span>Tiến độ</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-300"><Icons.Check size={18}/></div></div>
-                                    <div><div className="flex items-baseline gap-2 mb-3 text-left font-black text-stone-600 text-3xl md:text-5xl"><span>{completedTasks}</span><span className="text-stone-300 uppercase text-[11px]">/ {totalTasks} việc</span></div><div className="w-full h-1.5 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-stone-500 transition-all duration-700" style={{width: `${totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0}%`}}></div></div></div>
+                                <div className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 text-left">
+                                    <div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Tiến độ</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-300"><Icons.Check size={20}/></div></div>
+                                    <div><div className="flex items-baseline gap-2 mb-3 text-left font-black text-stone-600 text-4xl md:text-5xl"><span>{completedTasks}</span><span className="text-stone-300 uppercase text-xs">/ {totalTasks} việc</span></div><div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-stone-500 transition-all duration-700" style={{width: `${totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0}%`}}></div></div></div>
                                 </div>
-                                <div onClick={onOpenGuests} className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-44 md:h-48 cursor-pointer hover:border-stone-300 transition-all active:scale-[0.98]">
-                                    <div className="flex justify-between items-start text-left uppercase tracking-widest text-[10px] font-bold text-stone-400"><span>Khách mời</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={18}/></div></div>
-                                    <div className="flex items-baseline gap-2 text-stone-700 text-left font-black text-4xl md:text-6xl"><span>{guestCount}</span><span className="text-stone-300 font-bold uppercase text-[11px]">Người</span></div>
+                                <div onClick={onOpenGuests} className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 cursor-pointer hover:border-stone-300 transition-all active:scale-[0.98]">
+                                    <div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Khách mời</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={20}/></div></div>
+                                    <div className="flex items-baseline gap-2 text-stone-700 text-left font-black text-5xl md:text-6xl"><span>{guestCount}</span><span className="text-stone-300 font-bold uppercase text-xs">Người</span></div>
                                 </div>
                             </div>
                             <div className="bg-stone-500 p-6 md:p-12 rounded-[3rem] text-white relative overflow-hidden shadow-xl group">
                                 <div className="absolute top-0 right-0 w-80 h-80 bg-stone-400 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-40 transition-opacity duration-700"></div>
                                 <div className="relative z-10 text-left">
-                                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70 mb-6 md:mb-8 text-left">Tài chính tổng quát ({role || 'Bạn'})</h3>
+                                    <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/70 mb-6 md:mb-8 text-left">Tài chính tổng quát ({role || 'Bạn'})</h3>
                                     <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-8">
                                         <div className="flex-1 text-white text-left">
-                                            <div className="text-[10px] uppercase font-black text-white/30 mb-2 text-left">Đã chi tiêu</div>
-                                            <div className="text-4xl md:text-7xl font-black tracking-tighter text-left tabular-nums">{utils.formatMoney(spentAmount)}</div>
-                                            <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div>
-                                            <div className="flex items-center gap-2 group/budget inline-flex cursor-pointer text-white/80" onClick={onEditBudget}><p className="text-[12px] font-black uppercase tracking-widest font-bold">Ngân sách: {utils.formatMoney(budgetLimit)}</p><Icons.Edit size={14} className="text-white/20 group-hover/budget:text-white transition-colors" /></div>
+                                            <div className="text-xs uppercase font-black text-white/30 mb-2 text-left">Đã chi tiêu</div>
+                                            <div className="text-5xl md:text-7xl font-black tracking-tighter text-left tabular-nums">{utils.formatMoney(spentAmount)}</div>
+                                            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div>
+                                            <div className="flex items-center gap-2 group/budget inline-flex cursor-pointer text-white/80" onClick={onEditBudget}><p className="text-sm font-black uppercase tracking-widest font-bold">Ngân sách: {utils.formatMoney(budgetLimit)}</p><Icons.Edit size={16} className="text-white/20 group-hover/budget:text-white transition-colors" /></div>
                                         </div>
-                                        <div className="md:w-48 flex flex-col gap-4 justify-center text-white"><div className="bg-white/10 backdrop-blur-sm p-5 md:p-6 rounded-3xl border border-white/5 text-center md:text-left shadow-sm shadow-inner"><p className="text-[9px] font-black text-white/40 uppercase mb-1 text-left">Còn lại</p><p className="text-xl font-bold text-left">{utils.formatMoney((budgetLimit || 300000000) - spentAmount)}</p></div></div>
+                                        <div className="md:w-48 flex flex-col gap-4 justify-center text-white"><div className="bg-white/10 backdrop-blur-sm p-6 rounded-3xl border border-white/5 text-center md:text-left shadow-sm shadow-inner"><p className="text-xs font-black text-white/40 uppercase mb-2 text-left">Còn lại</p><p className="text-2xl font-bold text-left">{utils.formatMoney((budgetLimit || 300000000) - spentAmount)}</p></div></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div className="bg-white/60 backdrop-blur-md p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm h-full flex flex-col">
-                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] mb-8 text-stone-700 border-b border-stone-100 pb-6 font-bold text-left uppercase">Hoạt động gần đây</h3>
+                            <h3 className="text-sm font-black uppercase tracking-[0.2em] mb-8 text-stone-700 border-b border-stone-100 pb-6 font-bold text-left uppercase">Hoạt động gần đây</h3>
                             <div className="space-y-6 flex-1 overflow-y-auto hide-scrollbar max-h-[400px] md:max-h-[500px]">
                                 {activities?.length > 0 ? activities.map((act, i) => (
                                     <div key={i} className="flex gap-4 items-start group animate-in text-left">
-                                        <div className="w-9 h-9 md:w-10 md:h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-stone-500 group-hover:text-white transition-colors shadow-sm"><Icons.ArrowUpRight size={16} className="text-stone-300 group-hover:text-white" /></div>
-                                        <div className="text-left text-stone-600"><p className="text-[12px] md:text-[13px] font-bold leading-snug text-left">{act.text}</p><p className="text-[10px] font-black text-stone-300 uppercase tracking-widest mt-1 text-left">{act.time}</p></div>
+                                        <div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-stone-500 group-hover:text-white transition-colors shadow-sm"><Icons.ArrowUpRight size={18} className="text-stone-300 group-hover:text-white" /></div>
+                                        <div className="text-left text-stone-600"><p className="text-sm font-bold leading-snug text-left">{act.text}</p><p className="text-xs font-black text-stone-300 uppercase tracking-widest mt-1 text-left">{act.time}</p></div>
                                     </div>
-                                )) : <p className="text-sm text-stone-300 italic font-medium text-center">Chưa có thông báo mới.</p>}
+                                )) : <p className="text-base text-stone-300 italic font-medium text-center">Chưa có thông báo mới.</p>}
                             </div>
                         </div>
                     </div>
@@ -321,7 +318,7 @@
                                 <button 
                                     key={f.id}
                                     onClick={() => setActiveFilter(f.id)}
-                                    className={`px-4 md:px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-white shadow-md text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}
+                                    className={`px-4 md:px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-white shadow-md text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}
                                 >
                                     {f.label}
                                 </button>
@@ -331,59 +328,59 @@
 
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-40">
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48">
                             <div className="flex justify-between items-start">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">Dự kiến chi ({activeFilter === 'all' ? 'Tổng' : (activeFilter === 'groom' ? 'Nhà trai' : 'Nhà gái')})</p>
-                                <div className="p-2 bg-stone-50 rounded-full text-stone-400"><Icons.DollarSign size={16}/></div>
+                                <p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Dự kiến chi ({activeFilter === 'all' ? 'Tổng' : (activeFilter === 'groom' ? 'Nhà trai' : 'Nhà gái')})</p>
+                                <div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.DollarSign size={20}/></div>
                             </div>
-                            <p className="text-2xl font-black text-stone-800 tracking-tighter">{utils.formatMoney(totalBudget)}</p>
+                            <p className="text-3xl font-black text-stone-800 tracking-tighter">{utils.formatMoney(totalBudget)}</p>
                         </div>
-                        <div className="bg-stone-800 p-8 rounded-[2.5rem] shadow-xl flex flex-col justify-between h-40 text-white">
+                        <div className="bg-stone-800 p-8 rounded-[2.5rem] shadow-xl flex flex-col justify-between h-48 text-white">
                             <div className="flex justify-between items-start">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Đã thanh toán</p>
-                                <div className="p-2 bg-white/10 rounded-full text-white"><Icons.Check size={16}/></div>
+                                <p className="text-xs font-black uppercase tracking-[0.2em] text-white/50">Đã thanh toán</p>
+                                <div className="p-3 bg-white/10 rounded-full text-white"><Icons.Check size={20}/></div>
                             </div>
-                            <p className="text-2xl font-black tracking-tighter">{utils.formatMoney(totalPaid)}</p>
+                            <p className="text-3xl font-black tracking-tighter">{utils.formatMoney(totalPaid)}</p>
                         </div>
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-40">
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48">
                             <div className="flex justify-between items-start">
-                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">Còn lại</p>
-                                <div className="p-2 bg-stone-50 rounded-full text-stone-400"><Icons.Layout size={16}/></div>
+                                <p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Còn lại</p>
+                                <div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.Layout size={20}/></div>
                             </div>
-                            <p className={`text-2xl font-black tracking-tighter ${totalBudget - totalPaid < 0 ? 'text-rose-500' : 'text-stone-800'}`}>{utils.formatMoney(totalBudget - totalPaid)}</p>
+                            <p className={`text-3xl font-black tracking-tighter ${totalBudget - totalPaid < 0 ? 'text-rose-500' : 'text-stone-800'}`}>{utils.formatMoney(totalBudget - totalPaid)}</p>
                         </div>
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                          <div className="text-left">
-                            <h3 className="text-2xl font-black text-stone-700 uppercase tracking-tighter">Chi tiết khoản chi</h3>
-                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">
+                            <h3 className="text-3xl font-black text-stone-700 uppercase tracking-tighter">Chi tiết khoản chi</h3>
+                            <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">
                                 {activeFilter === 'all' ? 'Toàn bộ danh sách' : (activeFilter === 'groom' ? 'Chi phí của Chú rể' : 'Chi phí của Cô dâu')}
                             </p>
                          </div>
-                         <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-6 py-4 bg-stone-200 text-stone-600 hover:bg-stone-300 rounded-full text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm">
-                            <Icons.Plus size={14}/> Thêm khoản chi
+                         <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-200 text-stone-600 hover:bg-stone-300 rounded-full text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm">
+                            <Icons.Plus size={16}/> Thêm khoản chi
                          </button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {displayTasks.length === 0 ? (
-                            <div className="py-20 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem]">
-                                <p className="text-stone-400 text-xs font-bold uppercase tracking-widest">Chưa có dữ liệu</p>
+                            <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem]">
+                                <p className="text-stone-400 text-sm font-bold uppercase tracking-widest">Chưa có dữ liệu</p>
                             </div> 
                         ) : (
                             displayTasks.map((item, i) => (
                                 <div key={i} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div className="flex items-center gap-5">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${(item.paid || 0) >= item.cost ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-50 text-stone-400'}`}>
-                                            <Icons.DollarSign size={20} />
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${(item.paid || 0) >= item.cost ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-50 text-stone-400'}`}>
+                                            <Icons.DollarSign size={24} />
                                         </div>
                                         <div className="text-left">
-                                            <h4 className="font-bold text-base text-stone-700 leading-tight uppercase">{item.title}</h4>
-                                            <div className="flex gap-2 mt-1">
-                                                <span className="inline-block text-[9px] font-black uppercase tracking-wider text-stone-400 bg-stone-50 px-2 py-0.5 rounded-lg border border-stone-100">{item.tag}</span>
+                                            <h4 className="font-bold text-lg text-stone-700 leading-tight uppercase">{item.title}</h4>
+                                            <div className="flex gap-2 mt-2">
+                                                <span className="inline-block text-[10px] font-black uppercase tracking-wider text-stone-400 bg-stone-50 px-3 py-1 rounded-lg border border-stone-100">{item.tag}</span>
                                                 {item.paidBy && (
-                                                    <span className={`inline-block text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border border-transparent ${item.paidBy === 'Chú rể' ? 'bg-blue-50 text-blue-500' : (item.paidBy === 'Cô dâu' ? 'bg-rose-50 text-rose-500' : 'bg-stone-100 text-stone-500')}`}>
+                                                    <span className={`inline-block text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border border-transparent ${item.paidBy === 'Chú rể' ? 'bg-blue-50 text-blue-500' : (item.paidBy === 'Cô dâu' ? 'bg-rose-50 text-rose-500' : 'bg-stone-100 text-stone-500')}`}>
                                                         {item.paidBy}
                                                     </span>
                                                 )}
@@ -391,12 +388,12 @@
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1">
-                                        <p className="font-black text-lg text-stone-800 tracking-tight">{utils.formatMoney(item.cost)}</p>
+                                        <p className="font-black text-xl text-stone-800 tracking-tight">{utils.formatMoney(item.cost)}</p>
                                         <div className="flex items-center gap-2">
                                             {(item.paid || 0) >= item.cost ? (
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">Đã xong</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">Đã xong</span>
                                             ) : (
-                                                <span className="text-[9px] font-black uppercase tracking-widest text-stone-400 bg-stone-50 px-2 py-1 rounded-lg">Đã trả: {utils.formatMoney(item.paid || 0)}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-stone-400 bg-stone-50 px-3 py-1.5 rounded-lg">Đã trả: {utils.formatMoney(item.paid || 0)}</span>
                                             )}
                                         </div>
                                     </div>
@@ -408,33 +405,33 @@
                     <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Thêm khoản chi">
                         <div className="space-y-6 pt-2">
                             <div>
-                                <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên khoản chi</label>
-                                <input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-sm font-bold uppercase shadow-inner" placeholder="VD: CHỤP ẢNH CƯỚI" autoFocus />
+                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên khoản chi</label>
+                                <input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold uppercase shadow-inner" placeholder="VD: CHỤP ẢNH CƯỚI" autoFocus />
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Hạng mục</label>
+                                    <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Hạng mục</label>
                                     <div className="relative">
-                                        <select value={category} onChange={e=>setCategory(e.target.value)} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl text-xs md:text-sm font-bold uppercase appearance-none focus:outline-none focus:border-stone-400 focus:bg-white transition-all shadow-inner">
+                                        <select value={category} onChange={e=>setCategory(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl text-base font-bold uppercase appearance-none focus:outline-none focus:border-stone-400 focus:bg-white transition-all shadow-inner">
                                             <option value="Đặt tiệc cưới">Tiệc cưới</option>
                                             <option value="Chụp ảnh">Chụp ảnh</option>
                                             <option value="Trang phục">Trang phục</option>
                                             <option value="Khác">Khác</option>
                                         </select>
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={16} className="rotate-90" /></div>
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Số tiền (VNĐ)</label>
-                                    <input type="text" value={cost} onChange={e=>setCost(utils.formatInput(e.target.value))} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-sm font-bold shadow-inner" placeholder="0" />
+                                    <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Số tiền (VNĐ)</label>
+                                    <input type="text" value={cost} onChange={e=>setCost(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner" placeholder="0" />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Đã trả trước (VNĐ)</label>
-                                <input type="text" value={paid} onChange={e=>setPaid(utils.formatInput(e.target.value))} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-sm font-bold shadow-inner" placeholder="0" />
+                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Đã trả trước (VNĐ)</label>
+                                <input type="text" value={paid} onChange={e=>setPaid(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner" placeholder="0" />
                             </div>
-                            <div className="pt-6 border-t border-stone-50">
-                                <button onClick={handleSave} className="w-full py-4 bg-stone-800 text-white rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={14} strokeWidth={3}/> Lưu lại</button>
+                            <div className="pt-8 border-t border-stone-50">
+                                <button onClick={handleSave} className="w-full py-5 bg-stone-800 text-white rounded-full font-black uppercase text-sm tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={16} strokeWidth={3}/> Lưu lại</button>
                             </div>
                         </div>
                     </Modal>
@@ -453,42 +450,42 @@
                 <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 text-left px-2 md:px-0">
                     <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                          <div className="text-left">
-                            <h3 className="text-2xl font-black text-stone-700 uppercase tracking-tighter">Danh sách công việc</h3>
-                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">
+                            <h3 className="text-3xl font-black text-stone-700 uppercase tracking-tighter">Danh sách công việc</h3>
+                            <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">
                                 {pending.length} việc cần làm
                             </p>
                          </div>
-                         <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-6 py-4 bg-stone-800 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl">
+                         <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl">
                             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"><Icons.Plus size={12} /></span>
                             Thêm việc mới
                          </button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {pending.length > 0 ? pending.map((t, idx) => (
-                            <div key={idx} onClick={() => onToggleTask(tasks.indexOf(t))} className="group p-5 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all cursor-pointer flex items-center gap-5">
-                                <div className="w-6 h-6 rounded-lg border-2 border-stone-200 group-hover:border-stone-400 group-hover:bg-stone-50 transition-all shrink-0"></div>
+                            <div key={idx} onClick={() => onToggleTask(tasks.indexOf(t))} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all cursor-pointer flex items-center gap-6">
+                                <div className="w-8 h-8 rounded-xl border-2 border-stone-200 group-hover:border-stone-400 group-hover:bg-stone-50 transition-all shrink-0"></div>
                                 <div className="flex-1">
-                                    <h4 className="font-bold text-stone-800 text-base leading-tight uppercase">{t.title}</h4>
-                                    <span className="inline-block mt-1 text-[9px] font-black uppercase tracking-wider text-stone-400">{t.tag}</span>
+                                    <h4 className="font-bold text-stone-800 text-lg leading-tight uppercase">{t.title}</h4>
+                                    <span className="inline-block mt-2 text-[10px] font-black uppercase tracking-wider text-stone-400">{t.tag}</span>
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); onDeleteTask(tasks.indexOf(t)); }} className="w-9 h-9 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"><Icons.Trash size={16} /></button>
+                                <button onClick={(e) => { e.stopPropagation(); onDeleteTask(tasks.indexOf(t)); }} className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"><Icons.Trash size={20} /></button>
                             </div>
                         )) : (
-                            <div className="py-20 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50">
-                                <p className="text-stone-400 font-bold uppercase text-xs tracking-widest">Mọi việc đã hoàn tất! ✨</p>
+                            <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50">
+                                <p className="text-stone-400 font-bold uppercase text-sm tracking-widest">Mọi việc đã hoàn tất! ✨</p>
                             </div>
                         )}
                     </div>
 
                     {done.length > 0 && (
-                        <div className="pt-8 opacity-60">
-                            <h4 className="mb-4 text-[10px] font-black uppercase tracking-widest text-stone-400">Đã hoàn thành ({done.length})</h4>
-                            <div className="space-y-2">
+                        <div className="pt-10 opacity-60">
+                            <h4 className="mb-6 text-xs font-black uppercase tracking-widest text-stone-400">Đã hoàn thành ({done.length})</h4>
+                            <div className="space-y-3">
                                 {done.map((t, i) => (
-                                    <div key={i} className="p-4 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center gap-4 text-stone-400">
-                                        <div className="w-6 h-6 rounded-lg bg-stone-300 flex items-center justify-center text-white shrink-0"><Icons.Check size={12} /></div>
-                                        <div className="flex-1"><h4 className="text-sm font-bold line-through uppercase">{t.title}</h4></div>
+                                    <div key={i} className="p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center gap-5 text-stone-400">
+                                        <div className="w-8 h-8 rounded-xl bg-stone-300 flex items-center justify-center text-white shrink-0"><Icons.Check size={16} /></div>
+                                        <div className="flex-1"><h4 className="text-base font-bold line-through uppercase">{t.title}</h4></div>
                                     </div>
                                 ))}
                             </div>
@@ -498,29 +495,29 @@
                     <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Công việc mới">
                         <div className="space-y-6 pt-2">
                             <div>
-                                <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên công việc</label>
-                                <input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-sm font-bold shadow-inner uppercase" placeholder="VD: ĐẶT HOA CƯỚI" autoFocus />
+                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên công việc</label>
+                                <input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner uppercase" placeholder="VD: ĐẶT HOA CƯỚI" autoFocus />
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Phân loại</label>
+                                    <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Phân loại</label>
                                     <div className="relative">
-                                        <select value={cat} onChange={e=>setCat(e.target.value)} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl text-xs md:text-sm font-bold uppercase appearance-none focus:outline-none focus:border-stone-400 focus:bg-white transition-all shadow-inner">
+                                        <select value={cat} onChange={e=>setCat(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl text-base font-bold uppercase appearance-none focus:outline-none focus:border-stone-400 focus:bg-white transition-all shadow-inner">
                                             <option value="Đặt tiệc cưới">Tiệc cưới</option>
                                             <option value="Chụp ảnh">Chụp ảnh</option>
                                             <option value="Trang phục">Trang phục</option>
                                             <option value="Khác">Khác</option>
                                         </select>
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div>
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={16} className="rotate-90" /></div>
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Dự chi (VNĐ)</label>
-                                    <input type="text" value={cost} onChange={e=>setCost(utils.formatInput(e.target.value))} className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-sm font-bold shadow-inner" placeholder="0" />
+                                    <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Dự chi (VNĐ)</label>
+                                    <input type="text" value={cost} onChange={e=>setCost(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner" placeholder="0" />
                                 </div>
                             </div>
-                            <div className="pt-6 border-t border-stone-50">
-                                <button onClick={handleAdd} className="w-full py-4 bg-stone-800 text-white rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={14} strokeWidth={3}/> Lưu lại</button>
+                            <div className="pt-8 border-t border-stone-50">
+                                <button onClick={handleAdd} className="w-full py-5 bg-stone-800 text-white rounded-full font-black uppercase text-sm tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={16} strokeWidth={3}/> Lưu lại</button>
                             </div>
                         </div>
                     </Modal>
@@ -550,14 +547,14 @@
                 <div className="max-w-6xl mx-auto space-y-8 animate-in px-2 md:px-0">
                     <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                          <div className="text-left w-full md:w-auto">
-                            <h3 className="text-2xl font-black text-stone-700 uppercase tracking-tighter">Danh sách khách mời</h3>
-                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">
+                            <h3 className="text-3xl font-black text-stone-700 uppercase tracking-tighter">Danh sách khách mời</h3>
+                            <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">
                                 Tổng cộng: <span className="text-stone-700">{guests?.length || 0}</span> người
                             </p>
                          </div>
                          <button 
                             onClick={() => setIsOpen(true)} 
-                            className="group w-full md:w-auto flex items-center justify-center gap-3 px-6 py-4 bg-stone-800 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl"
+                            className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl"
                         >
                             <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
                                 <Icons.Plus size={12} />
@@ -568,35 +565,35 @@
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {guests?.length === 0 ? (
-                            <div className="col-span-full py-16 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50">
-                                <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4 text-stone-400 shadow-inner">
-                                    <Icons.Users size={24} />
+                            <div className="col-span-full py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50">
+                                <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-400 shadow-inner">
+                                    <Icons.Users size={32} />
                                 </div>
-                                <p className="text-stone-400 font-bold uppercase text-[10px] tracking-widest">Danh sách trống</p>
-                                <button onClick={() => setIsOpen(true)} className="mt-2 text-[11px] font-black underline uppercase text-stone-600 hover:text-stone-900 transition-colors">Thêm khách đầu tiên</button>
+                                <p className="text-stone-400 font-bold uppercase text-xs tracking-widest">Danh sách trống</p>
+                                <button onClick={() => setIsOpen(true)} className="mt-3 text-sm font-black underline uppercase text-stone-600 hover:text-stone-900 transition-colors">Thêm khách đầu tiên</button>
                             </div>
                         ) : (
                             guests?.map((g) => (
-                                <div key={g.id} className="group bg-white p-5 rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all flex items-center justify-between cursor-default">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black uppercase shadow-inner shrink-0 ${relationshipColors[g.relationship] || 'bg-stone-100 text-stone-500'}`}>
+                                <div key={g.id} className="group bg-white p-6 rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all flex items-center justify-between cursor-default">
+                                    <div className="flex items-center gap-5">
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black uppercase shadow-inner shrink-0 ${relationshipColors[g.relationship] || 'bg-stone-100 text-stone-500'}`}>
                                             {g.name.charAt(0)}
                                         </div>
                                         <div className="text-left">
-                                            <h4 className="font-bold text-stone-700 text-sm md:text-base leading-tight uppercase">{g.name}</h4>
-                                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                <span className="text-[9px] font-black uppercase tracking-wider text-stone-400 border border-stone-100 px-2 py-0.5 rounded-lg bg-stone-50">
+                                            <h4 className="font-bold text-stone-700 text-lg leading-tight uppercase">{g.name}</h4>
+                                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-stone-400 border border-stone-100 px-3 py-1 rounded-lg bg-stone-50">
                                                     {g.relationship}
                                                 </span>
-                                                {g.phone && <span className="text-[10px] font-bold text-stone-400 tabular-nums tracking-wide">{g.phone}</span>}
+                                                {g.phone && <span className="text-[11px] font-bold text-stone-400 tabular-nums tracking-wide">{g.phone}</span>}
                                             </div>
                                         </div>
                                     </div>
                                     <button 
                                         onClick={() => onDeleteGuest(g.id)} 
-                                        className="w-9 h-9 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
+                                        className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
                                     >
-                                        <Icons.Trash size={16} />
+                                        <Icons.Trash size={20} />
                                     </button>
                                 </div>
                             ))
@@ -607,25 +604,25 @@
                         <div className="space-y-6 pt-2">
                             <div className="space-y-5 text-left">
                                 <div>
-                                    <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Họ và tên</label>
+                                    <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Họ và tên</label>
                                     <input 
                                         type="text" 
                                         value={name} 
                                         onChange={e => setName(e.target.value)} 
-                                        className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-sm font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
+                                        className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
                                         placeholder="NHẬP TÊN KHÁCH MỜI..." 
                                         autoFocus
                                     />
                                 </div>
                                 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Mối quan hệ</label>
+                                        <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Mối quan hệ</label>
                                         <div className="relative">
                                             <select 
                                                 value={rel} 
                                                 onChange={e => setRel(e.target.value)} 
-                                                className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl appearance-none font-bold text-xs md:text-sm text-stone-700 focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all uppercase"
+                                                className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl appearance-none font-bold text-base text-stone-700 focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all uppercase"
                                             >
                                                 <option value="Bạn bè">Bạn bè</option>
                                                 <option value="Gia đình">Gia đình</option>
@@ -633,30 +630,30 @@
                                                 <option value="Khác">Khác</option>
                                             </select>
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
-                                                <Icons.ChevronRight size={14} className="rotate-90" />
+                                                <Icons.ChevronRight size={16} className="rotate-90" />
                                             </div>
                                         </div>
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Số điện thoại</label>
+                                        <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Số điện thoại</label>
                                         <input 
                                             type="text" 
                                             value={phone} 
                                             onChange={e => setPhone(utils.formatInput(e.target.value))} 
-                                            className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-xs md:text-sm font-bold text-stone-700 placeholder:text-stone-300 tabular-nums tracking-wider" 
+                                            className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 tabular-nums tracking-wider" 
                                             placeholder="09..." 
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="pt-6 border-t border-stone-50">
+                            <div className="pt-8 border-t border-stone-50">
                                 <button 
                                     onClick={handleAdd} 
-                                    className="w-full py-4 bg-stone-800 text-white rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                    className="w-full py-5 bg-stone-800 text-white rounded-full font-black uppercase text-sm tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"
                                 >
-                                    <Icons.Plus size={14} strokeWidth={3} /> Lưu khách mời
+                                    <Icons.Plus size={16} strokeWidth={3} /> Lưu khách mời
                                 </button>
                             </div>
                         </div>
@@ -667,12 +664,12 @@
 
         // --- NEW: Mobile Bottom Navigation Component ---
         const MobileNav = ({ activeTab, onNavigate }) => (
-            <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-stone-200 p-2 md:hidden z-50 pb-safe">
+            <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-stone-200 p-3 md:hidden z-50 pb-safe">
                 <div className="flex justify-around items-center">
                     {[{id: 'home', icon: Icons.Home, label: 'Home'}, {id: 'planner', icon: Icons.Layout, label: 'Planner'}, {id: 'invitation', icon: Icons.Link, label: 'Thiệp'}, {id: 'vendors', icon: Icons.Star, label: 'Dịch vụ'}].map(item => (
                         <button key={item.id} onClick={() => onNavigate(item.id)} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === item.id ? 'text-stone-800 bg-stone-100' : 'text-stone-400'}`}>
-                            <item.icon size={20} fill={activeTab === item.id ? "currentColor" : "none"} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-                            <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
+                            <item.icon size={24} fill={activeTab === item.id ? "currentColor" : "none"} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+                            <span className="text-[10px] font-black uppercase tracking-wider">{item.label}</span>
                         </button>
                     ))}
                 </div>
@@ -681,22 +678,22 @@
 
         // --- NEW: Footer Component ---
         const Footer = () => (
-            <footer className="bg-white/50 backdrop-blur-sm border-t border-stone-100 py-12 mt-12 mb-20 md:mb-0">
-                <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+            <footer className="bg-white/50 backdrop-blur-sm border-t border-stone-100 py-16 mt-16 mb-24 md:mb-0">
+                <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
                     <div>
-                        <h4 className="text-lg font-black text-stone-700 uppercase tracking-tighter mb-2">Weddy</h4>
-                        <p className="text-stone-400 text-xs max-w-xs font-medium leading-relaxed">
+                        <h4 className="text-xl font-black text-stone-700 uppercase tracking-tighter mb-3">Weddy</h4>
+                        <p className="text-stone-400 text-sm max-w-xs font-medium leading-relaxed">
                             Nền tảng lập kế hoạch đám cưới tinh tế, giúp bạn và người ấy đồng hành trên hành trình hạnh phúc.
                         </p>
                     </div>
-                    <div className="flex flex-wrap justify-center gap-6">
+                    <div className="flex flex-wrap justify-center gap-8">
                         {['Về chúng tôi', 'Điều khoản', 'Riêng tư', 'Liên hệ'].map(item => (
-                            <a key={item} href="#" className="text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors">
+                            <a key={item} href="#" className="text-xs font-black uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors">
                                 {item}
                             </a>
                         ))}
                     </div>
-                    <div className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">
+                    <div className="text-xs font-bold text-stone-300 uppercase tracking-widest">
                         © 2024 Weddy. All rights reserved.
                     </div>
                 </div>
@@ -1042,35 +1039,35 @@
                         <div className="space-y-5 text-left">
                             {isRegister && (
                                 <div className="animate-in">
-                                    <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Họ và tên</label>
+                                    <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Họ và tên</label>
                                     <input 
                                         type="text" 
                                         value={name} 
                                         onChange={e => setName(e.target.value)} 
-                                        className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-sm font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
+                                        className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
                                         placeholder="VD: NGUYỄN VĂN A" 
                                     />
                                 </div>
                             )}
                             
                             <div>
-                                <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Email</label>
+                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Email</label>
                                 <input 
                                     type="email" 
                                     value={email} 
                                     onChange={e => setEmail(e.target.value)} 
-                                    className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-sm font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
+                                    className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
                                     placeholder="WEDDY@EXAMPLE.COM" 
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Mật khẩu</label>
+                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Mật khẩu</label>
                                 <input 
                                     type="password" 
                                     value={password} 
                                     onChange={e => setPassword(e.target.value)} 
-                                    className="w-full p-4 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-sm font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
+                                    className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
                                     placeholder="••••••••" 
                                 />
                             </div>
@@ -1084,7 +1081,7 @@
                             <button 
                                 onClick={handleSubmit} 
                                 disabled={loading}
-                                className="w-full py-4 mt-2 bg-stone-800 text-white rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+                                className="w-full py-5 mt-2 bg-stone-800 text-white rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : (isRegister ? 'Tạo tài khoản' : 'Vào hệ thống')}
                             </button>
@@ -1098,7 +1095,7 @@
 
                         <button 
                             onClick={handleGoogleLogin} 
-                            className="w-full py-4 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-sm hover:bg-stone-50 hover:border-stone-300 active:scale-95 transition-all"
+                            className="w-full py-5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-sm hover:bg-stone-50 hover:border-stone-300 active:scale-95 transition-all"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
                             Tiếp tục với Google
@@ -1106,30 +1103,6 @@
                     </div>
                 );
             };
-
-            // --- NEW: Footer Component ---
-            const Footer = () => (
-                <footer className="bg-white/50 backdrop-blur-sm border-t border-stone-100 py-12 mt-12 mb-20 md:mb-0">
-                    <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
-                        <div>
-                            <h4 className="text-lg font-black text-stone-700 uppercase tracking-tighter mb-2">Weddy</h4>
-                            <p className="text-stone-400 text-xs max-w-xs font-medium leading-relaxed">
-                                Nền tảng lập kế hoạch đám cưới tinh tế, giúp bạn và người ấy đồng hành trên hành trình hạnh phúc.
-                            </p>
-                        </div>
-                        <div className="flex flex-wrap justify-center gap-6">
-                            {['Về chúng tôi', 'Điều khoản', 'Riêng tư', 'Liên hệ'].map(item => (
-                                <a key={item} href="#" className="text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors">
-                                    {item}
-                                </a>
-                            ))}
-                        </div>
-                        <div className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">
-                            © 2024 Weddy. All rights reserved.
-                        </div>
-                    </div>
-                </footer>
-            );
 
             return (
                 <div className="min-h-screen">
