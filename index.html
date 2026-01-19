@@ -208,7 +208,7 @@
                             <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i <= step ? 'bg-stone-500 w-8' : 'bg-stone-200 w-4'}`}></div>
                         ))}</div><h2 className="text-3xl md:text-4xl font-black tracking-tighter text-center mb-2 text-stone-700">{currentStep.title}</h2></div>
                         {currentStep.content}
-                        <div className="mt-12">{step < steps.length - 1 ? (<button onClick={handleNext} disabled={(step === 0 && !data.role) || (step === 1 && !data.date) || (step === 2 && !data.location)} className="w-full py-4 bg-stone-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl disabled:opacity-50 hover:bg-stone-400 transition-colors">Tiếp tục</button>) : (<button onClick={handleFinish} className="w-full py-4 bg-emerald-600 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl hover:bg-emerald-500 transition-all">Hoàn tất & Tạo Planner</button>)}</div>
+                        <div className="mt-12">{step < steps.length - 1 ? (<button onClick={handleNext} disabled={(step === 0 && !data.role) || (step === 1 && !data.date) || (step === 2 && !data.location)} className="w-full py-4 bg-stone-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl disabled:opacity-50 hover:bg-stone-400 transition-colors">Tiếp tục</button>) : (<button onClick={handleFinish} className="w-full py-4 bg-emerald-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl hover:bg-emerald-500 transition-all">Hoàn tất & Tạo Planner</button>)}</div>
                     </div>
                 </div>
             );
@@ -229,9 +229,7 @@
                                 <div className="w-12 h-12 bg-rose-100/50 rounded-full flex items-center justify-center text-rose-500"><Icons.Heart size={20} fill="currentColor"/></div>
                                 <div><h4 className="font-bold text-stone-800">Ví chung đôi mình</h4><p className="text-xs text-stone-500">Đồng bộ kế hoạch và ngân sách với người ấy.</p></div>
                             </div>
-                            <button onClick={onInvite} className="w-full md:w-auto px-6 py-3 bg-white border border-stone-200 text-stone-700 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">
-                                <Icons.Share size={14}/> Mời bạn đời
-                            </button>
+                            <button onClick={onInvite} className="w-full md:w-auto px-6 py-3 bg-white border border-stone-200 text-stone-700 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2"><Icons.Share size={14}/> Mời bạn đời</button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-stone-700">
@@ -379,10 +377,10 @@
                     </div>
                     <div className="bg-stone-50/50 rounded-2xl border border-stone-100 overflow-hidden divide-y divide-stone-50">
                         {guests.length === 0 ? <div className="p-12 text-center text-stone-300 italic font-medium">Chưa có khách mời nào.</div> : guests.map((g) => (
-                            <div key={g.id} className="p-4 flex items-center justify-between hover:bg-white transition-colors group">
+                            <div key={g.id} className="p-4 flex items-center justify-between hover:bg-white transition-colors group text-stone-800">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 font-bold text-[10px]">{g.name.charAt(0).toUpperCase()}</div>
-                                    <div><h4 className="font-bold text-sm text-stone-800">{g.name}</h4><p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">{g.relationship}</p></div>
+                                    <div><h4 className="font-bold text-sm">{g.name}</h4><p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">{g.relationship}</p></div>
                                 </div>
                                 <button onClick={() => onDeleteGuest(g.id)} className="p-2 text-stone-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><Icons.Trash size={16} /></button>
                             </div>
@@ -462,6 +460,7 @@
 
             const updateWedding = async (key, val) => await firebase.updateDoc(firebase.doc(firebase.db, "weddings", userData.weddingId), { [key]: val });
             const addActivity = async (text) => { const newActivity = { text, time: new Date().toLocaleTimeString('vi-VN') }; const newActivities = [newActivity, ...(userData.activities || [])].slice(0, 15); await updateWedding('activities', newActivities); };
+            
             const onAddTask = async (t) => { await updateWedding('tasks', [t, ...tasks]); addActivity(`Thêm công việc: ${t.title}`); };
             const onToggleTask = async (idx) => { const nt = [...tasks]; const status = nt[idx].status === 'done' ? 'pending' : 'done'; nt[idx].status = status; await updateWedding('tasks', nt); if (status === 'done') addActivity(`Hoàn thành: ${nt[idx].title}`); };
             const onDeleteTask = async (idx) => { const task = tasks[idx]; await updateWedding('tasks', tasks.filter((_,i) => i !== idx)); addActivity(`Xóa công việc: ${task.title}`); };
@@ -545,6 +544,11 @@
             const [user, setUser] = useState(null);
             const firebase = useFirebase();
 
+            // Notification states
+            const [showNotifications, setShowNotifications] = useState(false);
+            const [notifications, setNotifications] = useState([]);
+            const notificationRef = useRef(null);
+
             useEffect(() => {
                 const handleScroll = () => setScrolled(window.scrollY > 20);
                 window.addEventListener('scroll', handleScroll);
@@ -559,6 +563,37 @@
                     });
                 }
             }, [firebase]);
+
+            // Handle Click Outside for Notifications
+            useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+                        setShowNotifications(false);
+                    }
+                };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+            }, []);
+
+            // Global Notification Listener
+            useEffect(() => {
+                if (firebase && user) {
+                    const { db, doc, onSnapshot } = firebase;
+                    const unsubUser = onSnapshot(doc(db, "users", user.uid), (userSnap) => {
+                        if (userSnap.exists()) {
+                            const weddingId = userSnap.data().weddingId;
+                            if (weddingId) {
+                                onSnapshot(doc(db, "weddings", weddingId), (wSnap) => {
+                                    if (wSnap.exists()) {
+                                        setNotifications(wSnap.data().activities || []);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                    return () => unsubUser();
+                }
+            }, [firebase, user]);
 
             const navigateTo = (tab) => {
                 if (tab !== 'home' && !user) { setShowLogin(true); return; }
@@ -589,8 +624,8 @@
                     <div className="space-y-4 pt-4 text-stone-700">
                         <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:border-stone-500 text-sm" />
                         <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mật khẩu" className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:border-stone-500 text-sm" />
-                        {error && <p className="text-red-500 text-xs text-center">{error}</p>}
-                        <button className="w-full py-4 bg-stone-500 text-white rounded-full font-black uppercase text-xs shadow-lg hover:bg-stone-400 transition-all" onClick={handleLogin}>Vào hệ thống</button>
+                        {error && <p className="text-red-500 text-xs text-center font-bold">{error}</p>}
+                        <button className="w-full py-4 bg-stone-500 text-white rounded-full font-black uppercase text-xs shadow-lg hover:bg-stone-600 transition-all" onClick={handleLogin}>Vào hệ thống</button>
                         <div className="relative flex py-2 items-center"><div className="flex-grow border-t border-stone-100"></div><span className="flex-shrink-0 mx-4 text-stone-400 text-[10px] font-bold uppercase tracking-widest">Hoặc</span><div className="flex-grow border-t border-stone-100"></div></div>
                         <button onClick={handleGoogleLogin} className="w-full py-4 bg-white border border-stone-200 text-stone-700 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 active:scale-95 transition-all shadow-sm">
                             <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
@@ -629,7 +664,49 @@
                             <div className="hidden md:flex items-center gap-1">{[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Lập kế hoạch' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (<button key={item.id} onClick={() => navigateTo(item.id)} className={`text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-full transition-all ${activeTab === item.id ? 'bg-stone-500 text-white shadow-lg' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100/30'}`}>{item.label}</button>))}</div>
                             <div className="flex items-center gap-3">
                                 {user && <span className="hidden sm:block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2">{user.displayName || user.email}</span>}
-                                {user && <button className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-700 border border-stone-100 shadow-sm transition-colors"><Icons.Bell size={18} /></button>}
+                                
+                                {/* NOTIFICATION BUTTON & DROPDOWN (FACEBOOK STYLE) */}
+                                {user && (
+                                    <div className="relative" ref={notificationRef}>
+                                        <button 
+                                            onClick={() => setShowNotifications(!showNotifications)}
+                                            className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-700 border border-stone-100 shadow-sm transition-colors relative"
+                                        >
+                                            <Icons.Bell size={18} />
+                                            {notifications.length > 0 && (
+                                                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
+                                            )}
+                                        </button>
+                                        
+                                        {showNotifications && (
+                                            <div className="absolute right-0 mt-3 w-80 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-stone-100 py-6 animate-in zoom-in-95 origin-top-right overflow-hidden z-[60]">
+                                                <div className="px-6 mb-4 flex justify-between items-center">
+                                                    <h4 className="text-xs font-black uppercase tracking-widest text-stone-800">Thông báo</h4>
+                                                    <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">{notifications.length} mới</span>
+                                                </div>
+                                                <div className="max-h-96 overflow-y-auto hide-scrollbar px-2">
+                                                    {notifications.length > 0 ? notifications.map((n, i) => (
+                                                        <div key={i} className="p-4 rounded-2xl hover:bg-stone-50 transition-colors flex gap-4 items-start cursor-pointer group">
+                                                            <div className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-stone-200 transition-colors">
+                                                                <Icons.Heart size={14} className="text-stone-400" />
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <p className="text-xs font-bold text-stone-700 leading-snug">{n.text}</p>
+                                                                <p className="text-[9px] font-bold text-stone-400 uppercase mt-1">{n.time}</p>
+                                                            </div>
+                                                        </div>
+                                                    )) : (
+                                                        <div className="py-10 text-center text-stone-400 text-xs italic">Không có thông báo mới</div>
+                                                    )}
+                                                </div>
+                                                <div className="px-6 pt-4 border-t border-stone-50 mt-2">
+                                                    <button onClick={() => setShowNotifications(false)} className="w-full text-center text-[9px] font-black uppercase tracking-widest text-stone-400 hover:text-stone-800 transition-colors">Đóng thông báo</button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {user ? <button onClick={() => firebase.signOut(firebase.auth)} className="px-6 py-2.5 bg-white border border-stone-200 text-stone-700 rounded-full text-[10px] font-black uppercase tracking-[0.25em] shadow-sm active:scale-95 transition-all">Đăng xuất</button> : <button onClick={() => setShowLogin(true)} className="px-6 py-2.5 bg-stone-500 text-white rounded-full text-[10px] font-black uppercase tracking-[0.25em] shadow-xl active:scale-95 transition-all">Đăng nhập</button>}
                             </div>
                         </nav>
@@ -637,8 +714,8 @@
                     <main>
                         {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
                         {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} /> : <div className="h-screen flex flex-col gap-4 items-center justify-center text-stone-400 p-6 text-center"><Icons.Users size={48} className="opacity-20" /><p>Vui lòng đăng nhập để sử dụng tính năng Planner.</p><button onClick={() => setShowLogin(true)} className="px-8 py-3 bg-stone-500 text-white rounded-full text-xs font-bold uppercase shadow-lg">Đăng nhập ngay</button></div>)}
-                        {activeTab === 'invitation' && <div className="py-60 text-center px-6 animate-in"><p className="text-2xl font-black uppercase tracking-widest text-stone-300">Thiệp mời điện tử</p><p className="text-stone-400 mt-2 font-medium">Tính năng đang được phát triển</p></div>}
-                        {activeTab === 'vendors' && <div className="py-60 text-center px-6 animate-in"><p className="text-2xl font-black uppercase tracking-widest text-stone-300">Mạng lưới dịch vụ</p><p className="text-stone-400 mt-2 font-medium">Tính năng đang được phát triển</p></div>}
+                        {activeTab === 'invitation' && <div className="py-60 text-center px-6 animate-in text-stone-700"><p className="text-2xl font-black uppercase tracking-widest text-stone-300">Thiệp mời điện tử</p><p className="text-stone-400 mt-2 font-medium">Tính năng đang được phát triển</p></div>}
+                        {activeTab === 'vendors' && <div className="py-60 text-center px-6 animate-in text-stone-700"><p className="text-2xl font-black uppercase tracking-widest text-stone-300">Mạng lưới dịch vụ</p><p className="text-stone-400 mt-2 font-medium">Tính năng đang được phát triển</p></div>}
                     </main>
                     {activeTab !== 'planner' && <footer className="bg-white/30 border-t border-stone-200 py-24 text-center"><div className="container mx-auto px-6"><span className="text-xl font-black tracking-tighter uppercase mb-6 block text-stone-700">Weddy Platform.</span><div className="flex flex-wrap justify-center gap-6 md:gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-stone-400"><span className="hover:text-stone-800 cursor-pointer transition-colors font-bold">Instagram</span><span className="hover:text-stone-800 cursor-pointer transition-colors font-bold">Tiktok</span><span className="hover:text-stone-800 cursor-pointer transition-colors font-bold">Điều khoản</span></div><p className="mt-12 text-[9px] font-bold text-stone-300 uppercase tracking-widest">© 2024 Weddy Tech Collective. All rights reserved.</p></div></footer>}
                     <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title="Đăng nhập"><LoginForm /></Modal>
