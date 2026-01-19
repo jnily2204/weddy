@@ -679,6 +679,30 @@
             </div>
         );
 
+        // --- NEW: Footer Component ---
+        const Footer = () => (
+            <footer className="bg-white/50 backdrop-blur-sm border-t border-stone-100 py-12 mt-12 mb-20 md:mb-0">
+                <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+                    <div>
+                        <h4 className="text-lg font-black text-stone-700 uppercase tracking-tighter mb-2">Weddy</h4>
+                        <p className="text-stone-400 text-xs max-w-xs font-medium leading-relaxed">
+                            Nền tảng lập kế hoạch đám cưới tinh tế, giúp bạn và người ấy đồng hành trên hành trình hạnh phúc.
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap justify-center gap-6">
+                        {['Về chúng tôi', 'Điều khoản', 'Riêng tư', 'Liên hệ'].map(item => (
+                            <a key={item} href="#" className="text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors">
+                                {item}
+                            </a>
+                        ))}
+                    </div>
+                    <div className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">
+                        © 2024 Weddy. All rights reserved.
+                    </div>
+                </div>
+            </footer>
+        );
+
         // --- 6. LOGIC WRAPPER FOR PLANNER ---
         const FullPlannerApp = ({ currentUser, firebase }) => {
             const [subTab, setSubTab] = useState('overview');
@@ -1083,6 +1107,30 @@
                 );
             };
 
+            // --- NEW: Footer Component ---
+            const Footer = () => (
+                <footer className="bg-white/50 backdrop-blur-sm border-t border-stone-100 py-12 mt-12 mb-20 md:mb-0">
+                    <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+                        <div>
+                            <h4 className="text-lg font-black text-stone-700 uppercase tracking-tighter mb-2">Weddy</h4>
+                            <p className="text-stone-400 text-xs max-w-xs font-medium leading-relaxed">
+                                Nền tảng lập kế hoạch đám cưới tinh tế, giúp bạn và người ấy đồng hành trên hành trình hạnh phúc.
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-6">
+                            {['Về chúng tôi', 'Điều khoản', 'Riêng tư', 'Liên hệ'].map(item => (
+                                <a key={item} href="#" className="text-[10px] font-black uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors">
+                                    {item}
+                                </a>
+                            ))}
+                        </div>
+                        <div className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">
+                            © 2024 Weddy. All rights reserved.
+                        </div>
+                    </div>
+                </footer>
+            );
+
             return (
                 <div className="min-h-screen">
                     <div className="fixed top-4 md:top-6 left-0 w-full z-50 flex justify-center px-4 transition-all duration-500">
@@ -1117,6 +1165,9 @@
                         {activeTab === 'invitation' && <ComingSoon title="Thiệp Mời Online" desc="Tính năng thiết kế và gửi thiệp mời trực tuyến đang được phát triển." />}
                         {activeTab === 'vendors' && <ComingSoon title="Dịch Vụ Cưới" desc="Hệ thống kết nối nhà cung cấp dịch vụ uy tín sẽ sớm ra mắt." />}
                     </main>
+
+                    {/* Footer Component Added Here */}
+                    <Footer />
 
                     {user && <MobileNav activeTab={activeTab} onNavigate={navigateTo} />}
 
