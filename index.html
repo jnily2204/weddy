@@ -112,21 +112,19 @@
         const Modal = ({ isOpen, onClose, title, children }) => {
             if (!isOpen) return null;
             return (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center animate-in">
-                    {/* Reverted: Lớp nền mờ nhạt như cũ */}
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in">
+                    {/* Lớp nền mờ nhẹ nhàng, phủ kín toàn màn hình */}
                     <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm transition-all" onClick={onClose}></div>
                     
-                    {/* UPDATED: Modal Full Màn Hình */}
-                    <div className="relative bg-[#F0EBE5]/95 backdrop-blur-3xl w-full h-full p-6 md:p-12 overflow-y-auto hide-scrollbar text-stone-700 flex flex-col">
-                        <div className="flex justify-between items-center mb-10 max-w-3xl mx-auto w-full pt-4 md:pt-0">
-                            <h3 className="text-xl md:text-3xl font-black uppercase tracking-tighter text-stone-800">{title}</h3>
-                            <button onClick={onClose} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-stone-100 transition-colors group">
-                                <Icons.X size={20} className="text-stone-400 group-hover:text-stone-800 transition-colors" />
+                    {/* Hộp thoại Popup nằm giữa, bo góc sang trọng */}
+                    <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-stone-100 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar text-stone-700">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-black uppercase tracking-widest text-stone-600">{title}</h3>
+                            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-colors">
+                                <Icons.X size={16} />
                             </button>
                         </div>
-                        <div className="max-w-3xl mx-auto w-full flex-1">
-                            {children}
-                        </div>
+                        {children}
                     </div>
                 </div>
             );
