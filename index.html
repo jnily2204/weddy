@@ -116,11 +116,11 @@
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in">
-                    {/* Backdrop: Màu tối mờ nhẹ (như cũ), phủ kín màn hình */}
-                    <div className="absolute inset-0 bg-stone-900/30 backdrop-blur-sm transition-all" onClick={onClose}></div>
+                    {/* Backdrop: Đã loại bỏ màu nền đen và hiệu ứng mờ, hoàn toàn trong suốt */}
+                    <div className="absolute inset-0 transition-all" onClick={onClose}></div>
                     
-                    {/* Popup: Dạng Card nằm giữa, bo tròn sang trọng */}
-                    <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-2xl border border-stone-100 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar text-stone-700">
+                    {/* Popup: Dạng Card nằm giữa, bo tròn sang trọng, thêm shadow đậm để tách biệt */}
+                    <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-stone-100 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar text-stone-700">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-black uppercase tracking-widest text-stone-600">{title}</h3>
                             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-colors shrink-0">
