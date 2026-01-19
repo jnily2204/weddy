@@ -671,6 +671,22 @@
             )
         }
 
+        // --- NEW: COMING SOON COMPONENT ---
+        const ComingSoon = ({ title, desc }) => (
+            <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center animate-in min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mb-8 text-stone-300 shadow-inner">
+                    <Icons.Star size={40} />
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black text-stone-700 mb-4 tracking-tighter uppercase">{title}</h2>
+                <p className="text-stone-400 max-w-md mx-auto text-sm md:text-base font-bold uppercase tracking-widest leading-relaxed mb-8">
+                    {desc}
+                </p>
+                <div className="inline-block px-6 py-3 bg-stone-50 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 border border-stone-100">
+                    Đang phát triển
+                </div>
+            </div>
+        );
+
         // --- 7. TOP LEVEL APP CONTAINER ---
         const App = () => {
             const [activeTab, setActiveTab] = useState('home');
@@ -718,7 +734,7 @@
             }, []);
 
             const navigateTo = (tab) => { 
-                if (tab !== 'home' && !user) { setShowLogin(true); return; } 
+                if (tab !== 'home' && tab !== 'invitation' && tab !== 'vendors' && !user) { setShowLogin(true); return; } 
                 setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'smooth' }); 
             };
             
@@ -783,6 +799,8 @@
                     <main>
                         {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
                         {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} firebase={firebase} /> : <div className="h-screen flex flex-col gap-4 items-center justify-center text-stone-400 p-6 text-center animate-in font-bold uppercase font-black uppercase font-bold"><Icons.Users size={48} className="opacity-10" /><p className="font-medium text-sm text-stone-300 font-bold uppercase tracking-widest uppercase uppercase font-black uppercase font-bold">Vui lòng đăng nhập Planner.</p><button onClick={() => setShowLogin(true)} className="px-8 py-3 bg-stone-500 text-white rounded-full text-xs font-bold uppercase shadow-lg font-bold transition-all active:scale-95 font-bold uppercase font-black uppercase font-bold">Đăng nhập ngay</button></div>)}
+                        {activeTab === 'invitation' && <ComingSoon title="Thiệp Mời Online" desc="Tính năng thiết kế và gửi thiệp mời trực tuyến đang được phát triển." />}
+                        {activeTab === 'vendors' && <ComingSoon title="Dịch Vụ Cưới" desc="Hệ thống kết nối nhà cung cấp dịch vụ uy tín sẽ sớm ra mắt." />}
                     </main>
 
                     <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title="Đăng nhập"><LoginForm /></Modal>
