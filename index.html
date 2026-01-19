@@ -131,7 +131,7 @@
         };
 
         // --- FIXED: GettingStartedWizard ---
-        const GettingStartedWizard = ({ onComplete }) => {
+        const GettingStartedWizard = ({ onComplete, onSkip }) => { // Đã thêm prop onSkip
             const [step, setStep] = useState(0);
             const [data, setData] = useState({ role: "", date: "", location: "", budget: "" });
             const [isSubmitting, setIsSubmitting] = useState(false);
@@ -175,6 +175,16 @@
 
             return (
                 <div className="fixed inset-0 z-[200] bg-[#F0EBE5]/90 backdrop-blur-xl flex flex-col animate-in">
+                    {/* Nút Skip mới thêm */}
+                    <div className="absolute top-6 right-6 z-50">
+                        <button 
+                            onClick={onSkip} 
+                            className="text-stone-400 font-bold text-xs uppercase tracking-widest hover:text-stone-600 transition-colors px-4 py-2 bg-white/50 rounded-full hover:bg-white"
+                        >
+                            Bỏ qua
+                        </button>
+                    </div>
+
                     <div className="flex-1 flex flex-col justify-center px-8 max-w-lg mx-auto w-full text-center">
                         <div className="mb-12">
                             <div className="flex justify-center gap-1.5 mb-8">
@@ -780,7 +790,15 @@
                         await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { budgetLimit: w.budget || 300000000 });
                     }
                 };
-                return <GettingStartedWizard onComplete={onWiz} />;
+                
+                // Logic xử lý nút Skip
+                const onSkip = async () => {
+                    const { db, doc, updateDoc } = firebase;
+                    const pref = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
+                    await updateDoc(pref, { isSetupComplete: true });
+                };
+
+                return <GettingStartedWizard onComplete={onWiz} onSkip={onSkip} />;
             }
 
             const updateDB = async (k, v) => { await firebase.updateDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { [k]: v }); };
