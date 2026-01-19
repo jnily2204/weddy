@@ -374,7 +374,6 @@
                                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-6 mb-4">
                                             <div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div>
                                         </div>
-                                        {/* Updated Budget Display with Edit functionality */}
                                         <div className="flex items-center gap-2 group/budget inline-flex cursor-pointer" onClick={onEditBudget}>
                                             <p className="text-[12px] font-black text-white/80 uppercase tracking-widest">Ngân sách: {formatMoneyDisplay(displayBudgetLimit)}</p>
                                             <Icons.Edit size={14} className="text-white/20 group-hover/budget:text-white transition-colors" />
@@ -420,7 +419,6 @@
                     const numCost = parseCurrencyInput(cost);
                     const numPaid = parseCurrencyInput(paid);
                     
-                    // Logic for custom category
                     const finalCategory = category === "Khác" ? (customCategory || "Khác") : category;
 
                     onAddExpense({ 
@@ -518,12 +516,26 @@
             const [isAddModalOpen, setIsAddModalOpen] = useState(false);
             const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
             const [taskToDeleteIndex, setTaskToDeleteIndex] = useState(null);
-            const [newTaskTitle, setNewTaskTitle] = useState(""); const [newTaskCategory, setNewTaskCategory] = useState("Khác"); const [newTaskCost, setNewTaskCost] = useState("");
+            const [newTaskTitle, setNewTaskTitle] = useState(""); 
+            const [newTaskCategory, setNewTaskCategory] = useState("Đặt tiệc cưới"); 
+            const [customTaskCategory, setCustomTaskCategory] = useState("");
+            const [newTaskCost, setNewTaskCost] = useState("");
 
             const pendingTasks = tasks.map((task, index) => ({...task, originalIndex: index})).filter(t => t.status !== 'done');
             const completedTasks = tasks.map((task, index) => ({...task, originalIndex: index})).filter(t => t.status === 'done');
 
-            const handleAddTask = () => { if (newTaskTitle && newTaskTitle.trim() !== "") { onAddTask({ title: newTaskTitle, tag: newTaskCategory, status: "pending", cost: newTaskCost ? parseCurrencyInput(newTaskCost) : 0 }); setNewTaskTitle(""); setNewTaskCategory("Khác"); setNewTaskCost(""); setIsAddModalOpen(false); } };
+            const handleAddTask = () => { 
+                if (newTaskTitle && newTaskTitle.trim() !== "") { 
+                    const finalTag = newTaskCategory === "Khác" ? (customTaskCategory || "Khác") : newTaskCategory;
+                    onAddTask({ 
+                        title: newTaskTitle, 
+                        tag: finalTag, 
+                        status: "pending", 
+                        cost: newTaskCost ? parseCurrencyInput(newTaskCost) : 0 
+                    }); 
+                    setNewTaskTitle(""); setNewTaskCategory("Đặt tiệc cưới"); setCustomTaskCategory(""); setNewTaskCost(""); setIsAddModalOpen(false); 
+                } 
+            };
             const confirmDelete = (index) => { setTaskToDeleteIndex(index); setIsDeleteModalOpen(true); };
             const executeDelete = () => { if (taskToDeleteIndex !== null) { onDeleteTask(taskToDeleteIndex); setIsDeleteModalOpen(false); setTaskToDeleteIndex(null); } };
 
@@ -541,7 +553,51 @@
                     <div className="flex justify-between items-center px-4"><h3 className="text-2xl font-black uppercase tracking-tighter">Công việc</h3><button onClick={() => setIsAddModalOpen(true)} className="px-6 md:px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-xl shadow-black/10 flex items-center gap-2 active:scale-95 transition-transform hover:bg-stone-800"><Icons.Plus size={16}/> <span className="hidden md:inline">Thêm việc</span><span className="md:hidden">Thêm</span></button></div>
                     <div><h4 className="px-4 mb-4 text-[10px] font-black uppercase tracking-widest text-stone-400">Cần làm ({pendingTasks.length})</h4><div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm">{pendingTasks.length > 0 ? pendingTasks.map(renderTaskItem) : <div className="p-8 text-center text-stone-400 text-sm">Tuyệt vời! Bạn đã hoàn thành hết các việc cần làm.</div>}</div></div>
                     {completedTasks.length > 0 && (<div><h4 className="px-4 mb-4 text-[10px] font-black uppercase tracking-widest text-stone-400 mt-8">Đã hoàn thành ({completedTasks.length})</h4><div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-stone-100 overflow-hidden shadow-sm opacity-60 hover:opacity-100 transition-opacity">{completedTasks.map(renderTaskItem)}</div></div>)}
-                    <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Thêm công việc mới"><div className="space-y-6"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên công việc</label><input type="text" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" /></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tính chất</label><div className="relative"><select value={newTaskCategory} onChange={(e) => setNewTaskCategory(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"><option value="Khác">Khác</option><option value="Địa điểm">Địa điểm</option><option value="Khách mời">Khách mời</option><option value="Thiệp mời">Thiệp mời</option><option value="Trang phục">Trang phục</option><option value="Ẩm thực">Ẩm thực</option><option value="Trang trí">Trang trí</option></select><div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div><div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Chi phí dự kiến</label><input type="text" value={newTaskCost} onChange={(e) => setNewTaskCost(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="0 VNĐ" /></div></div><div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleAddTask} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu công việc</button></div></div></Modal>
+                    <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} title="Thêm công việc mới">
+                        <div className="space-y-6">
+                            <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên công việc</label><input type="text" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="Ví dụ: Thuê váy cưới" /></div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Hạng mục</label>
+                                    <div className="relative">
+                                        <select 
+                                            value={newTaskCategory} 
+                                            onChange={(e) => setNewTaskCategory(e.target.value)} 
+                                            className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none"
+                                        >
+                                            <option value="Đặt tiệc cưới">Đặt tiệc cưới</option>
+                                            <option value="Tiệc đám hỏi">Tiệc đám hỏi</option>
+                                            <option value="Chụp ảnh & Quay phim">Chụp ảnh & Quay phim</option>
+                                            <option value="Decor & Trang trí">Decor & Trang trí</option>
+                                            <option value="Trang phục & Make-up">Trang phục & Make-up</option>
+                                            <option value="Nhẫn & Trang sức">Nhẫn & Trang sức</option>
+                                            <option value="Thiệp mời">Thiệp mời</option>
+                                            <option value="Khách mời">Khách mời</option>
+                                            <option value="Khác">Khác...</option>
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div>
+                                    </div>
+                                </div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Chi phí dự kiến</label><input type="text" value={newTaskCost} onChange={(e) => setNewTaskCost(formatCurrencyInput(e.target.value))} className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" placeholder="0 VNĐ" /></div>
+                            </div>
+
+                            {/* Conditional Input for Custom Task Category */}
+                            {newTaskCategory === "Khác" && (
+                                <div className="animate-in slide-in-from-top-2">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Tên hạng mục riêng</label>
+                                    <input 
+                                        type="text" 
+                                        value={customTaskCategory} 
+                                        onChange={(e) => setCustomTaskCategory(e.target.value)} 
+                                        className="w-full bg-[#FBF9F7] border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" 
+                                        placeholder="Tự điền hạng mục..."
+                                    />
+                                </div>
+                            )}
+
+                            <div className="flex justify-end gap-3 pt-2"><button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={handleAddTask} className="px-8 py-3 bg-black text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-stone-800">Lưu công việc</button></div>
+                        </div>
+                    </Modal>
                     <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} title="Xóa công việc?"><div className="space-y-6"><p className="text-sm text-stone-600 font-medium">Bạn có chắc chắn muốn xóa công việc này không?<br/><span className="text-xs text-stone-400 mt-2 block">Hành động này không thể hoàn tác.</span></p><div className="flex justify-end gap-3"><button onClick={() => setIsDeleteModalOpen(false)} className="px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest text-stone-500 hover:bg-stone-100">Hủy</button><button onClick={executeDelete} className="px-8 py-3 bg-red-500 text-white rounded-full text-[11px] font-black uppercase tracking-widest shadow-lg hover:bg-red-600">Xóa ngay</button></div></div></Modal>
                 </div>
             );
