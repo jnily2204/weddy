@@ -117,6 +117,7 @@
             User: (p) => <Icon {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></Icon>
         };
 
+        // --- 2. HOOKS ---
         const useFirebase = () => {
             const [services, setServices] = useState(null);
             useEffect(() => {
@@ -126,6 +127,7 @@
             return services;
         };
 
+        // --- 3. SUB-COMPONENTS ---
         const Modal = ({ isOpen, onClose, title, children }) => {
             if (!isOpen) return null;
             return (
@@ -867,46 +869,15 @@
 
             return (
                 <div className="pt-24 pb-32 md:pt-32 container mx-auto px-4 md:px-12 max-w-7xl animate-in text-stone-700">
-                    <div className="fixed top-2 md:top-4 left-0 w-full z-50 flex justify-center px-2 md:px-4 transition-all duration-500">
-                        <nav className={`flex items-center justify-between px-4 py-2 md:px-6 md:py-2 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/80 backdrop-blur-2xl border border-white/40 shadow-lg' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
-                            
-                            <div onClick={() => navigateTo('home')}>
-                                <Logo animated={true} />
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6 px-2 md:px-0 text-left font-bold uppercase">
+                            <div className="flex-1 w-full text-stone-600 text-left font-bold uppercase font-black uppercase font-bold text-left font-black uppercase font-bold"><span className="text-[10px] tracking-[0.3em] text-[#B5A896] mb-2 block">Planner của {userData.profile?.name || 'bạn'}</span><h2 className="text-3xl md:text-5xl font-title font-bold tracking-tighter">Weddy Planner</h2></div>
+                        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto text-left font-bold uppercase font-black uppercase font-bold">
+                            <div className="bg-white/70 p-5 md:p-6 rounded-[2.5rem] border border-stone-100 shadow-sm flex items-center gap-6 flex-1 min-w-0 sm:min-w-[280px] font-bold uppercase font-black uppercase font-bold">
+                                <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-100/40 rounded-full flex items-center justify-center text-rose-300 shrink-0 shadow-inner"><Icons.Heart size={20} fill="currentColor"/></div>
+                                <div className="flex-1 text-sm overflow-hidden text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold text-left"><p className="text-[9px] font-black tracking-widest text-stone-300 mb-1 text-left uppercase font-black">Ngày trọng đại</p><div className="flex items-baseline gap-2 md:gap-3 font-bold text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold text-left"><p className="text-base md:text-xl font-bold text-stone-600 truncate text-left">{userData.profile?.weddingDate || 'Chưa đặt'}</p><p className="text-[10px] font-bold text-rose-400 whitespace-nowrap uppercase text-left">{utils.getDaysLeft(userData.profile?.weddingDate)}</p></div></div>
                             </div>
-
-                            <div className="hidden md:flex items-center gap-1 font-bold uppercase tracking-widest font-black text-xs">
-                                {[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (
-                                    <button key={item.id} onClick={() => navigateTo(item.id)} className={`px-5 py-2.5 rounded-full transition-all uppercase ${activeTab === item.id ? 'bg-stone-800 text-white shadow-lg' : 'text-stone-500 hover:text-stone-900 hover:bg-white/50'}`}>
-                                        {item.label}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="flex items-center gap-3 md:gap-4 font-bold uppercase">
-                                {currentUser && <span onClick={() => navigateTo('account')} className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2 truncate max-w-[120px] cursor-pointer hover:text-stone-600 transition-colors">{currentUser.displayName || currentUser.email}</span>}
-                                {currentUser && (
-                                    <div className="relative" ref={notificationRef}>
-                                        <button onClick={() => setShowNotifications(!showNotifications)} className="w-9 h-9 md:w-10 md:h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors relative"><Icons.Bell size={18} />{notifications.length > 0 && (<span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>)}</button>
-                                        {showNotifications && (
-                                            <div className="absolute right-0 mt-3 w-[280px] md:w-80 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-stone-100 py-6 animate-in zoom-in-95 origin-top-right overflow-hidden z-[60]">
-                                                <div className="px-6 mb-4 flex justify-between items-center text-stone-800 font-bold uppercase"><h4 className="text-[10px] md:text-xs">Thông báo</h4><span className="text-[9px] text-stone-400">{notifications.length} mới</span></div>
-                                                <div className="max-h-96 overflow-y-auto hide-scrollbar px-2 text-stone-600 text-left">
-                                                    {notifications.length > 0 ? notifications.map((n, i) => (
-                                                        <div key={i} className="p-4 rounded-2xl hover:bg-stone-50 transition-colors flex gap-4 items-start cursor-pointer group text-left"><div className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-stone-200 transition-colors shadow-sm"><Icons.Heart size={14} className="text-stone-400 group-hover:text-rose-500 transition-colors" /></div><div className="flex-1"><p className="text-xs font-bold leading-snug">{n.text}</p><p className="text-[9px] font-bold text-stone-300 uppercase mt-1">{n.time}</p></div></div>
-                                                    )) : <div className="py-10 text-center text-stone-300 text-xs italic font-medium">Không có thông báo mới</div>}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                {currentUser ? (
-                                    <>
-                                        <button onClick={() => firebase.signOut(firebase.auth)} className="hidden sm:block px-6 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase shadow-sm active:scale-95 transition-all hover:bg-stone-50 hover:border-stone-300">Đăng xuất</button>
-                                        <button onClick={() => firebase.signOut(firebase.auth)} className="sm:hidden w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors"><Icons.LogOut size={16} /></button>
-                                    </>
-                                ) : <button onClick={() => setShowLogin(true)} className="px-6 py-2.5 bg-stone-800 text-white rounded-full text-[10px] font-black uppercase shadow-xl active:scale-95 transition-all hover:bg-stone-700">Đăng nhập</button>}
-                            </div>
-                        </nav>
+                            <button onClick={() => setIsJoinModalOpen(true)} className="bg-stone-500 text-white p-5 md:p-6 rounded-[2.5rem] shadow-xl hover:bg-stone-600 active:scale-95 flex items-center justify-center gap-4 transition-all shrink-0 font-bold uppercase font-black uppercase font-bold uppercase font-black font-bold uppercase font-black uppercase font-bold"><Icons.Link size={20}/><span className="text-xs">Nhập mã kết nối</span></button>
+                        </div>
                     </div>
 
                     <div className="flex justify-center mb-10 md:mb-16 -mx-4 px-4 md:mx-0 md:px-0 font-bold uppercase font-black uppercase font-bold">
@@ -1013,6 +984,26 @@
                 }
             }, [firebase]);
 
+            useEffect(() => {
+                if (firebase && user) {
+                    const { db, doc, onSnapshot } = firebase;
+                    const unsubProfile = onSnapshot(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), (pSnap) => {
+                        if (pSnap.exists() && pSnap.data().weddingId) {
+                            onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', pSnap.data().weddingId), (wSnap) => {
+                                if (wSnap.exists()) setNotifications(wSnap.data().activities || []);
+                            });
+                        }
+                    });
+                    return () => unsubProfile();
+                }
+            }, [firebase, user]);
+
+            useEffect(() => {
+                const handleClickOutside = (e) => { if (notificationRef.current && !notificationRef.current.contains(e.target)) setShowNotifications(false); };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+            }, []);
+
             const navigateTo = (tab) => { 
                 if (tab !== 'home' && tab !== 'invitation' && tab !== 'vendors' && !user) { setShowLogin(true); return; } 
                 setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'smooth' }); 
@@ -1098,8 +1089,19 @@
                 <div className="min-h-screen">
                     <div className="fixed top-2 md:top-4 left-0 w-full z-50 flex justify-center px-2 md:px-4 transition-all duration-500">
                         <nav className={`flex items-center justify-between px-4 py-2 md:px-6 md:py-2 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/80 backdrop-blur-2xl border border-white/40 shadow-lg' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
-                            <div onClick={() => navigateTo('home')}><Logo animated={true} /></div>
-                            <div className="hidden md:flex items-center gap-1 font-bold uppercase tracking-widest font-black text-xs">{[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (<button key={item.id} onClick={() => navigateTo(item.id)} className={`px-5 py-2.5 rounded-full transition-all uppercase ${activeTab === item.id ? 'bg-stone-800 text-white shadow-lg' : 'text-stone-500 hover:text-stone-900 hover:bg-white/50'}`}>{item.label}</button>))}</div>
+                            
+                            <div onClick={() => navigateTo('home')}>
+                                <Logo animated={true} />
+                            </div>
+
+                            <div className="hidden md:flex items-center gap-1 font-bold uppercase tracking-widest font-black text-xs">
+                                {[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (
+                                    <button key={item.id} onClick={() => navigateTo(item.id)} className={`px-5 py-2.5 rounded-full transition-all uppercase ${activeTab === item.id ? 'bg-stone-800 text-white shadow-lg' : 'text-stone-500 hover:text-stone-900 hover:bg-white/50'}`}>
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+
                             <div className="flex items-center gap-3 md:gap-4 font-bold uppercase">
                                 {user && <span onClick={() => navigateTo('account')} className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2 truncate max-w-[120px] cursor-pointer hover:text-stone-600 transition-colors">{user.displayName || user.email}</span>}
                                 {user && (
@@ -1152,3 +1154,4 @@
     </script>
 </body>
 </html>
+
