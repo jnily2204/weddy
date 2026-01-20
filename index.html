@@ -634,7 +634,11 @@
         // --- 6. LOGIC WRAPPER FOR PLANNER ---
         const FullPlannerApp = ({ currentUser, firebase }) => {
             const [subTab, setSubTab] = useState('overview');
-            const [userData, setUserData] = useState(null);
+            
+            // FIX: Tách biệt state để tránh conflict dữ liệu gây vòng lặp Wizard
+            const [userProfile, setUserProfile] = useState(null);
+            const [weddingData, setWeddingData] = useState(null);
+            
             const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
             const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
             const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
@@ -643,70 +647,88 @@
             const [joinInput, setJoinInput] = useState("");
             const [tempBudget, setTempBudget] = useState("");
 
+            // 1. Chỉ lắng nghe Profile User
             useEffect(() => {
                 if (!firebase || !currentUser) return;
-                const { db, onSnapshot, doc, setDoc, getDoc, updateDoc } = firebase;
+                const { db, doc, onSnapshot, setDoc } = firebase;
                 const profileRef = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
-                
-                let unsubWedding = () => {};
-                let currentWeddingId = null;
 
-                const unsubProfile = onSnapshot(profileRef, async (snap) => {
+                const unsub = onSnapshot(profileRef, async (snap) => {
                     if (!snap.exists()) {
+                        // Khởi tạo profile nếu chưa có
                         await setDoc(profileRef, { 
                             email: currentUser.email, 
                             name: currentUser.displayName, 
                             weddingId: null, 
                             isSetupComplete: false 
                         });
-                        return;
-                    }
-
-                    const pv = snap.data();
-                    const wid = pv.weddingId;
-
-                    if (!wid) {
-                        const newWid = currentUser.uid;
-                        await updateDoc(profileRef, { weddingId: newWid });
-                        const wRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', newWid);
-                        const wSnap = await getDoc(wRef);
-                        if (!wSnap.exists()) {
-                            await setDoc(wRef, { 
-                                tasks: [], guests: [], activities: [], 
-                                budgetLimit: 300000000, owners: [currentUser.uid] 
-                            });
-                        }
-                        return;
-                    }
-
-                    if (wid !== currentWeddingId) {
-                        currentWeddingId = wid;
-                        unsubWedding();
-                        unsubWedding = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', wid), (wSnap) => {
-                            if (wSnap.exists()) {
-                                setUserData(prev => ({ 
-                                    ...wSnap.data(), 
-                                    weddingId: wid, 
-                                    profile: pv
-                                }));
-                            }
-                        });
                     } else {
-                        setUserData(prev => prev ? ({ ...prev, profile: pv }) : null);
+                        const data = snap.data();
+                        setUserProfile(data);
+                        
+                        // Tự động tạo weddingId nếu chưa có
+                        if (!data.weddingId) {
+                             const newWid = currentUser.uid;
+                             await firebase.updateDoc(profileRef, { weddingId: newWid });
+                        }
                     }
-
                 }, (err) => console.error("Profile Error:", err));
 
-                return () => { unsubProfile(); unsubWedding(); };
+                return () => unsub();
             }, [firebase, currentUser]);
+
+            // 2. Chỉ lắng nghe Wedding Data (khi đã có weddingId từ profile)
+            useEffect(() => {
+                if (!firebase || !userProfile?.weddingId) return;
+                const { db, doc, onSnapshot, getDoc, setDoc } = firebase;
+                const wid = userProfile.weddingId;
+                
+                // Đảm bảo document Wedding tồn tại
+                const ensureWedding = async () => {
+                     const wRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', wid);
+                     const wSnap = await getDoc(wRef);
+                     if (!wSnap.exists()) {
+                        await setDoc(wRef, { 
+                            tasks: [], guests: [], activities: [], 
+                            budgetLimit: 300000000, owners: [currentUser.uid] 
+                        });
+                     }
+                };
+                ensureWedding();
+
+                const unsub = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', wid), (snap) => {
+                    if (snap.exists()) {
+                        setWeddingData({ ...snap.data(), weddingId: wid });
+                    }
+                });
+                return () => unsub();
+            }, [firebase, userProfile?.weddingId]); // Chỉ chạy lại khi ID đám cưới thay đổi
+
+            // 3. Gộp dữ liệu an toàn
+            const userData = useMemo(() => {
+                if (!userProfile || !weddingData) return null;
+                return { ...weddingData, profile: userProfile };
+            }, [userProfile, weddingData]);
+
 
             if (!userData) return <div className="h-screen flex items-center justify-center text-stone-400"><div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin"></div></div>;
 
+            // Kiểm tra chặt chẽ trạng thái hoàn tất
             if (!userData.profile?.isSetupComplete) {
                 const onWiz = async (w) => {
                     const { db, doc, updateDoc } = firebase;
                     const pref = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
-                    await updateDoc(pref, { role: w.role, weddingDate: w.date, location: w.location, isSetupComplete: true, name: currentUser.displayName || userData.profile.name });
+                    
+                    // Cập nhật profile TRƯỚC
+                    await updateDoc(pref, { 
+                        role: w.role, 
+                        weddingDate: w.date, 
+                        location: w.location, 
+                        isSetupComplete: true, // Quan trọng: Đánh dấu đã xong
+                        name: currentUser.displayName || userData.profile.name 
+                    });
+
+                    // Cập nhật ngân sách SAU (nếu có)
                     if (userData.weddingId) {
                         await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { budgetLimit: w.budget || 300000000 });
                     }
@@ -721,39 +743,45 @@
                 return <GettingStartedWizard onComplete={onWiz} onSkip={onSkip} />;
             }
 
-            const updateDB = async (k, v) => { await firebase.updateDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { [k]: v }); };
-            const addAct = async (t) => { const n = { text: t, time: new Date().toLocaleTimeString('vi-VN') }; await updateDB('activities', [n, ...(userData.activities || [])].slice(0, 15)); };
+            // --- CÁC HÀM XỬ LÝ DB GIỮ NGUYÊN NHƯNG ĐẢM BẢO AN TOÀN HƠN ---
+            const updateDB = async (k, v) => { 
+                if (!userData.weddingId) return;
+                await firebase.updateDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { [k]: v }); 
+            };
             
-            // FIX: Using ID for tasks logic
+            const addAct = async (t) => { 
+                const n = { text: t, time: new Date().toLocaleTimeString('vi-VN') }; 
+                await updateDB('activities', [n, ...(userData.activities || [])].slice(0, 15)); 
+            };
+            
             const onAddTask = async (t) => { 
-                // Ensure ID is added if not present (though it should be from handleAdd)
                 const newTask = { ...t, paidBy: userData.profile?.role, id: t.id || Date.now() };
                 const nt = [newTask, ...(userData.tasks || [])]; 
                 await updateDB('tasks', nt); await addAct(`Thêm: ${t.title}`); 
             };
-            const onToggleTask = async (id) => { // ID-based toggle
+            
+            const onToggleTask = async (id) => { 
                 const nt = (userData.tasks || []).map(t => {
-                    if ((t.id && t.id === id) || (!t.id && t === id)) { // Fallback for old tasks without ID (if any) using object ref? No, just use index if no ID? Better: migrate or assume ID exists.
-                        // Safe bet: find by ID if exists, or assume id passed is object ref (old way). 
-                        // But we changed call site to pass ID.
-                        // Let's strictly use ID.
+                    if ((t.id && t.id === id) || (!t.id && t === id)) { 
                          return t.id === id ? { ...t, status: t.status === 'done' ? 'pending' : 'done' } : t;
                     }
                     return t;
                 });
-                // Find task to log activity
                 const task = nt.find(t => t.id === id);
                 if(task) await addAct(`Cập nhật: ${task.title}`);
                 await updateDB('tasks', nt); 
             };
-            const onDeleteTask = async (id) => { // ID-based delete
+            
+            const onDeleteTask = async (id) => { 
                 const nt = (userData.tasks || []).filter(t => t.id !== id); 
                 await updateDB('tasks', nt); await addAct(`Xóa 1 công việc`); 
             };
+            
             const onAddGuest = async (g) => { 
                 const ng = [g, ...(userData.guests || [])]; 
                 await updateDB('guests', ng); await addAct(`Khách mới: ${g.name}`); 
             };
+            
             const onDeleteGuest = async (id) => { 
                 const ng = (userData.guests || []).filter(x => x.id !== id); 
                 await updateDB('guests', ng); await addAct(`Xóa khách`); 
@@ -778,6 +806,7 @@
 
             return (
                 <div className="pt-24 pb-32 md:pt-32 container mx-auto px-4 md:px-12 max-w-7xl animate-in text-stone-700">
+                    {/* ... (Phần giao diện bên dưới giữ nguyên) ... */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6 px-2 md:px-0 text-left font-bold uppercase">
                             <div className="flex-1 w-full text-stone-600 text-left font-bold uppercase font-black uppercase font-bold text-left font-black uppercase font-bold"><span className="text-[10px] tracking-[0.3em] text-[#B5A896] mb-2 block">Planner của {userData.profile?.name || 'bạn'}</span><h2 className="text-3xl md:text-5xl font-title font-bold tracking-tighter">Weddy Planner</h2></div>
                         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto text-left font-bold uppercase font-black uppercase font-bold">
@@ -792,7 +821,7 @@
                     <div className="flex justify-center mb-10 md:mb-16 -mx-4 px-4 md:mx-0 md:px-0 font-bold uppercase font-black uppercase font-bold">
                         <div className="bg-white/40 p-1.5 rounded-full flex w-full max-w-6xl border border-white/60 backdrop-blur-sm overflow-x-auto hide-scrollbar font-bold uppercase font-black uppercase font-bold">
                             {[{ id: 'overview', label: 'Tổng quan', icon: Icons.Layout }, { id: 'tasks', label: 'Công việc', icon: Icons.Check }, { id: 'budget', label: 'Ngân sách', icon: Icons.DollarSign }, { id: 'guests', label: 'Khách mời', icon: Icons.Users }].map((tab) => (
-                                <button key={tab.id} onClick={() => setSubTab(tab.id)} className={`flex-1 flex items-center justify-center gap-2 px-6 md:px-10 py-4 md:py-5 rounded-full text-[10px] md:text-sm tracking-widest transition-all whitespace-nowrap ${subTab === tab.id ? 'bg-stone-500 text-white shadow-xl scale-105 font-bold uppercase' : 'text-stone-400 hover:text-stone-700 hover:bg-white/50 font-bold uppercase font-bold uppercase font-black uppercase font-bold'}`}><tab.icon size={16} strokeWidth={3} className="md:w-[18px] md:h-[18px]" />{tab.label}</button>
+                                <button key={tab.id} onClick={() => setSubTab(tab.id)} className={`flex-1 flex items-center justify-center gap-2 px-6 md:px-10 py-4 md:py-5 rounded-full text-[10px] md:text-sm tracking-widest transition-all whitespace-nowrap ${subTab === tab.id ? 'bg-stone-500 text-white shadow-xl scale-105 font-bold uppercase' : 'text-stone-400 hover:text-stone-700 hover:bg-white/50 font-bold uppercase font-black uppercase font-bold'}`}><tab.icon size={16} strokeWidth={3} className="md:w-[18px] md:h-[18px]" />{tab.label}</button>
                             ))}
                         </div>
                     </div>
@@ -800,7 +829,7 @@
                     <div className="px-1 md:px-0 font-bold uppercase font-black uppercase font-bold">
                         {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={userData.tasks.filter(t=>t.status==='done').length} totalTasks={userData.tasks.length} guestCount={userData.guests.length} budgetLimit={userData.budgetLimit} role={userData.profile?.role} weddingDate={userData.profile?.weddingDate} activities={userData.activities} onInvite={handleInvite} onEditBudget={() => { setTempBudget(utils.formatInput(userData.budgetLimit)); setIsBudgetModalOpen(true); }} onOpenGuests={() => setIsGuestModalOpen(true)} />}
                         {subTab === 'tasks' && <PlannerTasks tasks={userData.tasks} onAddTask={onAddTask} onToggleTask={onToggleTask} onDeleteTask={onDeleteTask} />}
-                        {subTab === 'budget' && <PlannerBudget tasks={userData.tasks} onAddExpense={onAddTask} />}
+                        {subTab === 'budget' && <PlannerBudget tasks={userData.tasks} onAddExpense={onAddTask} onDeleteTask={onDeleteTask} />}
                         {subTab === 'guests' && <PlannerGuests guests={userData.guests} onAddGuest={onAddGuest} onDeleteGuest={onDeleteGuest} />}
                     </div>
 
