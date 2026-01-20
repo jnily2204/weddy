@@ -10,14 +10,19 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        /* Import Montserrat as a robust fallback for Century Gothic on mobile */
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+        /* Updated Fonts: Cormorant Garamond for Titles, Raleway for Body */
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700;800;900&display=swap');
         
-        /* Font Stack: Prioritize Century Gothic */
+        /* Default Body Font: Raleway */
         body { 
-            font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'Montserrat', sans-serif; 
+            font-family: 'Raleway', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
             font-size: 16px; 
+        }
+
+        /* Title Font: Cormorant Garamond */
+        h1, h2, h3, h4, h5, h6, .font-title {
+            font-family: 'Cormorant Garamond', serif;
         }
         
         .hide-scrollbar::-webkit-scrollbar { display: none; }
