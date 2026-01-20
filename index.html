@@ -38,6 +38,15 @@
         }
         @keyframes subtle-zoom { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
         .bg-zoom { animation: subtle-zoom 20s infinite alternate; }
+        
+        /* UPDATED: Animation chuyên nghiệp hơn cho Logo - Nhịp thở & Tỏa sáng nhẹ */
+        @keyframes professional-pulse { 
+            0% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); } 
+            50% { transform: scale(1.08); filter: drop-shadow(0 10px 20px rgba(244, 63, 94, 0.4)); } 
+            100% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); } 
+        }
+        .animate-professional { animation: professional-pulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        
         /* Safe area for iPhone X+ */
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     </style>
@@ -136,7 +145,7 @@
                     {/* Popup: Shadow đậm hơn để nổi bật trên nền trong suốt */}
                     <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-stone-100 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar text-stone-700">
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-black uppercase tracking-widest text-stone-600">{title}</h3>
+                            <h3 className="text-xl font-title font-bold uppercase tracking-widest text-stone-600">{title}</h3>
                             <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-colors shrink-0">
                                 <Icons.X size={20} />
                             </button>
@@ -146,6 +155,25 @@
                 </div>
             );
         };
+
+        // --- UPDATED: Logo Component (Raleway Black 900) ---
+        const Logo = ({ className, animated = false }) => (
+            <div className={`flex items-center gap-1.5 group cursor-pointer ${className}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                <span 
+                    // Changed to font-black (Weight 900) and explicitly set fontFamily
+                    className="text-lg md:text-xl font-black text-stone-700 tracking-tight group-hover:text-rose-500 transition-colors uppercase"
+                    style={{ fontFamily: '"Raleway", sans-serif', fontWeight: 900 }}
+                >
+                    WEDDY
+                </span>
+                <img 
+                    src="https://www.svgrepo.com/show/247211/wedding-rings-diamond.svg" 
+                    alt="Wedding Rings" 
+                    // Tiny size for refinement: w-3 h-3 (12px) mobile, w-4 h-4 (16px) desktop
+                    className={`w-3 h-3 md:w-4 md:h-4 object-contain transition-all duration-500 ${animated ? 'animate-professional' : 'grayscale hover:grayscale-0 opacity-80 hover:opacity-100'}`} 
+                />
+            </div>
+        );
 
         // --- FIXED: GettingStartedWizard ---
         const GettingStartedWizard = ({ onComplete, onSkip }) => {
@@ -208,7 +236,7 @@
                                     <div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-stone-800 w-8' : 'bg-stone-300/50 w-2'}`}></div>
                                 ))}
                             </div>
-                            <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-stone-800 mb-4">{current.title}</h2>
+                            <h2 className="text-3xl md:text-5xl font-title font-bold tracking-tighter text-stone-800 mb-4">{current.title}</h2>
                             <p className="text-stone-500 text-base font-medium">{current.subtitle}</p>
                         </div>
                         
@@ -250,18 +278,18 @@
                             <div className="bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-stone-200/50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm text-stone-800">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-rose-100/50 rounded-full flex items-center justify-center text-rose-500 shrink-0"><Icons.Heart size={24} fill="currentColor"/></div>
-                                    <div><h4 className="font-bold text-lg">Ví chung đôi mình</h4><p className="text-sm text-stone-400">Kết nối và đồng bộ kế hoạch với bạn đời.</p></div>
+                                    <div><h4 className="font-title font-bold text-lg">Ví chung đôi mình</h4><p className="text-sm text-stone-400">Kết nối và đồng bộ kế hoạch với bạn đời.</p></div>
                                 </div>
                                 <button onClick={onInvite} className="w-full md:w-auto px-8 py-4 bg-stone-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-sm hover:bg-stone-600 transition-all flex items-center justify-center gap-2"><Icons.Share size={16}/> Mời bạn đời</button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 text-left">
                                     <div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Tiến độ</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-300"><Icons.Check size={20}/></div></div>
-                                    <div><div className="flex items-baseline gap-2 mb-3 text-left font-black text-stone-600 text-4xl md:text-5xl"><span>{completedTasks}</span><span className="text-stone-300 uppercase text-xs">/ {totalTasks} việc</span></div><div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-stone-500 transition-all duration-700" style={{width: `${totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0}%`}}></div></div></div>
+                                    <div><div className="flex items-baseline gap-2 mb-3 text-left font-title font-bold text-stone-600 text-4xl md:text-5xl"><span>{completedTasks}</span><span className="text-stone-300 uppercase text-xs">/ {totalTasks} việc</span></div><div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-stone-500 transition-all duration-700" style={{width: `${totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0}%`}}></div></div></div>
                                 </div>
                                 <div onClick={onOpenGuests} className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 cursor-pointer hover:border-stone-300 transition-all active:scale-[0.98]">
                                     <div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Khách mời</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={20}/></div></div>
-                                    <div className="flex items-baseline gap-2 text-stone-700 text-left font-black text-5xl md:text-6xl"><span>{guestCount}</span><span className="text-stone-300 font-bold uppercase text-xs">Người</span></div>
+                                    <div className="flex items-baseline gap-2 text-stone-700 text-left font-title font-bold text-5xl md:text-6xl"><span>{guestCount}</span><span className="text-stone-300 font-bold uppercase text-xs">Người</span></div>
                                 </div>
                             </div>
                             <div className="bg-stone-500 p-6 md:p-12 rounded-[3rem] text-white relative overflow-hidden shadow-xl group">
@@ -271,11 +299,11 @@
                                     <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-8">
                                         <div className="flex-1 text-white text-left">
                                             <div className="text-xs uppercase font-black text-white/30 mb-2 text-left">Đã chi tiêu</div>
-                                            <div className="text-5xl md:text-7xl font-black tracking-tighter text-left tabular-nums">{utils.formatMoney(spentAmount)}</div>
+                                            <div className="text-5xl md:text-7xl font-title font-bold tracking-tighter text-left tabular-nums">{utils.formatMoney(spentAmount)}</div>
                                             <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div>
                                             <div className="flex items-center gap-2 group/budget inline-flex cursor-pointer text-white/80" onClick={onEditBudget}><p className="text-sm font-black uppercase tracking-widest font-bold">Ngân sách: {utils.formatMoney(budgetLimit)}</p><Icons.Edit size={16} className="text-white/20 group-hover/budget:text-white transition-colors" /></div>
                                         </div>
-                                        <div className="md:w-48 flex flex-col gap-4 justify-center text-white"><div className="bg-white/10 backdrop-blur-sm p-6 rounded-3xl border border-white/5 text-center md:text-left shadow-sm shadow-inner"><p className="text-xs font-black text-white/40 uppercase mb-2 text-left">Còn lại</p><p className="text-2xl font-bold text-left">{utils.formatMoney((budgetLimit || 300000000) - spentAmount)}</p></div></div>
+                                        <div className="md:w-48 flex flex-col gap-4 justify-center text-white"><div className="bg-white/10 backdrop-blur-sm p-6 rounded-3xl border border-white/5 text-center md:text-left shadow-sm shadow-inner"><p className="text-xs font-black text-white/40 uppercase mb-2 text-left">Còn lại</p><p className="text-2xl font-title font-bold text-left">{utils.formatMoney((budgetLimit || 300000000) - spentAmount)}</p></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -359,27 +387,27 @@
                                 <p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Dự kiến chi ({activeFilter === 'all' ? 'Tổng' : (activeFilter === 'groom' ? 'Nhà trai' : 'Nhà gái')})</p>
                                 <div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.DollarSign size={20}/></div>
                             </div>
-                            <p className="text-3xl font-black text-stone-800 tracking-tighter">{utils.formatMoney(totalBudget)}</p>
+                            <p className="text-3xl font-title font-bold text-stone-800 tracking-tighter">{utils.formatMoney(totalBudget)}</p>
                         </div>
                         <div className="bg-stone-800 p-8 rounded-[2.5rem] shadow-xl flex flex-col justify-between h-48 text-white">
                             <div className="flex justify-between items-start">
                                 <p className="text-xs font-black uppercase tracking-[0.2em] text-white/50">Đã thanh toán</p>
                                 <div className="p-3 bg-white/10 rounded-full text-white"><Icons.Check size={20}/></div>
                             </div>
-                            <p className="text-3xl font-black tracking-tighter">{utils.formatMoney(totalPaid)}</p>
+                            <p className="text-3xl font-title font-bold tracking-tighter">{utils.formatMoney(totalPaid)}</p>
                         </div>
                         <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48">
                             <div className="flex justify-between items-start">
                                 <p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Còn lại</p>
                                 <div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.Layout size={20}/></div>
                             </div>
-                            <p className={`text-3xl font-black tracking-tighter ${totalBudget - totalPaid < 0 ? 'text-rose-500' : 'text-stone-800'}`}>{utils.formatMoney(totalBudget - totalPaid)}</p>
+                            <p className={`text-3xl font-title font-bold tracking-tighter ${totalBudget - totalPaid < 0 ? 'text-rose-500' : 'text-stone-800'}`}>{utils.formatMoney(totalBudget - totalPaid)}</p>
                         </div>
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                          <div className="text-left">
-                            <h3 className="text-3xl font-black text-stone-700 uppercase tracking-tighter">Chi tiết khoản chi</h3>
+                            <h3 className="text-3xl font-title font-bold text-stone-700 uppercase tracking-tighter">Chi tiết khoản chi</h3>
                             <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">
                                 {activeFilter === 'all' ? 'Toàn bộ danh sách' : (activeFilter === 'groom' ? 'Chi phí của Chú rể' : 'Chi phí của Cô dâu')}
                             </p>
@@ -414,7 +442,7 @@
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1">
-                                        <p className="font-black text-xl text-stone-800 tracking-tight">{utils.formatMoney(item.cost)}</p>
+                                        <p className="font-bold text-xl text-stone-800 tracking-tight">{utils.formatMoney(item.cost)}</p>
                                         <div className="flex items-center gap-2">
                                             {(item.paid || 0) >= item.cost ? (
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">Đã xong</span>
@@ -476,7 +504,7 @@
                 <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 text-left px-2 md:px-0">
                     <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                          <div className="text-left">
-                            <h3 className="text-3xl font-black text-stone-700 uppercase tracking-tighter">Danh sách công việc</h3>
+                            <h3 className="text-3xl font-title font-bold text-stone-700 uppercase tracking-tighter">Danh sách công việc</h3>
                             <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">
                                 {pending.length} việc cần làm
                             </p>
@@ -573,7 +601,7 @@
                 <div className="max-w-6xl mx-auto space-y-8 animate-in px-2 md:px-0">
                     <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
                          <div className="text-left w-full md:w-auto">
-                            <h3 className="text-3xl font-black text-stone-700 uppercase tracking-tighter">Danh sách khách mời</h3>
+                            <h3 className="text-3xl font-title font-bold text-stone-700 uppercase tracking-tighter">Danh sách khách mời</h3>
                             <p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">
                                 Tổng cộng: <span className="text-stone-700">{guests?.length || 0}</span> người
                             </p>
@@ -701,26 +729,35 @@
                 </div>
             </div>
         );
-
-        // --- NEW: Footer Component ---
+        // --- UPDATED: Footer Component (Balanced Layout & Normal Case Menu) ---
         const Footer = () => (
-            <footer className="bg-white/50 backdrop-blur-sm border-t border-stone-100 py-16 mt-16 mb-24 md:mb-0">
-                <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
-                    <div>
-                        <h4 className="text-xl font-black text-stone-700 uppercase tracking-tighter mb-3">Weddy</h4>
-                        <p className="text-stone-400 text-sm max-w-xs font-medium leading-relaxed">
-                            Nền tảng lập kế hoạch đám cưới tinh tế, giúp bạn và người ấy đồng hành trên hành trình hạnh phúc.
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap justify-center gap-8">
-                        {['Về chúng tôi', 'Điều khoản', 'Riêng tư', 'Liên hệ'].map(item => (
-                            <a key={item} href="#" className="text-xs font-black uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors">
-                                {item}
-                            </a>
-                        ))}
-                    </div>
-                    <div className="text-xs font-bold text-stone-300 uppercase tracking-widest">
-                        © 2024 Weddy. All rights reserved.
+            <footer className="bg-white/60 backdrop-blur-md border-t border-stone-100 py-12 mt-16 mb-24 md:mb-0">
+                <div className="max-w-6xl mx-auto px-6">
+                    <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8">
+                        {/* Left: Brand Info */}
+                        <div className="text-center md:text-left flex flex-col items-center md:items-start">
+                            <div className="mb-3">
+                                <Logo /> 
+                            </div>
+                            <p className="text-stone-500 text-sm max-w-xs font-medium leading-relaxed">
+                                Nền tảng lập kế hoạch đám cưới tinh tế, giúp bạn và người ấy đồng hành trên hành trình hạnh phúc.
+                            </p>
+                        </div>
+                        
+                        {/* Right: Links & Copyright */}
+                        <div className="flex flex-col items-center md:items-end gap-6">
+                            <div className="flex flex-wrap justify-center md:justify-end gap-6 md:gap-8">
+                                {['Về chúng tôi', 'Điều khoản', 'Riêng tư', 'Liên hệ'].map(item => (
+                                    // UPDATED: Removed 'uppercase', adjusted font weight slightly for readability
+                                    <a key={item} href="#" className="text-sm font-bold tracking-wide text-stone-500 hover:text-stone-800 transition-colors">
+                                        {item}
+                                    </a>
+                                ))}
+                            </div>
+                            <div className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">
+                                © 2024 Weddy. All rights reserved.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </footer>
@@ -861,11 +898,11 @@
             return (
                 <div className="pt-24 pb-32 md:pt-32 container mx-auto px-4 md:px-12 max-w-7xl animate-in text-stone-700">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6 px-2 md:px-0 text-left font-bold uppercase">
-                            <div className="flex-1 w-full text-stone-600 text-left font-bold uppercase font-black uppercase font-bold text-left font-black uppercase font-bold"><span className="text-[10px] tracking-[0.3em] text-[#B5A896] mb-2 block">Planner của {userData.profile?.name || 'bạn'}</span><h2 className="text-3xl md:text-5xl tracking-tighter">Weddy Planner</h2></div>
+                            <div className="flex-1 w-full text-stone-600 text-left font-bold uppercase font-black uppercase font-bold text-left font-black uppercase font-bold"><span className="text-[10px] tracking-[0.3em] text-[#B5A896] mb-2 block">Planner của {userData.profile?.name || 'bạn'}</span><h2 className="text-3xl md:text-5xl font-title font-bold tracking-tighter">Weddy Planner</h2></div>
                         <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto text-left font-bold uppercase font-black uppercase font-bold">
                             <div className="bg-white/70 p-5 md:p-6 rounded-[2.5rem] border border-stone-100 shadow-sm flex items-center gap-6 flex-1 min-w-0 sm:min-w-[280px] font-bold uppercase font-black uppercase font-bold">
                                 <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-100/40 rounded-full flex items-center justify-center text-rose-300 shrink-0 shadow-inner"><Icons.Heart size={20} fill="currentColor"/></div>
-                                <div className="flex-1 text-sm overflow-hidden text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black font-bold uppercase font-black uppercase font-bold"><p className="text-[9px] font-black tracking-widest text-stone-300 mb-1 text-left uppercase font-black">Ngày trọng đại</p><div className="flex items-baseline gap-2 md:gap-3 font-bold text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold text-left"><p className="text-base md:text-xl font-bold text-stone-600 truncate text-left">{userData.profile?.weddingDate || 'Chưa đặt'}</p><p className="text-[10px] font-bold text-rose-400 whitespace-nowrap uppercase text-left">{utils.getDaysLeft(userData.profile?.weddingDate)}</p></div></div>
+                                <div className="flex-1 text-sm overflow-hidden text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold text-left"><p className="text-[9px] font-black tracking-widest text-stone-300 mb-1 text-left uppercase font-black">Ngày trọng đại</p><div className="flex items-baseline gap-2 md:gap-3 font-bold text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold text-left"><p className="text-base md:text-xl font-bold text-stone-600 truncate text-left">{userData.profile?.weddingDate || 'Chưa đặt'}</p><p className="text-[10px] font-bold text-rose-400 whitespace-nowrap uppercase text-left">{utils.getDaysLeft(userData.profile?.weddingDate)}</p></div></div>
                             </div>
                             <button onClick={() => setIsJoinModalOpen(true)} className="bg-stone-500 text-white p-5 md:p-6 rounded-[2.5rem] shadow-xl hover:bg-stone-600 active:scale-95 flex items-center justify-center gap-4 transition-all shrink-0 font-bold uppercase font-black uppercase font-bold uppercase font-black font-bold uppercase font-black uppercase font-bold"><Icons.Link size={20}/><span className="text-xs">Nhập mã kết nối</span></button>
                         </div>
@@ -899,7 +936,7 @@
                 <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center animate-in">
                     <div className="mb-12">
                         <div className="inline-block px-4 py-2 bg-rose-50 rounded-full text-rose-500 text-xs font-black uppercase tracking-widest mb-6">Weddy Planner</div>
-                        <h1 className="text-5xl md:text-7xl font-black text-stone-800 mb-6 tracking-tighter">
+                        <h1 className="text-5xl md:text-7xl font-title font-bold text-stone-800 mb-6 tracking-tighter">
                             Kế hoạch cưới <br/>
                             <span className="text-silk">Tinh tế & Hoàn hảo</span>
                         </h1>
@@ -924,7 +961,7 @@
                                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm text-stone-600">
                                     <item.icon />
                                 </div>
-                                <h3 className="text-lg font-bold text-stone-800 mb-2">{item.title}</h3>
+                                <h3 className="text-lg font-title font-bold text-stone-800 mb-2">{item.title}</h3>
                                 <p className="text-sm text-stone-500 leading-relaxed">{item.desc}</p>
                             </div>
                         ))}
@@ -939,7 +976,7 @@
                 <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mb-8 text-stone-300 shadow-inner">
                     <Icons.Star size={40} />
                 </div>
-                <h2 className="text-3xl md:text-5xl font-black text-stone-700 mb-4 tracking-tighter uppercase">{title}</h2>
+                <h2 className="text-3xl md:text-5xl font-title font-bold text-stone-700 mb-4 tracking-tighter uppercase">{title}</h2>
                 <p className="text-stone-400 max-w-md mx-auto text-sm md:text-base font-bold uppercase tracking-widest leading-relaxed mb-8">
                     {desc}
                 </p>
@@ -1140,22 +1177,36 @@
 
             return (
                 <div className="min-h-screen">
-                    <div className="fixed top-4 md:top-6 left-0 w-full z-50 flex justify-center px-4 transition-all duration-500">
-                        <nav className={`flex items-center justify-between px-5 py-2 md:px-6 md:py-2.5 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/75 backdrop-blur-2xl border border-white/20 shadow-lg' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
-                            <div className="flex items-center gap-2 cursor-pointer group font-bold uppercase font-black uppercase font-bold" onClick={() => navigateTo('home')}><div className="w-8 h-8 bg-stone-500 text-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm shadow-inner font-bold uppercase font-black uppercase font-bold"><Icons.Heart size={16} fill="currentColor" /></div><span className="text-base md:text-lg font-black tracking-tighter uppercase text-stone-600 font-bold uppercase font-black uppercase font-bold">Weddy</span></div>
-                            <div className="hidden md:flex items-center gap-1 font-bold uppercase tracking-widest uppercase font-black uppercase font-black uppercase font-bold">{[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (<button key={item.id} onClick={() => navigateTo(item.id)} className={`text-[10px] px-5 py-2.5 rounded-full transition-all ${activeTab === item.id ? 'bg-stone-500 text-white shadow-lg font-bold uppercase font-black uppercase font-bold' : 'text-stone-400 hover:text-stone-700 hover:bg-white/50 font-bold uppercase font-black uppercase font-bold'}`}>{item.label}</button>))}</div>
-                            <div className="flex items-center gap-2 md:gap-3 font-bold uppercase font-black uppercase font-bold">
-                                {user && <span className="hidden lg:block text-[9px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2 truncate max-w-[120px] font-bold uppercase uppercase font-black uppercase font-bold">{user.displayName || user.email}</span>}
+                    <div className="fixed top-2 md:top-4 left-0 w-full z-50 flex justify-center px-2 md:px-4 transition-all duration-500">
+                        {/* UPDATED: Compact Header Padding (py-2 instead of py-5) */}
+                        <nav className={`flex items-center justify-between px-4 py-2 md:px-6 md:py-2 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/80 backdrop-blur-2xl border border-white/40 shadow-lg' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
+                            
+                            {/* Logo Wrapper */}
+                            <div onClick={() => navigateTo('home')}>
+                                <Logo animated={true} />
+                            </div>
+
+                            {/* UPDATED: Top Menu - Explicitly Uppercase */}
+                            <div className="hidden md:flex items-center gap-1 font-bold uppercase tracking-widest font-black text-xs">
+                                {[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (
+                                    <button key={item.id} onClick={() => navigateTo(item.id)} className={`px-5 py-2.5 rounded-full transition-all uppercase ${activeTab === item.id ? 'bg-stone-800 text-white shadow-lg' : 'text-stone-500 hover:text-stone-900 hover:bg-white/50'}`}>
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center gap-3 md:gap-4 font-bold uppercase">
+                                {user && <span className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2 truncate max-w-[120px]">{user.displayName || user.email}</span>}
                                 {user && (
-                                    <div className="relative font-bold uppercase font-black uppercase font-bold" ref={notificationRef}>
-                                        <button onClick={() => setShowNotifications(!showNotifications)} className="w-9 h-9 md:w-10 md:h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-300 hover:text-stone-600 border border-stone-100 shadow-sm transition-colors relative shadow-inner font-bold uppercase font-black uppercase font-bold"><Icons.Bell size={18} />{notifications.length > 0 && (<span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-400 rounded-full border border-white font-bold uppercase font-black uppercase font-bold"></span>)}</button>
+                                    <div className="relative" ref={notificationRef}>
+                                        <button onClick={() => setShowNotifications(!showNotifications)} className="w-9 h-9 md:w-10 md:h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors relative"><Icons.Bell size={18} />{notifications.length > 0 && (<span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>)}</button>
                                         {showNotifications && (
-                                            <div className="absolute right-0 mt-3 w-[280px] md:w-80 bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-stone-100 py-6 animate-in zoom-in-95 origin-top-right overflow-hidden z-[60] font-bold uppercase font-black uppercase font-bold">
-                                                <div className="px-6 mb-4 flex justify-between items-center text-stone-700 font-bold uppercase font-bold uppercase font-black uppercase font-bold"><h4 className="text-[10px] md:text-xs">Thông báo</h4><span className="text-[9px] text-stone-300 font-bold uppercase uppercase font-black uppercase font-bold">{notifications.length} mới</span></div>
-                                                <div className="max-h-96 overflow-y-auto hide-scrollbar px-2 text-stone-600 text-left font-bold font-medium font-bold uppercase font-black uppercase font-bold text-left">
+                                            <div className="absolute right-0 mt-3 w-[280px] md:w-80 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-stone-100 py-6 animate-in zoom-in-95 origin-top-right overflow-hidden z-[60]">
+                                                <div className="px-6 mb-4 flex justify-between items-center text-stone-800 font-bold uppercase"><h4 className="text-[10px] md:text-xs">Thông báo</h4><span className="text-[9px] text-stone-400">{notifications.length} mới</span></div>
+                                                <div className="max-h-96 overflow-y-auto hide-scrollbar px-2 text-stone-600 text-left">
                                                     {notifications.length > 0 ? notifications.map((n, i) => (
-                                                        <div key={i} className="p-4 rounded-2xl hover:bg-stone-50 transition-colors flex gap-4 items-start cursor-pointer group text-left font-bold uppercase font-black uppercase font-bold text-left"><div className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-stone-200 transition-colors shadow-sm font-bold uppercase font-black uppercase font-bold text-left"><Icons.Heart size={14} className="text-stone-300 font-bold uppercase font-black uppercase font-bold text-left" /></div><div className="flex-1 text-left font-bold text-stone-600 text-left font-bold uppercase font-black uppercase font-bold text-left"><p className="text-xs font-bold leading-snug text-left font-bold uppercase font-black uppercase font-bold text-left">{n.text}</p><p className="text-[9px] font-bold text-stone-400 uppercase mt-1 text-left font-bold uppercase font-black uppercase font-bold text-left">{n.time}</p></div></div>
-                                                    )) : <div className="py-10 text-center text-stone-300 text-xs italic font-bold uppercase tracking-widest font-medium text-center uppercase font-black uppercase uppercase font-black uppercase font-bold text-center">Không có thông báo mới</div>}
+                                                        <div key={i} className="p-4 rounded-2xl hover:bg-stone-50 transition-colors flex gap-4 items-start cursor-pointer group text-left"><div className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-stone-200 transition-colors shadow-sm"><Icons.Heart size={14} className="text-stone-400 group-hover:text-rose-500 transition-colors" /></div><div className="flex-1"><p className="text-xs font-bold leading-snug">{n.text}</p><p className="text-[9px] font-black text-stone-300 uppercase mt-1">{n.time}</p></div></div>
+                                                    )) : <div className="py-10 text-center text-stone-300 text-xs italic font-medium">Không có thông báo mới</div>}
                                                 </div>
                                             </div>
                                         )}
@@ -1163,10 +1214,10 @@
                                 )}
                                 {user ? (
                                     <>
-                                        <button onClick={() => firebase.signOut(firebase.auth)} className="hidden sm:block px-5 py-2 md:px-6 md:py-2.5 bg-white border border-stone-200 text-stone-500 rounded-full text-[10px] font-black uppercase shadow-sm active:scale-95 font-bold transition-all uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold">Đăng xuất</button>
-                                        <button onClick={() => firebase.signOut(firebase.auth)} className="sm:hidden w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-600 border border-stone-100 shadow-sm transition-colors"><Icons.LogOut size={16} /></button>
+                                        <button onClick={() => firebase.signOut(firebase.auth)} className="hidden sm:block px-6 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase shadow-sm active:scale-95 transition-all hover:bg-stone-50 hover:border-stone-300">Đăng xuất</button>
+                                        <button onClick={() => firebase.signOut(firebase.auth)} className="sm:hidden w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors"><Icons.LogOut size={16} /></button>
                                     </>
-                                ) : <button onClick={() => setShowLogin(true)} className="px-5 py-2 md:px-6 md:py-2.5 bg-stone-500 text-white rounded-full text-[10px] font-black uppercase shadow-xl active:scale-95 font-bold transition-all uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold">Đăng nhập</button>}
+                                ) : <button onClick={() => setShowLogin(true)} className="px-6 py-2.5 bg-stone-800 text-white rounded-full text-[10px] font-black uppercase shadow-xl active:scale-95 transition-all hover:bg-stone-700">Đăng nhập</button>}
                             </div>
                         </nav>
                     </div>
