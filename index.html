@@ -469,11 +469,16 @@
                         )) : <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><p className="text-stone-400 font-bold uppercase text-sm tracking-widest">Mọi việc đã hoàn tất! ✨</p></div>}
                     </div>
 
+                    {/* UPDATED: Done list with clickable items */}
                     {done.length > 0 && (
-                        <div className="pt-10 opacity-60">
+                        <div className="pt-10 opacity-60 hover:opacity-100 transition-opacity duration-300">
                             <h4 className="mb-6 text-xs font-black uppercase tracking-widest text-stone-400">Đã hoàn thành ({done.length})</h4>
                             <div className="space-y-3">{done.map((t) => (
-                                <div key={t.id || t.title} className="p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center gap-5 text-stone-400">
+                                <div 
+                                    key={t.id || t.title} 
+                                    onClick={() => onToggleTask(t.id)} 
+                                    className="p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center gap-5 text-stone-400 cursor-pointer hover:bg-stone-100 transition-colors"
+                                >
                                     <div className="w-8 h-8 rounded-xl bg-stone-300 flex items-center justify-center text-white shrink-0"><Icons.Check size={16} /></div>
                                     <div className="flex-1"><h4 className="text-base font-bold line-through uppercase">{t.title}</h4></div>
                                 </div>
