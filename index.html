@@ -332,6 +332,11 @@
             const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [paid, setPaid] = useState(""); const [category, setCategory] = useState("Đặt tiệc cưới");
             const [confirmDeleteId, setConfirmDeleteId] = useState(null); // Updated: Use ID for safety
 
+            // --- Pagination State ---
+            const [currentPage, setCurrentPage] = useState(1);
+            const itemsPerPage = 5; // Updated: 5 items per page
+
+            // Lọc danh sách các công việc có chi phí
             const allBudgetTasks = (tasks || []).filter(t => t.cost > 0);
             
             const groomTasks = allBudgetTasks.filter(t => t.paidBy === 'Chú rể');
@@ -341,9 +346,20 @@
             if (activeFilter === 'groom') displayTasks = groomTasks;
             if (activeFilter === 'bride') displayTasks = brideTasks;
 
+            // Reset page when filter changes or tasks change
+            useEffect(() => {
+                setCurrentPage(1);
+            }, [activeFilter, tasks]);
+
             const totalBudget = displayTasks.reduce((acc, curr) => acc + curr.cost, 0);
             const totalPaid = displayTasks.reduce((acc, curr) => acc + (curr.paid || (curr.status === 'done' ? curr.cost : 0)), 0);
             
+            // Calculate paginated data
+            const indexOfLastItem = currentPage * itemsPerPage;
+            const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+            const currentTransactions = displayTasks.slice(indexOfFirstItem, indexOfLastItem);
+            const totalPages = Math.ceil(displayTasks.length / itemsPerPage);
+
             const handleSave = () => { 
                 if (title.trim() && cost) { 
                     onAddExpense({ 
@@ -355,6 +371,7 @@
                         id: Date.now() // Added ID
                     }); 
                     setTitle(""); setCost(""); setPaid(""); setIsOpen(false); 
+                    setCurrentPage(1); // Reset to first page
                 } 
             };
             
@@ -389,7 +406,7 @@
                     </div>
 
                     <div className="space-y-4">
-                        {displayTasks.length === 0 ? <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem]"><p className="text-stone-400 text-sm font-bold uppercase tracking-widest">Chưa có dữ liệu</p></div> : displayTasks.map((item) => (
+                        {displayTasks.length === 0 ? <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem]"><p className="text-stone-400 text-sm font-bold uppercase tracking-widest">Chưa có dữ liệu</p></div> : currentTransactions.map((item) => (
                             <div key={item.id} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
                                 <div className="flex items-center gap-5">
                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${(item.paid || 0) >= item.cost ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-50 text-stone-400'}`}><Icons.DollarSign size={24} /></div>
@@ -406,6 +423,27 @@
                             </div>
                         ))}
                     </div>
+
+                    {/* Pagination UI for Budget */}
+                    {displayTasks.length > itemsPerPage && (
+                        <div className="flex justify-center items-center gap-4 pt-4">
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                                <Icons.ChevronRight size={16} className="rotate-180" />
+                            </button>
+                            <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {currentPage} / {totalPages}</span>
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                                <Icons.ChevronRight size={16} />
+                            </button>
+                        </div>
+                    )}
 
                     <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Thêm khoản chi">
                         <div className="space-y-6 pt-2">
