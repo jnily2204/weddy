@@ -529,12 +529,29 @@
             const [name, setName] = useState(""); const [rel, setRel] = useState("Bạn bè"); const [phone, setPhone] = useState("");
             const [confirmDeleteId, setConfirmDeleteId] = useState(null);
             
+            // --- Pagination State ---
+            const [currentPage, setCurrentPage] = useState(1);
+            const itemsPerPage = 10;
+            
+            // Reset page if needed when items deleted
+            useEffect(() => {
+                const maxPage = Math.ceil((guests?.length || 0) / itemsPerPage) || 1;
+                if (currentPage > maxPage) setCurrentPage(maxPage);
+            }, [guests?.length]);
+
             const handleAdd = () => { 
                 if (name.trim()) { 
                     onAddGuest({ name: name.trim(), relationship: rel, phone, id: Date.now() }); 
                     setName(""); setPhone(""); setIsOpen(false); 
+                    setCurrentPage(1); // Go to first page on add
                 } 
             };
+
+            // Calculate paginated data
+            const indexOfLastItem = currentPage * itemsPerPage;
+            const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+            const currentGuests = guests?.slice(indexOfFirstItem, indexOfLastItem);
+            const totalPages = Math.ceil((guests?.length || 0) / itemsPerPage);
 
             const relationshipColors = { "Bạn bè": "bg-blue-50 text-blue-600", "Gia đình": "bg-rose-50 text-rose-600", "Đồng nghiệp": "bg-purple-50 text-purple-600", "Khác": "bg-stone-50 text-stone-600" };
 
@@ -546,7 +563,7 @@
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {guests?.length === 0 ? <div className="col-span-full py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-400 shadow-inner"><Icons.Users size={32} /></div><p className="text-stone-400 font-bold uppercase text-xs tracking-widest">Danh sách trống</p><button onClick={() => setIsOpen(true)} className="mt-3 text-sm font-black underline uppercase text-stone-600 hover:text-stone-900 transition-colors">Thêm khách đầu tiên</button></div> : guests?.map((g) => (
+                        {guests?.length === 0 ? <div className="col-span-full py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-400 shadow-inner"><Icons.Users size={32} /></div><p className="text-stone-400 font-bold uppercase text-xs tracking-widest">Danh sách trống</p><button onClick={() => setIsOpen(true)} className="mt-3 text-sm font-black underline uppercase text-stone-600 hover:text-stone-900 transition-colors">Thêm khách đầu tiên</button></div> : currentGuests?.map((g) => (
                             <div key={g.id} className="group bg-white p-6 rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all flex items-center justify-between cursor-default relative">
                                 <div className="flex items-center gap-5">
                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black uppercase shadow-inner shrink-0 ${relationshipColors[g.relationship] || 'bg-stone-100 text-stone-500'}`}>{g.name.charAt(0)}</div>
@@ -556,6 +573,27 @@
                             </div>
                         ))}
                     </div>
+
+                    {/* Pagination UI */}
+                    {guests?.length > itemsPerPage && (
+                        <div className="flex justify-center items-center gap-4 pt-4">
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                                <Icons.ChevronRight size={16} className="rotate-180" />
+                            </button>
+                            <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {currentPage} / {totalPages}</span>
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                                <Icons.ChevronRight size={16} />
+                            </button>
+                        </div>
+                    )}
                     
                     <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Thêm khách mời">
                         <div className="space-y-6 pt-2">
