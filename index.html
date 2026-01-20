@@ -10,17 +10,15 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        /* Updated Fonts: Cormorant Garamond for Titles, Raleway for Body */
+        /* Fonts */
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700;800;900&display=swap');
         
-        /* Default Body Font: Raleway */
         body { 
             font-family: 'Raleway', sans-serif; 
             -webkit-tap-highlight-color: transparent; 
             font-size: 16px; 
         }
 
-        /* Title Font: Cormorant Garamond */
         h1, h2, h3, h4, h5, h6, .font-title {
             font-family: 'Cormorant Garamond', serif;
         }
@@ -28,7 +26,6 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* UPDATED: Smoother Transitions with Blur & Bezier Curve */
         @keyframes fadeIn { 
             0% { opacity: 0; transform: translateY(15px); filter: blur(4px); } 
             100% { opacity: 1; transform: translateY(0); filter: blur(0); } 
@@ -36,16 +33,7 @@
         .animate-in { animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes silk-shine { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-        .text-silk {
-            background: linear-gradient(90deg, #806233 0%, #CC9C53 25%, #FFECB3 50%, #CC9C53 75%, #806233 100%);
-            background-size: 200% auto; color: #000; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            animation: silk-shine 5s linear infinite;
-        }
-        @keyframes subtle-zoom { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        .bg-zoom { animation: subtle-zoom 20s infinite alternate; }
         
-        /* Animation cho Logo: Nhịp thở & Tỏa sáng nhẹ */
         @keyframes professional-pulse { 
             0% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); } 
             50% { transform: scale(1.08); filter: drop-shadow(0 10px 20px rgba(244, 63, 94, 0.4)); } 
@@ -53,10 +41,7 @@
         }
         .animate-professional { animation: professional-pulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
         
-        /* Smooth scrolling for whole document */
         html { scroll-behavior: smooth; }
-
-        /* Safe area for iPhone X+ */
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
@@ -68,7 +53,6 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Cấu hình Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyD_F3OI5GexlAqgC8TZ1CN1JB5O3RacQqs",
             authDomain: "weddyvn.firebaseapp.com",
@@ -89,8 +73,6 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo, useCallback } = React;
-
-        // --- 1. GLOBAL CONSTANTS & UTILS ---
         const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'weddy-stable-final';
         
         const utils = {
@@ -131,10 +113,10 @@
             Star: (p) => <Icon {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></Icon>,
             Home: (p) => <Icon {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></Icon>,
             LogOut: (p) => <Icon {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></Icon>,
-            Undo: (p) => <Icon {...p}><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></Icon>
+            Undo: (p) => <Icon {...p}><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></Icon>,
+            User: (p) => <Icon {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></Icon>
         };
 
-        // --- 2. HOOKS ---
         const useFirebase = () => {
             const [services, setServices] = useState(null);
             useEffect(() => {
@@ -144,21 +126,15 @@
             return services;
         };
 
-        // --- 3. SUB-COMPONENTS ---
         const Modal = ({ isOpen, onClose, title, children }) => {
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in">
-                    {/* Backdrop: Hoàn toàn trong suốt */}
                     <div className="absolute inset-0 transition-all" onClick={onClose}></div>
-                    
-                    {/* Popup: Shadow đậm hơn */}
                     <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-stone-100 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar text-stone-700">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-title font-bold uppercase tracking-widest text-stone-600">{title}</h3>
-                            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-colors shrink-0">
-                                <Icons.X size={20} />
-                            </button>
+                            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-colors shrink-0"><Icons.X size={20} /></button>
                         </div>
                         {children}
                     </div>
@@ -166,93 +142,27 @@
             );
         };
 
-        // --- UPDATED: Logo Component ---
         const Logo = ({ className, animated = false }) => (
             <div className={`flex items-center gap-1.5 group cursor-pointer ${className}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                <span 
-                    className="text-lg md:text-xl font-black text-stone-700 tracking-tight group-hover:text-rose-500 transition-colors uppercase"
-                    style={{ fontFamily: '"Raleway", sans-serif', fontWeight: 900 }}
-                >
-                    WEDDY
-                </span>
-                <img 
-                    src="https://www.svgrepo.com/show/247211/wedding-rings-diamond.svg" 
-                    alt="Wedding Rings" 
-                    className={`w-3 h-3 md:w-4 md:h-4 object-contain transition-all duration-500 ${animated ? 'animate-professional' : 'grayscale hover:grayscale-0 opacity-80 hover:opacity-100'}`} 
-                />
+                <span className="text-lg md:text-xl font-black text-stone-700 tracking-tight group-hover:text-rose-500 transition-colors uppercase" style={{ fontFamily: '"Raleway", sans-serif', fontWeight: 900 }}>WEDDY</span>
+                <img src="https://www.svgrepo.com/show/247211/wedding-rings-diamond.svg" alt="Wedding Rings" className={`w-3 h-3 md:w-4 md:h-4 object-contain transition-all duration-500 ${animated ? 'animate-professional' : 'grayscale hover:grayscale-0 opacity-80 hover:opacity-100'}`} />
             </div>
         );
 
-        // --- FIXED: GettingStartedWizard ---
         const GettingStartedWizard = ({ onComplete, onSkip }) => {
             const [step, setStep] = useState(0);
-            const [data, setData] = useState({ 
-                role: "", partnerName: "", 
-                engagementDate: "", weddingDate: "", 
-                location: "", venue: "", 
-                preWedding: "", budget: "" 
-            });
+            const [data, setData] = useState({ role: "", partnerName: "", engagementDate: "", weddingDate: "", location: "", venue: "", preWedding: "", budget: "" });
             const [isSubmitting, setIsSubmitting] = useState(false);
 
             const handleNext = () => setStep(prev => prev + 1);
 
             const steps = [
-                { 
-                    title: "Chào bạn,", 
-                    subtitle: "Bạn là Cô Dâu hay Chú Rể, và tên thân mật của người ấy là gì?",
-                    content: (
-                        <div className="space-y-6 mt-6">
-                            <div className="grid grid-cols-2 gap-4 font-bold">
-                                {["Cô dâu", "Chú rể"].map(r => (
-                                    <button key={r} onClick={() => setData({ ...data, role: r })} className={`p-6 rounded-[2rem] border transition-all shadow-sm ${data.role === r ? 'border-stone-800 bg-stone-800 text-white shadow-xl scale-105' : 'border-white bg-white hover:border-stone-300'}`}>{r}</button>
-                                ))}
-                            </div>
-                            <input 
-                                type="text" 
-                                value={data.partnerName} 
-                                onChange={e => setData({ ...data, partnerName: e.target.value })} 
-                                placeholder="Tên thân mật của người ấy..." 
-                                className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"
-                            />
-                        </div>
-                    )
-                },
-                { 
-                    title: "Ngày lành tháng tốt", 
-                    subtitle: "Hai bạn đã chọn được ngày đẹp cho Lễ Ăn Hỏi và Lễ Cưới chưa?",
-                    content: (
-                        <div className="space-y-6 mt-6">
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Ăn Hỏi (Đính hôn)</label>
-                                <input type="date" value={data.engagementDate} onChange={e => setData({ ...data, engagementDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Cưới (Thành hôn)</label>
-                                <input type="date" value={data.weddingDate} onChange={e => setData({ ...data, weddingDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/>
-                            </div>
-                        </div>
-                    ) 
-                },
-                { 
-                    title: "Nơi diễn ra", 
-                    subtitle: "Đám cưới sẽ diễn ra tại Tỉnh/Thành phố nào?",
-                    content: (<div className="mt-8"><input type="text" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Vd: TP. Hồ Chí Minh, Hà Nội..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) 
-                },
-                { 
-                    title: "Địa điểm tiệc", 
-                    subtitle: "Bạn đã nhắm được Nhà hàng/Khách sạn cụ thể nào chưa?",
-                    content: (<div className="mt-8"><input type="text" value={data.venue} onChange={e => setData({ ...data, venue: e.target.value })} placeholder="Nhập tên nhà hàng (nếu có)..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) 
-                },
-                { 
-                    title: "Lưu giữ khoảnh khắc", 
-                    subtitle: "Hai bạn dự định chụp ảnh Pre-wedding ở đâu?",
-                    content: (<div className="mt-8"><input type="text" value={data.preWedding} onChange={e => setData({ ...data, preWedding: e.target.value })} placeholder="Vd: Studio, Đà Lạt, Hàn Quốc..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) 
-                },
-                { 
-                    title: "Ngân sách dự kiến?", 
-                    subtitle: "Con số tối đa mà hai bạn muốn chi cho đám cưới này là bao nhiêu?",
-                    content: (<div className="mt-8"><div className="relative"><input type="text" value={data.budget} onChange={e => setData({ ...data, budget: utils.formatInput(e.target.value) })} placeholder="300.000.000" className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 pl-8 pr-20 text-3xl font-black text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-200 text-center"/><div className="absolute right-8 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm uppercase tracking-widest">VNĐ</div></div></div>) 
-                }
+                { title: "Chào bạn,", subtitle: "Bạn là Cô Dâu hay Chú Rể, và tên thân mật của người ấy là gì?", content: (<div className="space-y-6 mt-6"><div className="grid grid-cols-2 gap-4 font-bold">{["Cô dâu", "Chú rể"].map(r => (<button key={r} onClick={() => setData({ ...data, role: r })} className={`p-6 rounded-[2rem] border transition-all shadow-sm ${data.role === r ? 'border-stone-800 bg-stone-800 text-white shadow-xl scale-105' : 'border-white bg-white hover:border-stone-300'}`}>{r}</button>))}</div><input type="text" value={data.partnerName} onChange={e => setData({ ...data, partnerName: e.target.value })} placeholder="Tên thân mật của người ấy..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
+                { title: "Ngày lành tháng tốt", subtitle: "Hai bạn đã chọn được ngày đẹp cho Lễ Ăn Hỏi và Lễ Cưới chưa?", content: (<div className="space-y-6 mt-6"><div><label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Ăn Hỏi (Đính hôn)</label><input type="date" value={data.engagementDate} onChange={e => setData({ ...data, engagementDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div><div><label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Cưới (Thành hôn)</label><input type="date" value={data.weddingDate} onChange={e => setData({ ...data, weddingDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div></div>) },
+                { title: "Nơi diễn ra", subtitle: "Đám cưới sẽ diễn ra tại Tỉnh/Thành phố nào?", content: (<div className="mt-8"><input type="text" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Vd: TP. Hồ Chí Minh, Hà Nội..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
+                { title: "Địa điểm tiệc", subtitle: "Bạn đã nhắm được Nhà hàng/Khách sạn cụ thể nào chưa?", content: (<div className="mt-8"><input type="text" value={data.venue} onChange={e => setData({ ...data, venue: e.target.value })} placeholder="Nhập tên nhà hàng (nếu có)..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
+                { title: "Lưu giữ khoảnh khắc", subtitle: "Hai bạn dự định chụp ảnh Pre-wedding ở đâu?", content: (<div className="mt-8"><input type="text" value={data.preWedding} onChange={e => setData({ ...data, preWedding: e.target.value })} placeholder="Vd: Studio, Đà Lạt, Hàn Quốc..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
+                { title: "Ngân sách dự kiến?", subtitle: "Con số tối đa mà hai bạn muốn chi cho đám cưới này là bao nhiêu?", content: (<div className="mt-8"><div className="relative"><input type="text" value={data.budget} onChange={e => setData({ ...data, budget: utils.formatInput(e.target.value) })} placeholder="300.000.000" className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 pl-8 pr-20 text-3xl font-black text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-200 text-center"/><div className="absolute right-8 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm uppercase tracking-widest">VNĐ</div></div></div>) }
             ];
 
             const current = steps[step];
@@ -260,82 +170,16 @@
             const handleFinish = async () => {
                 if (isSubmitting) return;
                 setIsSubmitting(true);
-                try {
-                    await onComplete({
-                        ...data, 
-                        budget: utils.parseInput(data.budget)
-                    });
-                } catch (e) {
-                    console.error("Wizard Error", e);
-                    setIsSubmitting(false);
-                    alert("Có lỗi xảy ra, vui lòng thử lại.");
-                }
+                try { await onComplete({...data, budget: utils.parseInput(data.budget)}); } catch (e) { setIsSubmitting(false); alert("Có lỗi xảy ra, vui lòng thử lại."); }
             };
 
             return (
                 <div className="fixed inset-0 z-[200] bg-[#F0EBE5]/95 backdrop-blur-xl flex flex-col animate-in overflow-y-auto">
-                    {/* Global Skip Button */}
-                    <div className="absolute top-6 right-6 z-50">
-                        <button 
-                            onClick={onSkip} 
-                            className="text-stone-400 font-bold text-xs uppercase tracking-widest hover:text-stone-600 transition-colors px-4 py-2 bg-white/50 rounded-full hover:bg-white"
-                        >
-                            Bỏ qua tất cả
-                        </button>
-                    </div>
-
+                    <div className="absolute top-6 right-6 z-50"><button onClick={onSkip} className="text-stone-400 font-bold text-xs uppercase tracking-widest hover:text-stone-600 transition-colors px-4 py-2 bg-white/50 rounded-full hover:bg-white">Bỏ qua tất cả</button></div>
                     <div className="flex-1 flex flex-col justify-center px-6 max-w-lg mx-auto w-full text-center py-10">
-                        <div className="mb-8">
-                            <div className="flex justify-center gap-1.5 mb-8">
-                                {steps.map((_, i) => (
-                                    <div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-stone-800 w-8' : 'bg-stone-300/50 w-2'}`}></div>
-                                ))}
-                            </div>
-                            <h2 className="text-3xl md:text-4xl font-title font-bold tracking-tighter text-stone-800 mb-3">{current.title}</h2>
-                            <p className="text-stone-500 text-base font-medium leading-relaxed">{current.subtitle}</p>
-                        </div>
-                        
-                        <div className="min-h-[160px] flex flex-col justify-center mb-8">
-                            {current.content}
-                        </div>
-                        
-                        <div className="space-y-4">
-                            {step < steps.length - 1 ? (
-                                <>
-                                    <button 
-                                        onClick={handleNext} 
-                                        // Disable only if Step 0 (Identity) is not filled properly, others are optional via 'Skip this question'
-                                        disabled={step === 0 && !data.role} 
-                                        className="w-full py-5 bg-stone-800 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
-                                    >
-                                        Tiếp tục
-                                    </button>
-                                    <button 
-                                        onClick={handleNext} 
-                                        className="text-stone-400 text-xs font-bold uppercase tracking-widest hover:text-stone-600 transition-colors p-2"
-                                    >
-                                        Bỏ qua câu này
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button 
-                                        onClick={handleFinish} 
-                                        disabled={isSubmitting}
-                                        className="w-full py-5 bg-emerald-700 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-800 disabled:opacity-70 transition-all active:scale-95 flex items-center justify-center gap-3"
-                                    >
-                                        {isSubmitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null}
-                                        {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất thiết lập'}
-                                    </button>
-                                    <button 
-                                        onClick={handleFinish} 
-                                        className="text-stone-400 text-xs font-bold uppercase tracking-widest hover:text-stone-600 transition-colors p-2"
-                                    >
-                                        Bỏ qua câu này
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                        <div className="mb-8"><div className="flex justify-center gap-1.5 mb-8">{steps.map((_, i) => (<div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-stone-800 w-8' : 'bg-stone-300/50 w-2'}`}></div>))}</div><h2 className="text-3xl md:text-4xl font-title font-bold tracking-tighter text-stone-800 mb-3">{current.title}</h2><p className="text-stone-500 text-base font-medium leading-relaxed">{current.subtitle}</p></div>
+                        <div className="min-h-[160px] flex flex-col justify-center mb-8">{current.content}</div>
+                        <div className="space-y-4">{step < steps.length - 1 ? (<><button onClick={handleNext} disabled={step === 0 && !data.role} className="w-full py-5 bg-stone-800 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95">Tiếp tục</button><button onClick={handleNext} className="text-stone-400 text-xs font-bold uppercase tracking-widest hover:text-stone-600 transition-colors p-2">Bỏ qua câu này</button></>) : (<><button onClick={handleFinish} disabled={isSubmitting} className="w-full py-5 bg-emerald-700 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-800 disabled:opacity-70 transition-all active:scale-95 flex items-center justify-center gap-3">{isSubmitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null} {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất thiết lập'}</button><button onClick={handleFinish} className="text-stone-400 text-xs font-bold uppercase tracking-widest hover:text-stone-600 transition-colors p-2">Bỏ qua câu này</button></>)}</div>
                     </div>
                 </div>
             );
@@ -424,7 +268,6 @@
                          <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-200 text-stone-600 hover:bg-stone-300 rounded-full text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm"><Icons.Plus size={16}/> Thêm khoản chi</button>
                     </div>
 
-                    {/* UPDATED: Added key={currentPage} and className="animate-in" for page transition effect */}
                     <div className="space-y-4 animate-in" key={currentPage} ref={listRef}>
                         {displayTasks.length === 0 ? <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem]"><p className="text-stone-400 text-sm font-bold uppercase tracking-widest">Chưa có dữ liệu</p></div> : currentTransactions.map((item) => (
                             <div key={item.id} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
@@ -438,7 +281,6 @@
                         ))}
                     </div>
 
-                    {/* Pagination UI */}
                     {totalPages > 1 && (
                         <div className="flex justify-center items-center gap-4 pt-6 pb-4">
                             <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
@@ -510,7 +352,6 @@
             
             // Scroll Effects
             useEffect(() => { if(pendingListRef.current && pendingPage > 1) pendingListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [pendingPage]);
-            // Optional: Done list might be further down, scrolling there might be annoying, keeping it subtle or just manual scroll is fine. But per user request "scroll top".
             useEffect(() => { if(doneListRef.current && donePage > 1) doneListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [donePage]);
 
             return (
@@ -635,7 +476,6 @@
                          <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"><Icons.Plus size={12} /></span> Thêm khách mới</button>
                     </div>
 
-                    {/* UPDATED: Added key={currentPage} and className="animate-in" for page transition effect */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in" key={currentPage} ref={listRef}>
                         {guests?.length === 0 ? <div className="col-span-full py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-400 shadow-inner"><Icons.Users size={32} /></div><p className="text-stone-400 font-bold uppercase text-xs tracking-widest">Danh sách trống</p><button onClick={() => setIsOpen(true)} className="mt-3 text-sm font-black underline uppercase text-stone-600 hover:text-stone-900 transition-colors">Thêm khách đầu tiên</button></div> : currentGuests?.map((g) => (
                             <div key={g.id} className="group bg-white p-6 rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all flex items-center justify-between cursor-default relative">
@@ -650,7 +490,7 @@
 
                     {/* Pagination UI */}
                     {totalPages > 1 && (
-                        <div className="flex justify-center items-center gap-4 pt-4">
+                        <div className="flex justify-center items-center gap-4 pt-6 pb-4">
                             <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
                             <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {currentPage} / {totalPages}</span>
                             <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
@@ -688,7 +528,7 @@
         const MobileNav = ({ activeTab, onNavigate }) => (
             <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-stone-200 p-3 md:hidden z-50 pb-safe">
                 <div className="flex justify-around items-center">
-                    {[{id: 'home', icon: Icons.Home, label: 'Home'}, {id: 'planner', icon: Icons.Layout, label: 'Planner'}, {id: 'invitation', icon: Icons.Link, label: 'Thiệp'}, {id: 'vendors', icon: Icons.Star, label: 'Dịch vụ'}].map(item => (
+                    {[{id: 'home', icon: Icons.Home, label: 'Home'}, {id: 'planner', icon: Icons.Layout, label: 'Planner'}, {id: 'invitation', icon: Icons.Link, label: 'Thiệp'}, {id: 'vendors', icon: Icons.Star, label: 'Dịch vụ'}, {id: 'account', icon: Icons.User, label: 'Tài khoản'}].map(item => (
                         <button key={item.id} onClick={() => onNavigate(item.id)} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === item.id ? 'text-stone-800 bg-stone-100' : 'text-stone-400'}`}>
                             <item.icon size={24} fill={activeTab === item.id ? "currentColor" : "none"} strokeWidth={activeTab === item.id ? 2.5 : 2} />
                             <span className="text-[10px] font-black uppercase tracking-wider">{item.label}</span>
@@ -697,7 +537,129 @@
                 </div>
             </div>
         );
-        // --- UPDATED: Footer Component (Balanced Layout & Normal Case Menu) ---
+
+        // --- NEW: Account View Component ---
+        const AccountView = ({ user, firebase }) => {
+            const [data, setData] = useState({ name: "", role: "Cô dâu", partnerName: "", date: "", location: "", budget: "" });
+            const [loading, setLoading] = useState(true);
+            const [msg, setMsg] = useState("");
+
+            useEffect(() => {
+                const init = async () => {
+                    if (!user) return;
+                    try {
+                        const db = firebase.db;
+                        const profileRef = firebase.doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
+                        const pSnap = await firebase.getDoc(profileRef);
+                        if (pSnap.exists()) {
+                            const p = pSnap.data();
+                            let b = "";
+                            if (p.weddingId) {
+                                const wSnap = await firebase.getDoc(firebase.doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', p.weddingId));
+                                if (wSnap.exists()) {
+                                    const limit = wSnap.data().budgetLimit;
+                                    b = limit ? utils.formatInput(limit) : "";
+                                }
+                            }
+                            setData({
+                                name: p.name || user.displayName || "",
+                                role: p.role || "Cô dâu",
+                                partnerName: p.partnerName || "",
+                                date: p.weddingDate || "",
+                                location: p.location || "",
+                                budget: b
+                            });
+                        }
+                    } catch (e) { console.error(e); }
+                    setLoading(false);
+                };
+                init();
+            }, [user, firebase]);
+
+            const handleSave = async () => {
+                setMsg("Đang lưu...");
+                try {
+                    const db = firebase.db;
+                    const profileRef = firebase.doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
+                    await firebase.updateDoc(profileRef, {
+                        name: data.name,
+                        role: data.role,
+                        partnerName: data.partnerName,
+                        weddingDate: data.date,
+                        location: data.location
+                    });
+                    
+                    const pSnap = await firebase.getDoc(profileRef);
+                    const wid = pSnap.data().weddingId;
+                    if(wid) {
+                        await firebase.updateDoc(firebase.doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', wid), {
+                            budgetLimit: utils.parseInput(data.budget)
+                        });
+                    }
+                    setMsg("Đã cập nhật thành công!");
+                    setTimeout(() => setMsg(""), 3000);
+                } catch (e) { setMsg("Lỗi khi lưu."); }
+            };
+
+            if (loading) return <div className="pt-40 text-center"><div className="w-8 h-8 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mx-auto"></div></div>;
+
+            return (
+                <div className="pt-32 pb-32 px-4 max-w-2xl mx-auto animate-in">
+                    <div className="text-center mb-12">
+                        <div className="w-24 h-24 bg-stone-200 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-title font-bold text-stone-500 uppercase shadow-inner border-4 border-white">
+                            {data.name ? data.name.charAt(0) : (user.email ? user.email.charAt(0).toUpperCase() : '?')}
+                        </div>
+                        <h2 className="text-3xl font-title font-bold text-stone-800 uppercase tracking-wide mb-2">{data.name}</h2>
+                        <p className="text-stone-400 text-sm font-medium tracking-wide">{user.email}</p>
+                    </div>
+
+                    <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-xl shadow-stone-200/50 space-y-8">
+                        <div className="flex items-center gap-3 border-b border-stone-100 pb-4">
+                            <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500"><Icons.Edit size={14}/></div>
+                            <h3 className="text-lg font-bold text-stone-700 uppercase tracking-widest">Thông tin đám cưới</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Vai trò</label>
+                                <div className="relative">
+                                    <select value={data.role} onChange={e => setData({...data, role: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none appearance-none border border-transparent focus:border-stone-200 focus:bg-white transition-all uppercase text-sm">
+                                        <option value="Cô dâu">Cô dâu</option>
+                                        <option value="Chú rể">Chú rể</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Tên người ấy</label>
+                                <input type="text" value={data.partnerName} onChange={e => setData({...data, partnerName: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase placeholder:text-stone-300" placeholder="Chưa nhập" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Ngày cưới</label>
+                            <input type="date" value={data.date} onChange={e => setData({...data, date: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase" />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Địa điểm tổ chức</label>
+                            <input type="text" value={data.location} onChange={e => setData({...data, location: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase placeholder:text-stone-300" placeholder="Chưa nhập" />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Ngân sách dự kiến (VNĐ)</label>
+                            <input type="text" value={data.budget} onChange={e => setData({...data, budget: utils.formatInput(e.target.value)})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase placeholder:text-stone-300" placeholder="0" />
+                        </div>
+
+                        <div className="pt-4">
+                            <button onClick={handleSave} className="w-full py-5 bg-stone-800 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-stone-700 active:scale-95 transition-all shadow-lg">{msg || "Lưu thay đổi"}</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- NEW: Footer Component ---
         const Footer = () => (
             <footer className="bg-white/60 backdrop-blur-md border-t border-stone-100 py-12 mt-16 mb-24 md:mb-0">
                 <div className="max-w-6xl mx-auto px-6">
@@ -740,7 +702,6 @@
             const [weddingData, setWeddingData] = useState(null);
             
             const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
-            // ... (keep existing state declarations)
             const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
             const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
             const [isInviteShowModal, setIsInviteShowModal] = useState(false);
@@ -848,7 +809,6 @@
                 return <GettingStartedWizard onComplete={onWiz} onSkip={onSkip} />;
             }
             
-            // ... (Giữ nguyên các hàm updateDB, addAct...)
             const updateDB = async (k, v) => { 
                 if (!userData.weddingId) return;
                 await firebase.updateDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { [k]: v }); 
@@ -860,6 +820,7 @@
                 const nt = [newTask, ...(userData.tasks || [])]; 
                 await updateDB('tasks', nt); await addAct(`Thêm: ${t.title}`); 
             };
+            
             const onToggleTask = async (id) => { 
                 const nt = (userData.tasks || []).map(t => {
                     if ((t.id && t.id === id) || (!t.id && t === id)) { 
@@ -871,14 +832,17 @@
                 if(task) await addAct(`Cập nhật: ${task.title}`);
                 await updateDB('tasks', nt); 
             };
+            
             const onDeleteTask = async (id) => { 
                 const nt = (userData.tasks || []).filter(t => t.id !== id); 
                 await updateDB('tasks', nt); await addAct(`Xóa 1 công việc`); 
             };
+            
             const onAddGuest = async (g) => { 
                 const ng = [g, ...(userData.guests || [])]; 
                 await updateDB('guests', ng); await addAct(`Khách mới: ${g.name}`); 
             };
+            
             const onDeleteGuest = async (id) => { 
                 const ng = (userData.guests || []).filter(x => x.id !== id); 
                 await updateDB('guests', ng); await addAct(`Xóa khách`); 
@@ -903,15 +867,46 @@
 
             return (
                 <div className="pt-24 pb-32 md:pt-32 container mx-auto px-4 md:px-12 max-w-7xl animate-in text-stone-700">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6 px-2 md:px-0 text-left font-bold uppercase">
-                            <div className="flex-1 w-full text-stone-600 text-left font-bold uppercase font-black uppercase font-bold text-left font-black uppercase font-bold"><span className="text-[10px] tracking-[0.3em] text-[#B5A896] mb-2 block">Planner của {userData.profile?.name || 'bạn'}</span><h2 className="text-3xl md:text-5xl font-title font-bold tracking-tighter">Weddy Planner</h2></div>
-                        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto text-left font-bold uppercase font-black uppercase font-bold">
-                            <div className="bg-white/70 p-5 md:p-6 rounded-[2.5rem] border border-stone-100 shadow-sm flex items-center gap-6 flex-1 min-w-0 sm:min-w-[280px] font-bold uppercase font-black uppercase font-bold">
-                                <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-100/40 rounded-full flex items-center justify-center text-rose-300 shrink-0 shadow-inner"><Icons.Heart size={20} fill="currentColor"/></div>
-                                <div className="flex-1 text-sm overflow-hidden text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold text-left"><p className="text-[9px] font-black tracking-widest text-stone-300 mb-1 text-left uppercase font-black">Ngày trọng đại</p><div className="flex items-baseline gap-2 md:gap-3 font-bold text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold text-left"><p className="text-base md:text-xl font-bold text-stone-600 truncate text-left">{userData.profile?.weddingDate || 'Chưa đặt'}</p><p className="text-[10px] font-bold text-rose-400 whitespace-nowrap uppercase text-left">{utils.getDaysLeft(userData.profile?.weddingDate)}</p></div></div>
+                    <div className="fixed top-2 md:top-4 left-0 w-full z-50 flex justify-center px-2 md:px-4 transition-all duration-500">
+                        <nav className={`flex items-center justify-between px-4 py-2 md:px-6 md:py-2 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/80 backdrop-blur-2xl border border-white/40 shadow-lg' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
+                            
+                            <div onClick={() => navigateTo('home')}>
+                                <Logo animated={true} />
                             </div>
-                            <button onClick={() => setIsJoinModalOpen(true)} className="bg-stone-500 text-white p-5 md:p-6 rounded-[2.5rem] shadow-xl hover:bg-stone-600 active:scale-95 flex items-center justify-center gap-4 transition-all shrink-0 font-bold uppercase font-black uppercase font-bold uppercase font-black font-bold uppercase font-black uppercase font-bold"><Icons.Link size={20}/><span className="text-xs">Nhập mã kết nối</span></button>
-                        </div>
+
+                            <div className="hidden md:flex items-center gap-1 font-bold uppercase tracking-widest font-black text-xs">
+                                {[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (
+                                    <button key={item.id} onClick={() => navigateTo(item.id)} className={`px-5 py-2.5 rounded-full transition-all uppercase ${activeTab === item.id ? 'bg-stone-800 text-white shadow-lg' : 'text-stone-500 hover:text-stone-900 hover:bg-white/50'}`}>
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center gap-3 md:gap-4 font-bold uppercase">
+                                {currentUser && <span onClick={() => navigateTo('account')} className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2 truncate max-w-[120px] cursor-pointer hover:text-stone-600 transition-colors">{currentUser.displayName || currentUser.email}</span>}
+                                {currentUser && (
+                                    <div className="relative" ref={notificationRef}>
+                                        <button onClick={() => setShowNotifications(!showNotifications)} className="w-9 h-9 md:w-10 md:h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors relative"><Icons.Bell size={18} />{notifications.length > 0 && (<span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>)}</button>
+                                        {showNotifications && (
+                                            <div className="absolute right-0 mt-3 w-[280px] md:w-80 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-stone-100 py-6 animate-in zoom-in-95 origin-top-right overflow-hidden z-[60]">
+                                                <div className="px-6 mb-4 flex justify-between items-center text-stone-800 font-bold uppercase"><h4 className="text-[10px] md:text-xs">Thông báo</h4><span className="text-[9px] text-stone-400">{notifications.length} mới</span></div>
+                                                <div className="max-h-96 overflow-y-auto hide-scrollbar px-2 text-stone-600 text-left">
+                                                    {notifications.length > 0 ? notifications.map((n, i) => (
+                                                        <div key={i} className="p-4 rounded-2xl hover:bg-stone-50 transition-colors flex gap-4 items-start cursor-pointer group text-left"><div className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-stone-200 transition-colors shadow-sm"><Icons.Heart size={14} className="text-stone-400 group-hover:text-rose-500 transition-colors" /></div><div className="flex-1"><p className="text-xs font-bold leading-snug">{n.text}</p><p className="text-[9px] font-bold text-stone-300 uppercase mt-1">{n.time}</p></div></div>
+                                                    )) : <div className="py-10 text-center text-stone-300 text-xs italic font-medium">Không có thông báo mới</div>}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                {currentUser ? (
+                                    <>
+                                        <button onClick={() => firebase.signOut(firebase.auth)} className="hidden sm:block px-6 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase shadow-sm active:scale-95 transition-all hover:bg-stone-50 hover:border-stone-300">Đăng xuất</button>
+                                        <button onClick={() => firebase.signOut(firebase.auth)} className="sm:hidden w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors"><Icons.LogOut size={16} /></button>
+                                    </>
+                                ) : <button onClick={() => setShowLogin(true)} className="px-6 py-2.5 bg-stone-800 text-white rounded-full text-[10px] font-black uppercase shadow-xl active:scale-95 transition-all hover:bg-stone-700">Đăng nhập</button>}
+                            </div>
+                        </nav>
                     </div>
 
                     <div className="flex justify-center mb-10 md:mb-16 -mx-4 px-4 md:mx-0 md:px-0 font-bold uppercase font-black uppercase font-bold">
@@ -922,7 +917,6 @@
                         </div>
                     </div>
 
-                    {/* UPDATED: Wrapper with Key for Animation */}
                     <div className="px-1 md:px-0">
                         <div key={subTab} className="animate-in">
                             {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={userData.tasks.filter(t=>t.status==='done').length} totalTasks={userData.tasks.length} guestCount={userData.guests.length} budgetLimit={userData.budgetLimit} role={userData.profile?.role} weddingDate={userData.profile?.weddingDate} activities={userData.activities} onInvite={handleInvite} onEditBudget={() => { setTempBudget(utils.formatInput(userData.budgetLimit)); setIsBudgetModalOpen(true); }} onOpenGuests={() => setIsGuestModalOpen(true)} />}
@@ -979,7 +973,6 @@
             )
         }
 
-        // --- NEW: COMING SOON COMPONENT ---
         const ComingSoon = ({ title, desc }) => (
             <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center animate-in min-h-[60vh] flex flex-col items-center justify-center">
                 <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mb-8 text-stone-300 shadow-inner">
@@ -995,7 +988,6 @@
             </div>
         );
 
-        // --- 7. TOP LEVEL APP CONTAINER ---
         const App = () => {
             const [activeTab, setActiveTab] = useState('home');
             const [scrolled, setScrolled] = useState(false);
@@ -1071,7 +1063,6 @@
                         if (isRegister) {
                             if (!name.trim()) throw new Error("Vui lòng nhập họ tên.");
                             const { user } = await firebase.createUserWithEmailAndPassword(firebase.auth, email, password);
-                            // Create profile doc directly
                             await firebase.setDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { 
                                 email: user.email, 
                                 name: name, 
@@ -1097,88 +1088,27 @@
 
                 return (
                     <div className="pt-2 animate-in">
-                        {/* Tabs Switcher */}
                         <div className="flex bg-stone-100 p-1 rounded-2xl mb-8 relative">
-                            <div 
-                                className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out transform ${isRegister ? 'translate-x-full' : 'translate-x-0'}`}
-                            ></div>
-                            <button 
-                                onClick={() => { setIsRegister(false); setError(""); }} 
-                                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors ${!isRegister ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}
-                            >
-                                Đăng nhập
-                            </button>
-                            <button 
-                                onClick={() => { setIsRegister(true); setError(""); }} 
-                                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors ${isRegister ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}
-                            >
-                                Đăng ký
-                            </button>
+                            <div className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out transform ${isRegister ? 'translate-x-full' : 'translate-x-0'}`}></div>
+                            <button onClick={() => { setIsRegister(false); setError(""); }} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors ${!isRegister ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>Đăng nhập</button>
+                            <button onClick={() => { setIsRegister(true); setError(""); }} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors ${isRegister ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>Đăng ký</button>
                         </div>
 
                         <div className="space-y-5 text-left">
                             {isRegister && (
                                 <div className="animate-in">
                                     <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Họ và tên</label>
-                                    <input 
-                                        type="text" 
-                                        value={name} 
-                                        onChange={e => setName(e.target.value)} 
-                                        className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
-                                        placeholder="VD: NGUYỄN VĂN A" 
-                                    />
+                                    <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="VD: NGUYỄN VĂN A" />
                                 </div>
                             )}
-                            
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Email</label>
-                                <input 
-                                    type="email" 
-                                    value={email} 
-                                    onChange={e => setEmail(e.target.value)} 
-                                    className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
-                                    placeholder="WEDDY@EXAMPLE.COM" 
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Mật khẩu</label>
-                                <input 
-                                    type="password" 
-                                    value={password} 
-                                    onChange={e => setPassword(e.target.value)} 
-                                    className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" 
-                                    placeholder="••••••••" 
-                                />
-                            </div>
-
-                            {error && (
-                                <div className="p-3 bg-rose-50 text-rose-500 rounded-xl text-xs font-bold uppercase tracking-wide text-center animate-in">
-                                    <Icons.X size={12} className="inline mr-1" /> {error}
-                                </div>
-                            )}
-
-                            <button 
-                                onClick={handleSubmit} 
-                                disabled={loading}
-                                className="w-full py-5 mt-2 bg-stone-800 text-white rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : (isRegister ? 'Tạo tài khoản' : 'Vào hệ thống')}
-                            </button>
+                            <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="WEDDY@EXAMPLE.COM" /></div>
+                            <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Mật khẩu</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="••••••••" /></div>
+                            {error && <div className="p-3 bg-rose-50 text-rose-500 rounded-xl text-xs font-bold uppercase tracking-wide text-center animate-in"><Icons.X size={12} className="inline mr-1" /> {error}</div>}
+                            <button onClick={handleSubmit} disabled={loading} className="w-full py-5 mt-2 bg-stone-800 text-white rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">{loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : (isRegister ? 'Tạo tài khoản' : 'Vào hệ thống')}</button>
                         </div>
-
-                        <div className="relative flex py-6 items-center">
-                            <div className="flex-grow border-t border-stone-100"></div>
-                            <span className="flex-shrink-0 mx-4 text-stone-300 text-[9px] font-black uppercase tracking-widest">Hoặc</span>
-                            <div className="flex-grow border-t border-stone-100"></div>
-                        </div>
-
-                        <button 
-                            onClick={handleGoogleLogin} 
-                            className="w-full py-5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-sm hover:bg-stone-50 hover:border-stone-300 active:scale-95 transition-all"
-                        >
-                            <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                            Tiếp tục với Google
+                        <div className="relative flex py-6 items-center"><div className="flex-grow border-t border-stone-100"></div><span className="flex-shrink-0 mx-4 text-stone-300 text-[9px] font-black uppercase tracking-widest">Hoặc</span><div className="flex-grow border-t border-stone-100"></div></div>
+                        <button onClick={handleGoogleLogin} className="w-full py-5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-sm hover:bg-stone-50 hover:border-stone-300 active:scale-95 transition-all">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Tiếp tục với Google
                         </button>
                     </div>
                 );
@@ -1187,15 +1117,12 @@
             return (
                 <div className="min-h-screen">
                     <div className="fixed top-2 md:top-4 left-0 w-full z-50 flex justify-center px-2 md:px-4 transition-all duration-500">
-                        {/* UPDATED: Compact Header Padding (py-2 instead of py-5) */}
                         <nav className={`flex items-center justify-between px-4 py-2 md:px-6 md:py-2 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/80 backdrop-blur-2xl border border-white/40 shadow-lg' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
                             
-                            {/* Logo Wrapper */}
                             <div onClick={() => navigateTo('home')}>
                                 <Logo animated={true} />
                             </div>
 
-                            {/* UPDATED: Top Menu - Explicitly Uppercase */}
                             <div className="hidden md:flex items-center gap-1 font-bold uppercase tracking-widest font-black text-xs">
                                 {[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (
                                     <button key={item.id} onClick={() => navigateTo(item.id)} className={`px-5 py-2.5 rounded-full transition-all uppercase ${activeTab === item.id ? 'bg-stone-800 text-white shadow-lg' : 'text-stone-500 hover:text-stone-900 hover:bg-white/50'}`}>
@@ -1205,7 +1132,7 @@
                             </div>
 
                             <div className="flex items-center gap-3 md:gap-4 font-bold uppercase">
-                                {user && <span className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2 truncate max-w-[120px]">{user.displayName || user.email}</span>}
+                                {user && <span onClick={() => navigateTo('account')} className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2 truncate max-w-[120px] cursor-pointer hover:text-stone-600 transition-colors">{user.displayName || user.email}</span>}
                                 {user && (
                                     <div className="relative" ref={notificationRef}>
                                         <button onClick={() => setShowNotifications(!showNotifications)} className="w-9 h-9 md:w-10 md:h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors relative"><Icons.Bell size={18} />{notifications.length > 0 && (<span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>)}</button>
@@ -1214,7 +1141,7 @@
                                                 <div className="px-6 mb-4 flex justify-between items-center text-stone-800 font-bold uppercase"><h4 className="text-[10px] md:text-xs">Thông báo</h4><span className="text-[9px] text-stone-400">{notifications.length} mới</span></div>
                                                 <div className="max-h-96 overflow-y-auto hide-scrollbar px-2 text-stone-600 text-left">
                                                     {notifications.length > 0 ? notifications.map((n, i) => (
-                                                        <div key={i} className="p-4 rounded-2xl hover:bg-stone-50 transition-colors flex gap-4 items-start cursor-pointer group text-left"><div className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-stone-200 transition-colors shadow-sm"><Icons.Heart size={14} className="text-stone-400 group-hover:text-rose-500 transition-colors" /></div><div className="flex-1"><p className="text-xs font-bold leading-snug">{n.text}</p><p className="text-[9px] font-black text-stone-300 uppercase mt-1">{n.time}</p></div></div>
+                                                        <div key={i} className="p-4 rounded-2xl hover:bg-stone-50 transition-colors flex gap-4 items-start cursor-pointer group text-left"><div className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-stone-200 transition-colors shadow-sm"><Icons.Heart size={14} className="text-stone-400 group-hover:text-rose-500 transition-colors" /></div><div className="flex-1"><p className="text-xs font-bold leading-snug">{n.text}</p><p className="text-[9px] font-bold text-stone-300 uppercase mt-1">{n.time}</p></div></div>
                                                     )) : <div className="py-10 text-center text-stone-300 text-xs italic font-medium">Không có thông báo mới</div>}
                                                 </div>
                                             </div>
@@ -1236,6 +1163,7 @@
                         {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} firebase={firebase} /> : <div className="h-screen flex flex-col gap-4 items-center justify-center text-stone-400 p-6 text-center animate-in font-bold uppercase font-black uppercase font-bold"><Icons.Users size={48} className="opacity-10" /><p className="font-medium text-sm text-stone-300 font-bold uppercase tracking-widest uppercase uppercase font-black uppercase font-bold">Vui lòng đăng nhập Planner.</p><button onClick={() => setShowLogin(true)} className="px-8 py-3 bg-stone-500 text-white rounded-full text-xs font-bold uppercase shadow-lg font-bold transition-all active:scale-95 font-bold uppercase font-black uppercase font-bold">Đăng nhập ngay</button></div>)}
                         {activeTab === 'invitation' && <ComingSoon title="Thiệp Mời Online" desc="Tính năng thiết kế và gửi thiệp mời trực tuyến đang được phát triển." />}
                         {activeTab === 'vendors' && <ComingSoon title="Dịch Vụ Cưới" desc="Hệ thống kết nối nhà cung cấp dịch vụ uy tín sẽ sớm ra mắt." />}
+                        {activeTab === 'account' && (user ? <AccountView user={user} firebase={firebase} /> : null)}
                     </main>
 
                     {/* Footer Component Added Here */}
