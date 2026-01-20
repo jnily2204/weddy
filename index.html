@@ -149,10 +149,10 @@
             if (!isOpen) return null;
             return (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in">
-                    {/* Backdrop: Hoàn toàn trong suốt (Transparent) theo yêu cầu */}
+                    {/* Backdrop: Hoàn toàn trong suốt */}
                     <div className="absolute inset-0 transition-all" onClick={onClose}></div>
                     
-                    {/* Popup: Shadow đậm hơn để nổi bật trên nền trong suốt */}
+                    {/* Popup: Shadow đậm hơn */}
                     <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-stone-100 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar text-stone-700">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-title font-bold uppercase tracking-widest text-stone-600">{title}</h3>
@@ -166,11 +166,10 @@
             );
         };
 
-        // --- UPDATED: Logo Component (Raleway Black 900) ---
+        // --- UPDATED: Logo Component ---
         const Logo = ({ className, animated = false }) => (
             <div className={`flex items-center gap-1.5 group cursor-pointer ${className}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
                 <span 
-                    // Changed to font-black (Weight 900) and explicitly set fontFamily
                     className="text-lg md:text-xl font-black text-stone-700 tracking-tight group-hover:text-rose-500 transition-colors uppercase"
                     style={{ fontFamily: '"Raleway", sans-serif', fontWeight: 900 }}
                 >
@@ -179,7 +178,6 @@
                 <img 
                     src="https://www.svgrepo.com/show/247211/wedding-rings-diamond.svg" 
                     alt="Wedding Rings" 
-                    // Tiny size for refinement: w-3 h-3 (12px) mobile, w-4 h-4 (16px) desktop
                     className={`w-3 h-3 md:w-4 md:h-4 object-contain transition-all duration-500 ${animated ? 'animate-professional' : 'grayscale hover:grayscale-0 opacity-80 hover:opacity-100'}`} 
                 />
             </div>
@@ -188,30 +186,15 @@
         // --- FIXED: GettingStartedWizard ---
         const GettingStartedWizard = ({ onComplete, onSkip }) => {
             const [step, setStep] = useState(0);
+            // ... (Giữ nguyên logic Wizard)
             const [data, setData] = useState({ role: "", date: "", location: "", budget: "" });
             const [isSubmitting, setIsSubmitting] = useState(false);
 
             const steps = [
-                { 
-                    title: "Chào mừng bạn,", 
-                    subtitle: "Hãy chọn vai trò của bạn để bắt đầu.",
-                    content: (<div className="grid grid-cols-2 gap-4 mt-8 font-bold">{["Cô dâu", "Chú rể"].map(r => (<button key={r} onClick={() => setData({ ...data, role: r })} className={`p-8 rounded-[2rem] border transition-all shadow-sm ${data.role === r ? 'border-stone-800 bg-stone-800 text-white shadow-xl scale-105' : 'border-white bg-white hover:border-stone-300'}`}>{r}</button>))}</div>) 
-                },
-                { 
-                    title: "Ngày trọng đại?", 
-                    subtitle: "Ngày mà hai bạn về chung một nhà.",
-                    content: (<div className="mt-8"><input type="date" value={data.date} onChange={e => setData({ ...data, date: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-2xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div>) 
-                },
-                { 
-                    title: "Tổ chức ở đâu?", 
-                    subtitle: "Địa điểm diễn ra hôn lễ.",
-                    content: (<div className="mt-8"><input type="text" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Vd: White Palace, Tại gia..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 uppercase text-center"/></div>) 
-                },
-                { 
-                    title: "Ngân sách dự kiến?", 
-                    subtitle: "Con số ước tính cho đám cưới.",
-                    content: (<div className="mt-8"><div className="relative"><input type="text" value={data.budget} onChange={e => setData({ ...data, budget: utils.formatInput(e.target.value) })} placeholder="300.000.000" className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 pl-8 pr-20 text-3xl font-black text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-200 text-center"/><div className="absolute right-8 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm uppercase tracking-widest">VNĐ</div></div></div>) 
-                }
+                { title: "Chào mừng bạn,", subtitle: "Hãy chọn vai trò của bạn để bắt đầu.", content: (<div className="grid grid-cols-2 gap-4 mt-8 font-bold">{["Cô dâu", "Chú rể"].map(r => (<button key={r} onClick={() => setData({ ...data, role: r })} className={`p-8 rounded-[2rem] border transition-all shadow-sm ${data.role === r ? 'border-stone-800 bg-stone-800 text-white shadow-xl scale-105' : 'border-white bg-white hover:border-stone-300'}`}>{r}</button>))}</div>) },
+                { title: "Ngày trọng đại?", subtitle: "Ngày mà hai bạn về chung một nhà.", content: (<div className="mt-8"><input type="date" value={data.date} onChange={e => setData({ ...data, date: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-2xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div>) },
+                { title: "Tổ chức ở đâu?", subtitle: "Địa điểm diễn ra hôn lễ.", content: (<div className="mt-8"><input type="text" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Vd: White Palace, Tại gia..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 uppercase text-center"/></div>) },
+                { title: "Ngân sách dự kiến?", subtitle: "Con số ước tính cho đám cưới.", content: (<div className="mt-8"><div className="relative"><input type="text" value={data.budget} onChange={e => setData({ ...data, budget: utils.formatInput(e.target.value) })} placeholder="300.000.000" className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 pl-8 pr-20 text-3xl font-black text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-200 text-center"/><div className="absolute right-8 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm uppercase tracking-widest">VNĐ</div></div></div>) }
             ];
 
             const current = steps[step];
@@ -219,61 +202,16 @@
             const handleFinish = async () => {
                 if (isSubmitting) return;
                 setIsSubmitting(true);
-                try {
-                    await onComplete({...data, budget: utils.parseInput(data.budget)});
-                } catch (e) {
-                    console.error("Wizard Error", e);
-                    setIsSubmitting(false);
-                    alert("Có lỗi xảy ra, vui lòng thử lại.");
-                }
+                try { await onComplete({...data, budget: utils.parseInput(data.budget)}); } catch (e) { setIsSubmitting(false); alert("Có lỗi xảy ra, vui lòng thử lại."); }
             };
 
             return (
                 <div className="fixed inset-0 z-[200] bg-[#F0EBE5]/90 backdrop-blur-xl flex flex-col animate-in">
-                    <div className="absolute top-6 right-6 z-50">
-                        <button 
-                            onClick={onSkip} 
-                            className="text-stone-400 font-bold text-xs uppercase tracking-widest hover:text-stone-600 transition-colors px-4 py-2 bg-white/50 rounded-full hover:bg-white"
-                        >
-                            Bỏ qua
-                        </button>
-                    </div>
-
+                    <div className="absolute top-6 right-6 z-50"><button onClick={onSkip} className="text-stone-400 font-bold text-xs uppercase tracking-widest hover:text-stone-600 transition-colors px-4 py-2 bg-white/50 rounded-full hover:bg-white">Bỏ qua</button></div>
                     <div className="flex-1 flex flex-col justify-center px-8 max-w-lg mx-auto w-full text-center">
-                        <div className="mb-12">
-                            <div className="flex justify-center gap-1.5 mb-8">
-                                {steps.map((_, i) => (
-                                    <div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-stone-800 w-8' : 'bg-stone-300/50 w-2'}`}></div>
-                                ))}
-                            </div>
-                            <h2 className="text-3xl md:text-5xl font-title font-bold tracking-tighter text-stone-800 mb-4">{current.title}</h2>
-                            <p className="text-stone-500 text-base font-medium">{current.subtitle}</p>
-                        </div>
-                        
-                        <div className="min-h-[200px] flex flex-col justify-center">
-                            {current.content}
-                        </div>
-                        
-                        <div className="mt-16">
-                            {step < steps.length - 1 ? (
-                                <button 
-                                    onClick={() => setStep(step + 1)} 
-                                    disabled={(step === 0 && !data.role) || (step === 1 && !data.date) || (step === 2 && !data.location)} 
-                                    className="w-full py-5 bg-stone-800 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
-                                >
-                                    Tiếp tục
-                                </button>
-                            ) : (
-                                <button 
-                                    onClick={handleFinish} 
-                                    disabled={isSubmitting}
-                                    className="w-full py-5 bg-emerald-700 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-800 disabled:opacity-70 transition-all active:scale-95 flex items-center justify-center gap-3"
-                                >
-                                    {isSubmitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null}
-                                    {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất thiết lập'}
-                                </button>
-                            )}
-                        </div>
+                        <div className="mb-12"><div className="flex justify-center gap-1.5 mb-8">{steps.map((_, i) => (<div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-stone-800 w-8' : 'bg-stone-300/50 w-2'}`}></div>))}</div><h2 className="text-3xl md:text-5xl font-title font-bold tracking-tighter text-stone-800 mb-4">{current.title}</h2><p className="text-stone-500 text-base font-medium">{current.subtitle}</p></div>
+                        <div className="min-h-[200px] flex flex-col justify-center">{current.content}</div>
+                        <div className="mt-16">{step < steps.length - 1 ? (<button onClick={() => setStep(step + 1)} disabled={(step === 0 && !data.role) || (step === 1 && !data.date) || (step === 2 && !data.location)} className="w-full py-5 bg-stone-800 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95">Tiếp tục</button>) : (<button onClick={handleFinish} disabled={isSubmitting} className="w-full py-5 bg-emerald-700 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-800 disabled:opacity-70 transition-all active:scale-95 flex items-center justify-center gap-3">{isSubmitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null} {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất thiết lập'}</button>)}</div>
                     </div>
                 </div>
             );
@@ -286,47 +224,19 @@
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                         <div className="lg:col-span-2 space-y-6 md:space-y-8">
                             <div className="bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-stone-200/50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm text-stone-800">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-rose-100/50 rounded-full flex items-center justify-center text-rose-500 shrink-0"><Icons.Heart size={24} fill="currentColor"/></div>
-                                    <div><h4 className="font-title font-bold text-lg">Ví chung đôi mình</h4><p className="text-sm text-stone-400">Kết nối và đồng bộ kế hoạch với bạn đời.</p></div>
-                                </div>
+                                <div className="flex items-center gap-4"><div className="w-12 h-12 bg-rose-100/50 rounded-full flex items-center justify-center text-rose-500 shrink-0"><Icons.Heart size={24} fill="currentColor"/></div><div><h4 className="font-title font-bold text-lg">Ví chung đôi mình</h4><p className="text-sm text-stone-400">Kết nối và đồng bộ kế hoạch với bạn đời.</p></div></div>
                                 <button onClick={onInvite} className="w-full md:w-auto px-8 py-4 bg-stone-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-sm hover:bg-stone-600 transition-all flex items-center justify-center gap-2"><Icons.Share size={16}/> Mời bạn đời</button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 text-left">
-                                    <div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Tiến độ</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-300"><Icons.Check size={20}/></div></div>
-                                    <div><div className="flex items-baseline gap-2 mb-3 text-left font-title font-bold text-stone-600 text-4xl md:text-5xl"><span>{completedTasks}</span><span className="text-stone-300 uppercase text-xs">/ {totalTasks} việc</span></div><div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-stone-500 transition-all duration-700" style={{width: `${totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0}%`}}></div></div></div>
-                                </div>
-                                <div onClick={onOpenGuests} className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 cursor-pointer hover:border-stone-300 transition-all active:scale-[0.98]">
-                                    <div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Khách mời</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={20}/></div></div>
-                                    <div className="flex items-baseline gap-2 text-stone-700 text-left font-title font-bold text-5xl md:text-6xl"><span>{guestCount}</span><span className="text-stone-300 font-bold uppercase text-xs">Người</span></div>
-                                </div>
+                                <div className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 text-left"><div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Tiến độ</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-300"><Icons.Check size={20}/></div></div><div><div className="flex items-baseline gap-2 mb-3 text-left font-title font-bold text-stone-600 text-4xl md:text-5xl"><span>{completedTasks}</span><span className="text-stone-300 uppercase text-xs">/ {totalTasks} việc</span></div><div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-stone-500 transition-all duration-700" style={{width: `${totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0}%`}}></div></div></div></div>
+                                <div onClick={onOpenGuests} className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 cursor-pointer hover:border-stone-300 transition-all active:scale-[0.98]"><div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Khách mời</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={20}/></div></div><div className="flex items-baseline gap-2 text-stone-700 text-left font-title font-bold text-5xl md:text-6xl"><span>{guestCount}</span><span className="text-stone-300 font-bold uppercase text-xs">Người</span></div></div>
                             </div>
-                            <div className="bg-stone-500 p-6 md:p-12 rounded-[3rem] text-white relative overflow-hidden shadow-xl group">
-                                <div className="absolute top-0 right-0 w-80 h-80 bg-stone-400 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-40 transition-opacity duration-700"></div>
-                                <div className="relative z-10 text-left">
-                                    <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/70 mb-6 md:mb-8 text-left">Tài chính tổng quát ({role || 'Bạn'})</h3>
-                                    <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-8">
-                                        <div className="flex-1 text-white text-left">
-                                            <div className="text-xs uppercase font-black text-white/30 mb-2 text-left">Đã chi tiêu</div>
-                                            <div className="text-5xl md:text-7xl font-title font-bold tracking-tighter text-left tabular-nums">{utils.formatMoney(spentAmount)}</div>
-                                            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div>
-                                            <div className="flex items-center gap-2 group/budget inline-flex cursor-pointer text-white/80" onClick={onEditBudget}><p className="text-sm font-black uppercase tracking-widest font-bold">Ngân sách: {utils.formatMoney(budgetLimit)}</p><Icons.Edit size={16} className="text-white/20 group-hover/budget:text-white transition-colors" /></div>
-                                        </div>
-                                        <div className="md:w-48 flex flex-col gap-4 justify-center text-white"><div className="bg-white/10 backdrop-blur-sm p-6 rounded-3xl border border-white/5 text-center md:text-left shadow-sm shadow-inner"><p className="text-xs font-black text-white/40 uppercase mb-2 text-left">Còn lại</p><p className="text-2xl font-title font-bold text-left">{utils.formatMoney((budgetLimit || 300000000) - spentAmount)}</p></div></div>
-                                    </div>
-                                </div>
-                            </div>
+                            <div className="bg-stone-500 p-6 md:p-12 rounded-[3rem] text-white relative overflow-hidden shadow-xl group"><div className="absolute top-0 right-0 w-80 h-80 bg-stone-400 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-40 transition-opacity duration-700"></div><div className="relative z-10 text-left"><h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/70 mb-6 md:mb-8 text-left">Tài chính tổng quát ({role || 'Bạn'})</h3><div className="flex flex-col md:flex-row justify-between gap-6 md:gap-8"><div className="flex-1 text-white text-left"><div className="text-xs uppercase font-black text-white/30 mb-2 text-left">Đã chi tiêu</div><div className="text-5xl md:text-7xl font-title font-bold tracking-tighter text-left tabular-nums">{utils.formatMoney(spentAmount)}</div><div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><div className="flex items-center gap-2 group/budget inline-flex cursor-pointer text-white/80" onClick={onEditBudget}><p className="text-sm font-black uppercase tracking-widest font-bold">Ngân sách: {utils.formatMoney(budgetLimit)}</p><Icons.Edit size={16} className="text-white/20 group-hover/budget:text-white transition-colors" /></div></div><div className="md:w-48 flex flex-col gap-4 justify-center text-white"><div className="bg-white/10 backdrop-blur-sm p-6 rounded-3xl border border-white/5 text-center md:text-left shadow-sm shadow-inner"><p className="text-xs font-black text-white/40 uppercase mb-2 text-left">Còn lại</p><p className="text-2xl font-title font-bold text-left">{utils.formatMoney((budgetLimit || 300000000) - spentAmount)}</p></div></div></div></div></div>
                         </div>
                         <div className="bg-white/60 backdrop-blur-md p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm h-full flex flex-col">
                             <h3 className="text-sm font-black uppercase tracking-[0.2em] mb-8 text-stone-700 border-b border-stone-100 pb-6 font-bold text-left uppercase">Hoạt động gần đây</h3>
                             <div className="space-y-6 flex-1 overflow-y-auto hide-scrollbar max-h-[400px] md:max-h-[500px]">
-                                {activities?.length > 0 ? activities.map((act, i) => (
-                                    <div key={i} className="flex gap-4 items-start group animate-in text-left">
-                                        <div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-stone-500 group-hover:text-white transition-colors shadow-sm"><Icons.ArrowUpRight size={18} className="text-stone-300 group-hover:text-white" /></div>
-                                        <div className="text-left text-stone-600"><p className="text-sm font-bold leading-snug text-left">{act.text}</p><p className="text-xs font-black text-stone-300 uppercase tracking-widest mt-1 text-left">{act.time}</p></div>
-                                    </div>
-                                )) : <p className="text-base text-stone-300 italic font-medium text-center">Chưa có thông báo mới.</p>}
+                                {activities?.length > 0 ? activities.map((act, i) => (<div key={i} className="flex gap-4 items-start group animate-in text-left"><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-stone-500 group-hover:text-white transition-colors shadow-sm"><Icons.ArrowUpRight size={18} className="text-stone-300 group-hover:text-white" /></div><div className="text-left text-stone-600"><p className="text-sm font-bold leading-snug text-left">{act.text}</p><p className="text-xs font-black text-stone-300 uppercase tracking-widest mt-1 text-left">{act.time}</p></div></div>)) : <p className="text-base text-stone-300 italic font-medium text-center">Chưa có thông báo mới.</p>}
                             </div>
                         </div>
                     </div>
@@ -339,14 +249,13 @@
             const [activeFilter, setActiveFilter] = useState('all');
             const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [paid, setPaid] = useState(""); const [category, setCategory] = useState("Đặt tiệc cưới");
             const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-
-            // --- Pagination State ---
+            
+            // --- Pagination ---
             const [currentPage, setCurrentPage] = useState(1);
             const itemsPerPage = 5;
+            const listRef = useRef(null); // Ref for scroll
 
-            // Lọc danh sách các công việc có chi phí
             const allBudgetTasks = (tasks || []).filter(t => t.cost > 0);
-            
             const groomTasks = allBudgetTasks.filter(t => t.paidBy === 'Chú rể');
             const brideTasks = allBudgetTasks.filter(t => t.paidBy === 'Cô dâu');
 
@@ -354,58 +263,36 @@
             if (activeFilter === 'groom') displayTasks = groomTasks;
             if (activeFilter === 'bride') displayTasks = brideTasks;
 
-            // Reset page when filter changes or tasks change
+            useEffect(() => { setCurrentPage(1); }, [activeFilter, tasks]);
+
+            // Scroll top when page changes
             useEffect(() => {
-                setCurrentPage(1);
-            }, [activeFilter, tasks]);
+                if(listRef.current && currentPage > 1) listRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, [currentPage]);
 
             const totalBudget = displayTasks.reduce((acc, curr) => acc + curr.cost, 0);
             const totalPaid = displayTasks.reduce((acc, curr) => acc + (curr.paid || (curr.status === 'done' ? curr.cost : 0)), 0);
-            
-            // Calculate paginated data
-            const indexOfLastItem = currentPage * itemsPerPage;
-            const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-            const currentTransactions = displayTasks.slice(indexOfFirstItem, indexOfLastItem);
-            const totalPages = Math.ceil(displayTasks.length / itemsPerPage);
 
+            // Calc pagination
+            const totalPages = Math.ceil(displayTasks.length / itemsPerPage);
+            const currentTransactions = displayTasks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            
             const handleSave = () => { 
                 if (title.trim() && cost) { 
-                    onAddExpense({ 
-                        title: title.trim(), 
-                        tag: category, 
-                        status: utils.parseInput(paid) >= utils.parseInput(cost) ? 'done' : 'pending', 
-                        cost: utils.parseInput(cost), 
-                        paid: utils.parseInput(paid),
-                        id: Date.now() // Added ID
-                    }); 
+                    onAddExpense({ title: title.trim(), tag: category, status: utils.parseInput(paid) >= utils.parseInput(cost) ? 'done' : 'pending', cost: utils.parseInput(cost), paid: utils.parseInput(paid), id: Date.now() }); 
                     setTitle(""); setCost(""); setPaid(""); setIsOpen(false); 
-                    setCurrentPage(1); // Reset to first page
+                    setCurrentPage(1); 
                 } 
             };
             
             return (
                 <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 px-2 md:px-0">
-                    <div className="flex justify-center">
-                        <div className="bg-stone-100 p-1.5 rounded-full flex gap-1">
-                            {[{ id: 'all', label: 'Ví chung' }, { id: 'groom', label: 'Chú rể' }, { id: 'bride', label: 'Cô dâu' }].map(f => (
-                                <button key={f.id} onClick={() => setActiveFilter(f.id)} className={`px-4 md:px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-white shadow-md text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>{f.label}</button>
-                            ))}
-                        </div>
-                    </div>
+                    <div className="flex justify-center"><div className="bg-stone-100 p-1.5 rounded-full flex gap-1">{[{ id: 'all', label: 'Ví chung' }, { id: 'groom', label: 'Chú rể' }, { id: 'bride', label: 'Cô dâu' }].map(f => (<button key={f.id} onClick={() => setActiveFilter(f.id)} className={`px-4 md:px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-white shadow-md text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>{f.label}</button>))}</div></div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48">
-                            <div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Dự kiến chi ({activeFilter === 'all' ? 'Tổng' : (activeFilter === 'groom' ? 'Nhà trai' : 'Nhà gái')})</p><div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.DollarSign size={20}/></div></div>
-                            <p className="text-3xl font-title font-bold text-stone-800 tracking-tighter">{utils.formatMoney(totalBudget)}</p>
-                        </div>
-                        <div className="bg-stone-800 p-8 rounded-[2.5rem] shadow-xl flex flex-col justify-between h-48 text-white">
-                            <div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-white/50">Đã thanh toán</p><div className="p-3 bg-white/10 rounded-full text-white"><Icons.Check size={20}/></div></div>
-                            <p className="text-3xl font-title font-bold tracking-tighter">{utils.formatMoney(totalPaid)}</p>
-                        </div>
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48">
-                            <div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Còn lại</p><div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.Layout size={20}/></div></div>
-                            <p className={`text-3xl font-title font-bold tracking-tighter ${totalBudget - totalPaid < 0 ? 'text-rose-500' : 'text-stone-800'}`}>{utils.formatMoney(totalBudget - totalPaid)}</p>
-                        </div>
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48"><div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Dự kiến chi ({activeFilter === 'all' ? 'Tổng' : (activeFilter === 'groom' ? 'Nhà trai' : 'Nhà gái')})</p><div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.DollarSign size={20}/></div></div><p className="text-3xl font-title font-bold text-stone-800 tracking-tighter">{utils.formatMoney(totalBudget)}</p></div>
+                        <div className="bg-stone-800 p-8 rounded-[2.5rem] shadow-xl flex flex-col justify-between h-48 text-white"><div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-white/50">Đã thanh toán</p><div className="p-3 bg-white/10 rounded-full text-white"><Icons.Check size={20}/></div></div><p className="text-3xl font-title font-bold tracking-tighter">{utils.formatMoney(totalPaid)}</p></div>
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48"><div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Còn lại</p><div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.Layout size={20}/></div></div><p className={`text-3xl font-title font-bold tracking-tighter ${totalBudget - totalPaid < 0 ? 'text-rose-500' : 'text-stone-800'}`}>{utils.formatMoney(totalBudget - totalPaid)}</p></div>
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
@@ -413,43 +300,25 @@
                          <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-200 text-stone-600 hover:bg-stone-300 rounded-full text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm"><Icons.Plus size={16}/> Thêm khoản chi</button>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4" ref={listRef}>
                         {displayTasks.length === 0 ? <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem]"><p className="text-stone-400 text-sm font-bold uppercase tracking-widest">Chưa có dữ liệu</p></div> : currentTransactions.map((item) => (
                             <div key={item.id} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
                                 <div className="flex items-center gap-5">
                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${(item.paid || 0) >= item.cost ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-50 text-stone-400'}`}><Icons.DollarSign size={24} /></div>
-                                    <div className="text-left">
-                                        <h4 className="font-bold text-lg text-stone-700 leading-tight uppercase">{item.title}</h4>
-                                        <div className="flex gap-2 mt-2"><span className="inline-block text-[10px] font-black uppercase tracking-wider text-stone-400 bg-stone-50 px-3 py-1 rounded-lg border border-stone-100">{item.tag}</span>{item.paidBy && <span className={`inline-block text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border border-transparent ${item.paidBy === 'Chú rể' ? 'bg-blue-50 text-blue-500' : (item.paidBy === 'Cô dâu' ? 'bg-rose-50 text-rose-500' : 'bg-stone-100 text-stone-500')}`}>{item.paidBy}</span>}</div>
-                                    </div>
+                                    <div className="text-left"><h4 className="font-bold text-lg text-stone-700 leading-tight uppercase">{item.title}</h4><div className="flex gap-2 mt-2"><span className="inline-block text-[10px] font-black uppercase tracking-wider text-stone-400 bg-stone-50 px-3 py-1 rounded-lg border border-stone-100">{item.tag}</span>{item.paidBy && <span className={`inline-block text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border border-transparent ${item.paidBy === 'Chú rể' ? 'bg-blue-50 text-blue-500' : (item.paidBy === 'Cô dâu' ? 'bg-rose-50 text-rose-500' : 'bg-stone-100 text-stone-500')}`}>{item.paidBy}</span>}</div></div>
                                 </div>
-                                <div className="flex flex-col items-end gap-1">
-                                    <p className="font-bold text-xl text-stone-800 tracking-tight">{utils.formatMoney(item.cost)}</p>
-                                    <div className="flex items-center gap-2">{(item.paid || 0) >= item.cost ? <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">Đã xong</span> : <span className="text-[10px] font-black uppercase tracking-widest text-stone-400 bg-stone-50 px-3 py-1.5 rounded-lg">Đã trả: {utils.formatMoney(item.paid || 0)}</span>}</div>
-                                </div>
+                                <div className="flex flex-col items-end gap-1"><p className="font-bold text-xl text-stone-800 tracking-tight">{utils.formatMoney(item.cost)}</p><div className="flex items-center gap-2">{(item.paid || 0) >= item.cost ? <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">Đã xong</span> : <span className="text-[10px] font-black uppercase tracking-widest text-stone-400 bg-stone-50 px-3 py-1.5 rounded-lg">Đã trả: {utils.formatMoney(item.paid || 0)}</span>}</div></div>
                                 <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(item.id); }} className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all opacity-100 md:opacity-0 group-hover:opacity-100 absolute top-4 right-4 md:relative md:top-0 md:right-0"><Icons.Trash size={20} /></button>
                             </div>
                         ))}
                     </div>
 
-                    {/* Pagination UI for Budget */}
-                    {displayTasks.length > itemsPerPage && (
-                        <div className="flex justify-center items-center gap-4 pt-4">
-                            <button 
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                                className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            >
-                                <Icons.ChevronRight size={16} className="rotate-180" />
-                            </button>
+                    {/* Pagination UI */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 pt-6 pb-4">
+                            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
                             <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {currentPage} / {totalPages}</span>
-                            <button 
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                disabled={currentPage === totalPages}
-                                className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            >
-                                <Icons.ChevronRight size={16} />
-                            </button>
+                            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
                         </div>
                     )}
 
@@ -487,39 +356,38 @@
             // --- Pagination State ---
             const [pendingPage, setPendingPage] = useState(1);
             const [donePage, setDonePage] = useState(1);
-            const pendingPerPage = 5; // Yêu cầu: 5 việc đang làm
-            const donePerPage = 3;    // Yêu cầu: 3 việc đã xong
+            const pendingPerPage = 5; 
+            const donePerPage = 3;
+            
+            const pendingListRef = useRef(null);
+            const doneListRef = useRef(null);
 
             const handleAdd = () => { 
                 if (title.trim()) { 
-                    onAddTask({ 
-                        title: title.trim(), 
-                        tag: cat, 
-                        status: "pending", 
-                        cost: utils.parseInput(cost), 
-                        paid: 0,
-                        id: Date.now() 
-                    }); 
+                    onAddTask({ title: title.trim(), tag: cat, status: "pending", cost: utils.parseInput(cost), paid: 0, id: Date.now() }); 
                     setTitle(""); setCost(""); setIsOpen(false); 
-                    setPendingPage(1); // Reset về trang đầu khi thêm mới
+                    setPendingPage(1); 
                 } 
             };
 
             const pending = tasks?.filter(t => t.status !== 'done') || [];
             const done = tasks?.filter(t => t.status === 'done') || [];
 
-            // Calculate Pagination for Pending
+            // Calculate Pagination
             const totalPendingPages = Math.ceil(pending.length / pendingPerPage) || 1;
             const currentPending = pending.slice((pendingPage - 1) * pendingPerPage, pendingPage * pendingPerPage);
 
-            // Calculate Pagination for Done
             const totalDonePages = Math.ceil(done.length / donePerPage) || 1;
             const currentDone = done.slice((donePage - 1) * donePerPage, donePage * donePerPage);
 
-            // Reset pages if out of bounds (e.g. after deleting items)
-            useEffect(() => { if (pendingPage > totalPendingPages) setPendingPage(totalPendingPages); }, [pending.length, totalPendingPages, pendingPage]);
-            useEffect(() => { if (donePage > totalDonePages) setDonePage(totalDonePages); }, [done.length, totalDonePages, donePage]);
+            useEffect(() => { if (pendingPage > totalPendingPages) setPendingPage(totalPendingPages); }, [pending.length]);
+            useEffect(() => { if (donePage > totalDonePages) setDonePage(totalDonePages); }, [done.length]);
             
+            // Scroll Effects
+            useEffect(() => { if(pendingListRef.current && pendingPage > 1) pendingListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [pendingPage]);
+            // Optional: Done list might be further down, scrolling there might be annoying, keeping it subtle or just manual scroll is fine. But per user request "scroll top".
+            useEffect(() => { if(doneListRef.current && donePage > 1) doneListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [donePage]);
+
             return (
                 <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 text-left px-2 md:px-0">
                     <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
@@ -528,7 +396,7 @@
                     </div>
 
                     {/* Pending List */}
-                    <div className="space-y-4">
+                    <div className="space-y-4" ref={pendingListRef}>
                         {pending.length > 0 ? currentPending.map((t) => (
                             <div key={t.id || t.title} onClick={() => onToggleTask(t.id)} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all cursor-pointer flex items-center gap-6 relative">
                                 <div className="w-8 h-8 rounded-xl border-2 border-stone-200 group-hover:border-stone-400 group-hover:bg-stone-50 transition-all shrink-0"></div>
@@ -539,45 +407,34 @@
                     </div>
 
                     {/* Pending Pagination */}
-                    {pending.length > pendingPerPage && (
+                    {totalPendingPages > 1 && (
                         <div className="flex justify-center items-center gap-4 pt-2">
-                            <button onClick={() => setPendingPage(prev => Math.max(prev - 1, 1))} disabled={pendingPage === 1} className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all"><Icons.ChevronRight size={14} className="rotate-180" /></button>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Trang {pendingPage} / {totalPendingPages}</span>
-                            <button onClick={() => setPendingPage(prev => Math.min(prev + 1, totalPendingPages))} disabled={pendingPage === totalPendingPages} className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all"><Icons.ChevronRight size={14} /></button>
+                            <button onClick={() => setPendingPage(prev => Math.max(prev - 1, 1))} disabled={pendingPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
+                            <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {pendingPage} / {totalPendingPages}</span>
+                            <button onClick={() => setPendingPage(prev => Math.min(prev + 1, totalPendingPages))} disabled={pendingPage === totalPendingPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
                         </div>
                     )}
 
                     {/* Done List */}
                     {done.length > 0 && (
-                        <div className="pt-10 opacity-60 hover:opacity-100 transition-opacity duration-300">
+                        <div className="pt-10 opacity-60 hover:opacity-100 transition-opacity duration-300" ref={doneListRef}>
                             <h4 className="mb-6 text-xs font-black uppercase tracking-widest text-stone-400">Đã hoàn thành ({done.length})</h4>
                             <div className="space-y-3">{currentDone.map((t) => (
-                                <div 
-                                    key={t.id || t.title} 
-                                    className="p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center justify-between gap-4 text-stone-400 transition-colors"
-                                >
+                                <div key={t.id || t.title} className="p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center justify-between gap-4 text-stone-400 transition-colors">
                                     <div className="flex items-center gap-5 cursor-pointer flex-1" onClick={() => onToggleTask(t.id)}>
                                         <div className="w-8 h-8 rounded-xl bg-stone-300 flex items-center justify-center text-white shrink-0"><Icons.Check size={16} /></div>
                                         <h4 className="text-base font-bold line-through uppercase">{t.title}</h4>
                                     </div>
-                                    
-                                    <button 
-                                        onClick={() => onToggleTask(t.id)} 
-                                        className="group/undo flex items-center gap-2 px-4 py-2 bg-white border border-stone-100 rounded-full shadow-sm hover:bg-stone-100 hover:border-stone-300 transition-all shrink-0"
-                                        title="Hoàn tác công việc này"
-                                    >
-                                        <Icons.Undo size={14} className="text-stone-400 group-hover/undo:text-stone-600" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-stone-400 group-hover/undo:text-stone-600 hidden sm:inline">Hoàn tác</span>
-                                    </button>
+                                    <button onClick={() => onToggleTask(t.id)} className="group/undo flex items-center gap-2 px-4 py-2 bg-white border border-stone-100 rounded-full shadow-sm hover:bg-stone-100 hover:border-stone-300 transition-all shrink-0" title="Hoàn tác"><Icons.Undo size={14} className="text-stone-400 group-hover/undo:text-stone-600" /><span className="text-[10px] font-black uppercase tracking-widest text-stone-400 group-hover/undo:text-stone-600 hidden sm:inline">Hoàn tác</span></button>
                                 </div>
                             ))}</div>
 
                             {/* Done Pagination */}
-                            {done.length > donePerPage && (
+                            {totalDonePages > 1 && (
                                 <div className="flex justify-center items-center gap-4 pt-4">
-                                    <button onClick={() => setDonePage(prev => Math.max(prev - 1, 1))} disabled={donePage === 1} className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all"><Icons.ChevronRight size={14} className="rotate-180" /></button>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Trang {donePage} / {totalDonePages}</span>
-                                    <button onClick={() => setDonePage(prev => Math.min(prev + 1, totalDonePages))} disabled={donePage === totalDonePages} className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all"><Icons.ChevronRight size={14} /></button>
+                                    <button onClick={() => setDonePage(prev => Math.max(prev - 1, 1))} disabled={donePage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
+                                    <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {donePage} / {totalDonePages}</span>
+                                    <button onClick={() => setDonePage(prev => Math.min(prev + 1, totalDonePages))} disabled={donePage === totalDonePages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
                                 </div>
                             )}
                         </div>
@@ -616,18 +473,24 @@
             // --- Pagination State ---
             const [currentPage, setCurrentPage] = useState(1);
             const itemsPerPage = 10;
-            
+            const listRef = useRef(null);
+
             // Reset page if needed when items deleted
             useEffect(() => {
                 const maxPage = Math.ceil((guests?.length || 0) / itemsPerPage) || 1;
                 if (currentPage > maxPage) setCurrentPage(maxPage);
             }, [guests?.length]);
+            
+            // Scroll top when page changes
+            useEffect(() => {
+                if(listRef.current && currentPage > 1) listRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, [currentPage]);
 
             const handleAdd = () => { 
                 if (name.trim()) { 
                     onAddGuest({ name: name.trim(), relationship: rel, phone, id: Date.now() }); 
                     setName(""); setPhone(""); setIsOpen(false); 
-                    setCurrentPage(1); // Go to first page on add
+                    setCurrentPage(1); 
                 } 
             };
 
@@ -646,7 +509,7 @@
                          <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"><Icons.Plus size={12} /></span> Thêm khách mới</button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4" ref={listRef}>
                         {guests?.length === 0 ? <div className="col-span-full py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-400 shadow-inner"><Icons.Users size={32} /></div><p className="text-stone-400 font-bold uppercase text-xs tracking-widest">Danh sách trống</p><button onClick={() => setIsOpen(true)} className="mt-3 text-sm font-black underline uppercase text-stone-600 hover:text-stone-900 transition-colors">Thêm khách đầu tiên</button></div> : currentGuests?.map((g) => (
                             <div key={g.id} className="group bg-white p-6 rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all flex items-center justify-between cursor-default relative">
                                 <div className="flex items-center gap-5">
@@ -659,23 +522,11 @@
                     </div>
 
                     {/* Pagination UI */}
-                    {guests?.length > itemsPerPage && (
+                    {totalPages > 1 && (
                         <div className="flex justify-center items-center gap-4 pt-4">
-                            <button 
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                                className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            >
-                                <Icons.ChevronRight size={16} className="rotate-180" />
-                            </button>
+                            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
                             <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {currentPage} / {totalPages}</span>
-                            <button 
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                disabled={currentPage === totalPages}
-                                className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            >
-                                <Icons.ChevronRight size={16} />
-                            </button>
+                            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
                         </div>
                     )}
                     
