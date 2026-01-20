@@ -476,6 +476,12 @@
             const [title, setTitle] = useState(""); const [cat, setCat] = useState("Đặt tiệc cưới"); const [cost, setCost] = useState("");
             const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
+            // --- Pagination State ---
+            const [pendingPage, setPendingPage] = useState(1);
+            const [donePage, setDonePage] = useState(1);
+            const pendingPerPage = 5; // Yêu cầu: 5 việc đang làm
+            const donePerPage = 3;    // Yêu cầu: 3 việc đã xong
+
             const handleAdd = () => { 
                 if (title.trim()) { 
                     onAddTask({ 
@@ -484,13 +490,27 @@
                         status: "pending", 
                         cost: utils.parseInput(cost), 
                         paid: 0,
-                        id: Date.now() // Added ID
+                        id: Date.now() 
                     }); 
                     setTitle(""); setCost(""); setIsOpen(false); 
+                    setPendingPage(1); // Reset về trang đầu khi thêm mới
                 } 
             };
+
             const pending = tasks?.filter(t => t.status !== 'done') || [];
             const done = tasks?.filter(t => t.status === 'done') || [];
+
+            // Calculate Pagination for Pending
+            const totalPendingPages = Math.ceil(pending.length / pendingPerPage) || 1;
+            const currentPending = pending.slice((pendingPage - 1) * pendingPerPage, pendingPage * pendingPerPage);
+
+            // Calculate Pagination for Done
+            const totalDonePages = Math.ceil(done.length / donePerPage) || 1;
+            const currentDone = done.slice((donePage - 1) * donePerPage, donePage * donePerPage);
+
+            // Reset pages if out of bounds (e.g. after deleting items)
+            useEffect(() => { if (pendingPage > totalPendingPages) setPendingPage(totalPendingPages); }, [pending.length, totalPendingPages, pendingPage]);
+            useEffect(() => { if (donePage > totalDonePages) setDonePage(totalDonePages); }, [done.length, totalDonePages, donePage]);
             
             return (
                 <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 text-left px-2 md:px-0">
@@ -499,8 +519,9 @@
                          <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"><Icons.Plus size={12} /></span> Thêm việc mới</button>
                     </div>
 
+                    {/* Pending List */}
                     <div className="space-y-4">
-                        {pending.length > 0 ? pending.map((t) => (
+                        {pending.length > 0 ? currentPending.map((t) => (
                             <div key={t.id || t.title} onClick={() => onToggleTask(t.id)} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all cursor-pointer flex items-center gap-6 relative">
                                 <div className="w-8 h-8 rounded-xl border-2 border-stone-200 group-hover:border-stone-400 group-hover:bg-stone-50 transition-all shrink-0"></div>
                                 <div className="flex-1"><h4 className="font-bold text-stone-800 text-lg leading-tight uppercase">{t.title}</h4><span className="inline-block mt-2 text-[10px] font-black uppercase tracking-wider text-stone-400">{t.tag}</span></div>
@@ -509,11 +530,20 @@
                         )) : <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><p className="text-stone-400 font-bold uppercase text-sm tracking-widest">Mọi việc đã hoàn tất! ✨</p></div>}
                     </div>
 
-                    {/* UPDATED: Done list with clickable items */}
+                    {/* Pending Pagination */}
+                    {pending.length > pendingPerPage && (
+                        <div className="flex justify-center items-center gap-4 pt-2">
+                            <button onClick={() => setPendingPage(prev => Math.max(prev - 1, 1))} disabled={pendingPage === 1} className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all"><Icons.ChevronRight size={14} className="rotate-180" /></button>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Trang {pendingPage} / {totalPendingPages}</span>
+                            <button onClick={() => setPendingPage(prev => Math.min(prev + 1, totalPendingPages))} disabled={pendingPage === totalPendingPages} className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all"><Icons.ChevronRight size={14} /></button>
+                        </div>
+                    )}
+
+                    {/* Done List */}
                     {done.length > 0 && (
                         <div className="pt-10 opacity-60 hover:opacity-100 transition-opacity duration-300">
                             <h4 className="mb-6 text-xs font-black uppercase tracking-widest text-stone-400">Đã hoàn thành ({done.length})</h4>
-                            <div className="space-y-3">{done.map((t) => (
+                            <div className="space-y-3">{currentDone.map((t) => (
                                 <div 
                                     key={t.id || t.title} 
                                     className="p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center justify-between gap-4 text-stone-400 transition-colors"
@@ -523,7 +553,6 @@
                                         <h4 className="text-base font-bold line-through uppercase">{t.title}</h4>
                                     </div>
                                     
-                                    {/* UPDATED: Nút Hoàn tác rõ ràng */}
                                     <button 
                                         onClick={() => onToggleTask(t.id)} 
                                         className="group/undo flex items-center gap-2 px-4 py-2 bg-white border border-stone-100 rounded-full shadow-sm hover:bg-stone-100 hover:border-stone-300 transition-all shrink-0"
@@ -534,6 +563,15 @@
                                     </button>
                                 </div>
                             ))}</div>
+
+                            {/* Done Pagination */}
+                            {done.length > donePerPage && (
+                                <div className="flex justify-center items-center gap-4 pt-4">
+                                    <button onClick={() => setDonePage(prev => Math.max(prev - 1, 1))} disabled={donePage === 1} className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all"><Icons.ChevronRight size={14} className="rotate-180" /></button>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Trang {donePage} / {totalDonePages}</span>
+                                    <button onClick={() => setDonePage(prev => Math.min(prev + 1, totalDonePages))} disabled={donePage === totalDonePages} className="w-8 h-8 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all"><Icons.ChevronRight size={14} /></button>
+                                </div>
+                            )}
                         </div>
                     )}
 
