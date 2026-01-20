@@ -2,29 +2,28 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Weddy - Nền tảng quản lý đám cưới tinh tế</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Weddy - Kế hoạch đám cưới</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700;800;900&display=swap');
-        body { font-family: 'Raleway', sans-serif; -webkit-tap-highlight-color: transparent; font-size: 16px; }
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Raleway:wght@400;600;700;800&display=swap');
+        body { font-family: 'Raleway', sans-serif; background-color: #F0EBE5; color: #44403C; }
         .font-title { font-family: 'Cormorant Garamond', serif; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes fadeIn { 0% { opacity: 0; transform: translateY(15px); filter: blur(4px); } 100% { opacity: 1; transform: translateY(0); filter: blur(0); } }
-        .animate-in { animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .animate-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="bg-[#F0EBE5] text-stone-700 overflow-x-hidden">
+<body>
     <div id="root"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD_F3OI5GexlAqgC8TZ1CN1JB5O3RacQqs",
@@ -36,61 +35,192 @@
             measurementId: "G-KK4B3RXVNV"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        // Gắn vào window để React dùng được
-        window.firebaseServices = { auth, db, doc, setDoc, updateDoc, onSnapshot, getDoc, collection, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged };
+        try {
+            const app = initializeApp(firebaseConfig);
+            window.firebaseServices = { 
+                auth: getAuth(app), 
+                db: getFirestore(app), 
+                signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged,
+                doc, setDoc, onSnapshot, updateDoc, getDoc
+            };
+            console.log("Firebase Connected");
+        } catch (e) {
+            console.error("Firebase Init Error:", e);
+        }
     </script>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect } = React;
 
-        // --- UTILS & ICONS ---
-        const utils = {
-            formatMoney: (a) => a ? (a).toLocaleString('vi-VN') + " VNĐ" : "0 VNĐ",
-            formatInput: (v) => v ? v.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : "",
-            parseInput: (v) => v ? parseInt(v.toString().replace(/\./g, '')) || 0 : 0
+        // --- CÁC COMPONENT NHỎ ---
+        const Icon = ({ name }) => {
+            const icons = {
+                heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />,
+                check: <polyline points="20 6 9 17 4 12" />,
+                google: <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" /> // Giả lập icon Google đơn giản
+            };
+            return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{icons[name] || icons.heart}</svg>;
         };
 
-        const Icon = ({ children, size = 24, ...props }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
-        );
-        const Icons = {
-            Heart: (p) => <Icon {...p}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></Icon>,
-            Check: (p) => <Icon {...p}><polyline points="20 6 9 17 4 12" /></Icon>,
-            Plus: (p) => <Icon {...p}><path d="M5 12h14M12 5v14" /></Icon>,
-            X: (p) => <Icon {...p}><path d="M18 6 6 18M6 6l12 12" /></Icon>,
-            Trash: (p) => <Icon {...p}><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></Icon>,
-            Share: (p) => <Icon {...p}><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></Icon>,
-            LogOut: (p) => <Icon {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></Icon>,
-            Edit: (p) => <Icon {...p}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></Icon>
-        };
-
-        const Logo = ({ animated }) => (
-            <div className="flex items-center gap-1.5 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-                <span className="text-xl font-title font-black text-stone-700 tracking-tight group-hover:text-rose-500 transition-colors uppercase">WEDDY</span>
-                <img src="https://www.svgrepo.com/show/247211/wedding-rings-diamond.svg" className={`w-4 h-4 ${animated ? 'animate-professional' : ''}`} />
+        const Logo = () => (
+            <div className="flex items-center justify-center gap-2 mb-6">
+                <span className="text-2xl font-title font-bold tracking-widest text-stone-800">WEDDY</span>
             </div>
         );
 
-        const Modal = ({ isOpen, onClose, title, children }) => {
-            if (!isOpen) return null;
+        // --- MÀN HÌNH WIZARD (Thiết lập ban đầu) ---
+        const Wizard = ({ onComplete }) => {
+            const [step, setStep] = useState(1);
+            const [role, setRole] = useState("");
+            const [budget, setBudget] = useState("");
+
             return (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in">
-                    <div className="absolute inset-0 bg-stone-900/20 backdrop-blur-sm" onClick={onClose}></div>
-                    <div className="relative bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl border border-stone-100 max-h-[90vh] overflow-y-auto hide-scrollbar">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold uppercase tracking-widest text-stone-600">{title}</h3>
-                            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50"><Icons.X size={20} /></button>
+                <div className="fixed inset-0 bg-[#F0EBE5] flex items-center justify-center p-4 z-50 animate-in">
+                    <div className="max-w-md w-full bg-white/50 backdrop-blur-xl p-8 rounded-[2rem] shadow-xl border border-white">
+                        <Logo />
+                        <div className="h-1 w-full bg-stone-200 rounded-full mb-8 overflow-hidden">
+                            <div className="h-full bg-stone-800 transition-all duration-500" style={{width: step === 1 ? '50%' : '100%'}}></div>
                         </div>
-                        {children}
+
+                        {step === 1 ? (
+                            <div className="text-center space-y-6">
+                                <h2 className="text-xl font-bold text-stone-700">Bạn là ai trong ngày vui này?</h2>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button onClick={() => setRole('Chú rể')} className={`p-6 rounded-2xl border-2 transition-all ${role === 'Chú rể' ? 'border-stone-800 bg-stone-800 text-white' : 'border-white bg-white hover:border-stone-300'}`}>🤵 Chú rể</button>
+                                    <button onClick={() => setRole('Cô dâu')} className={`p-6 rounded-2xl border-2 transition-all ${role === 'Cô dâu' ? 'border-stone-800 bg-stone-800 text-white' : 'border-white bg-white hover:border-stone-300'}`}>👰 Cô dâu</button>
+                                </div>
+                                <button onClick={() => role && setStep(2)} disabled={!role} className="w-full py-4 bg-stone-800 text-white rounded-full font-bold uppercase tracking-widest disabled:opacity-50 hover:scale-[1.02] transition-transform">Tiếp tục</button>
+                            </div>
+                        ) : (
+                            <div className="text-center space-y-6">
+                                <h2 className="text-xl font-bold text-stone-700">Ngân sách dự kiến của bạn?</h2>
+                                <input 
+                                    type="text" 
+                                    value={budget}
+                                    onChange={(e) => setBudget(e.target.value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, "."))}
+                                    placeholder="VD: 300.000.000"
+                                    className="w-full p-4 text-center text-2xl font-bold bg-white/80 rounded-2xl outline-none focus:ring-2 ring-stone-200"
+                                    autoFocus
+                                />
+                                <div className="text-stone-400 text-sm font-bold uppercase">VNĐ</div>
+                                <button onClick={() => onComplete({ role, budget: parseInt(budget.replace(/\./g, '')) || 0 })} className="w-full py-4 bg-emerald-600 text-white rounded-full font-bold uppercase tracking-widest hover:scale-[1.02] transition-transform shadow-lg shadow-emerald-200">Hoàn tất thiết lập</button>
+                                <button onClick={() => setStep(1)} className="text-xs font-bold text-stone-400 uppercase tracking-widest hover:text-stone-600">Quay lại</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             );
         };
 
-        // --- MÀN HÌNH WIZARD (Cái bạn đang bị lỗi hiển thị) ---
-        const GettingStartedWizard = ({ onComplete }) => {
-            const [step, setStep] = useState(0);
-            const [data, setData] = useState
+        // --- COMPONENT CHÍNH ---
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [showWizard, setShowWizard] = useState(false);
+            const [services, setServices] = useState(null);
+            const [data, setData] = useState(null);
+
+            // Đợi Firebase load xong
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    if (window.firebaseServices) {
+                        setServices(window.firebaseServices);
+                        clearInterval(interval);
+                    }
+                }, 100);
+            }, []);
+
+            // Theo dõi trạng thái đăng nhập
+            useEffect(() => {
+                if (!services) return;
+                const { auth, db, onAuthStateChanged, doc, onSnapshot, setDoc } = services;
+                
+                return onAuthStateChanged(auth, async (u) => {
+                    setUser(u);
+                    if (u) {
+                        // Lắng nghe dữ liệu
+                        const unsub = onSnapshot(doc(db, "weddings", u.uid), (snap) => {
+                            if (snap.exists()) {
+                                setData(snap.data());
+                                setShowWizard(false);
+                            } else {
+                                setShowWizard(true); // Chưa có dữ liệu -> Hiện Wizard
+                            }
+                            setLoading(false);
+                        });
+                        return () => unsub();
+                    } else {
+                        setLoading(false);
+                        setData(null);
+                    }
+                });
+            }, [services]);
+
+            // Hàm lưu dữ liệu từ Wizard
+            const handleWizardComplete = async (wizardData) => {
+                if (!services || !user) return;
+                const { db, setDoc, doc } = services;
+                await setDoc(doc(db, "weddings", user.uid), {
+                    ...wizardData,
+                    tasks: [],
+                    createdAt: new Date().toISOString()
+                }, { merge: true });
+            };
+
+            const handleLogin = () => {
+                if(services) services.signInWithPopup(services.auth, new services.GoogleAuthProvider());
+            };
+
+            if (loading) return <div className="h-screen flex items-center justify-center text-stone-400 font-bold tracking-widest uppercase animate-pulse">Đang tải Weddy...</div>;
+
+            if (!user) return (
+                <div className="h-screen flex flex-col items-center justify-center p-6 animate-in text-center">
+                    <Logo />
+                    <h1 className="text-3xl font-title font-bold text-stone-800 mb-4">Lên kế hoạch đám cưới<br/>trong mơ của bạn</h1>
+                    <p className="text-stone-500 mb-8 max-w-xs mx-auto leading-relaxed">Quản lý ngân sách, danh sách việc cần làm và khách mời tất cả trong một.</p>
+                    <button onClick={handleLogin} className="bg-white border border-stone-200 px-8 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-transform flex items-center gap-3 text-stone-700">
+                        <span>Đăng nhập bằng Google</span>
+                    </button>
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen pb-10">
+                    {showWizard && <Wizard onComplete={handleWizardComplete} />}
+                    
+                    <nav className="bg-white/80 backdrop-blur-md px-6 py-4 flex justify-between items-center sticky top-0 z-40 border-b border-stone-100">
+                        <span className="font-title font-bold text-xl">WEDDY</span>
+                        <div className="flex items-center gap-4">
+                            <span className="text-xs font-bold uppercase hidden md:inline-block">Xin chào, {user.displayName}</span>
+                            <button onClick={() => services.signOut(services.auth)} className="text-stone-400 hover:text-rose-500 transition-colors">Thoát</button>
+                        </div>
+                    </nav>
+
+                    <main className="max-w-4xl mx-auto p-6 space-y-8">
+                        {/* Hiển thị Dashboard đơn giản để test */}
+                        <div className="bg-stone-800 text-white p-8 rounded-[2.5rem] shadow-xl animate-in">
+                            <p className="text-xs font-bold uppercase tracking-widest opacity-50 mb-2">Tổng ngân sách</p>
+                            <h2 className="text-5xl font-bold tracking-tighter">
+                                {data?.budget ? (data.budget).toLocaleString('vi-VN') : 0} <span className="text-xl">VNĐ</span>
+                            </h2>
+                            <div className="mt-8 flex gap-4">
+                                <div className="px-4 py-2 bg-white/10 rounded-xl text-xs font-bold uppercase tracking-widest border border-white/5">
+                                    Vai trò: {data?.role || "Chưa chọn"}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="text-center p-12 border-2 border-dashed border-stone-200 rounded-[2.5rem]">
+                            <p className="text-stone-400 font-bold mb-4">Giao diện chính đang được tải...</p>
+                            <p className="text-sm text-stone-400">Nếu bạn thấy màn hình này, nghĩa là code đã chạy thành công!</p>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
