@@ -153,13 +153,62 @@
 
         const GettingStartedWizard = ({ onComplete, onSkip }) => {
             const [step, setStep] = useState(0);
-            const [data, setData] = useState({ role: "", partnerName: "", engagementDate: "", weddingDate: "", location: "", venue: "", preWedding: "", budget: "" });
+            // THÊM: vibes để lưu sở thích
+            const [data, setData] = useState({ 
+                role: "", partnerName: "", engagementDate: "", weddingDate: "", 
+                location: "", venue: "", preWedding: "", budget: "",
+                vibes: [] // <--- Mảng chứa các tag sở thích
+            });
             const [isSubmitting, setIsSubmitting] = useState(false);
 
             const handleNext = () => setStep(prev => prev + 1);
 
+            // Danh sách các Style đám cưới để User chọn
+            const weddingVibes = [
+                { id: 'traditional', label: 'Truyền thống', icon: '🏮' },
+                { id: 'modern', label: 'Hiện đại', icon: '✨' },
+                { id: 'luxury', label: 'Sang trọng', icon: '💎' },
+                { id: 'rustic', label: 'Mộc mạc', icon: '🌿' },
+                { id: 'vintage', label: 'Cổ điển', icon: '📷' },
+                { id: 'minimalist', label: 'Tối giản', icon: '⚪' }
+            ];
+
+            // Hàm xử lý chọn/bỏ chọn Style
+            const toggleVibe = (id) => {
+                setData(prev => {
+                    const exists = prev.vibes.includes(id);
+                    return { 
+                        ...prev, 
+                        vibes: exists ? prev.vibes.filter(v => v !== id) : [...prev.vibes, id] 
+                    };
+                });
+            };
+
             const steps = [
-                { title: "Chào bạn,", subtitle: "Bạn là Cô Dâu hay Chú Rể, và tên thân mật của người ấy là gì?", content: (<div className="space-y-6 mt-6"><div className="grid grid-cols-2 gap-4 font-bold">{["Cô dâu", "Chú rể"].map(r => (<button key={r} onClick={() => setData({ ...data, role: r })} className={`p-6 rounded-[2rem] border transition-all shadow-sm ${data.role === r ? 'border-stone-800 bg-stone-800 text-white shadow-xl scale-105' : 'border-white bg-white hover:border-stone-300'}`}>{r}</button>))}</div><input type="text" value={data.partnerName} onChange={e => setData({ ...data, partnerName: e.target.value })} placeholder="Tên thân mật của người ấy..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
+                { 
+                    title: "Chào bạn,", 
+                    subtitle: "Bạn là Cô Dâu hay Chú Rể, và tên thân mật của người ấy là gì?", 
+                    content: (<div className="space-y-6 mt-6"><div className="grid grid-cols-2 gap-4 font-bold">{["Cô dâu", "Chú rể"].map(r => (<button key={r} onClick={() => setData({ ...data, role: r })} className={`p-6 rounded-[2rem] border transition-all shadow-sm ${data.role === r ? 'border-stone-800 bg-stone-800 text-white shadow-xl scale-105' : 'border-white bg-white hover:border-stone-300'}`}>{r}</button>))}</div><input type="text" value={data.partnerName} onChange={e => setData({ ...data, partnerName: e.target.value })} placeholder="Tên thân mật của người ấy..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) 
+                },
+                // --- BƯỚC MỚI: CHỌN VIBE (STYLE) ---
+                {
+                    title: "Gu của hai bạn?",
+                    subtitle: "Hãy chọn những phong cách đám cưới mà bạn yêu thích (Chọn nhiều)",
+                    content: (
+                        <div className="grid grid-cols-2 gap-4 mt-6 animate-in">
+                            {weddingVibes.map(v => (
+                                <button 
+                                    key={v.id} 
+                                    onClick={() => toggleVibe(v.id)} 
+                                    className={`p-4 rounded-[1.5rem] border transition-all flex flex-col items-center gap-2 ${data.vibes.includes(v.id) ? 'border-stone-800 bg-stone-100 text-stone-800 shadow-md ring-1 ring-stone-200' : 'border-white bg-white hover:bg-stone-50 text-stone-400'}`}
+                                >
+                                    <span className="text-3xl mb-1">{v.icon}</span>
+                                    <span className="text-xs font-black uppercase tracking-widest">{v.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )
+                },
                 { title: "Ngày lành tháng tốt", subtitle: "Hai bạn đã chọn được ngày đẹp cho Lễ Ăn Hỏi và Lễ Cưới chưa?", content: (<div className="space-y-6 mt-6"><div><label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Ăn Hỏi (Đính hôn)</label><input type="date" value={data.engagementDate} onChange={e => setData({ ...data, engagementDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div><div><label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Cưới (Thành hôn)</label><input type="date" value={data.weddingDate} onChange={e => setData({ ...data, weddingDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div></div>) },
                 { title: "Nơi diễn ra", subtitle: "Đám cưới sẽ diễn ra tại Tỉnh/Thành phố nào?", content: (<div className="mt-8"><input type="text" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Vd: TP. Hồ Chí Minh, Hà Nội..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
                 { title: "Địa điểm tiệc", subtitle: "Bạn đã nhắm được Nhà hàng/Khách sạn cụ thể nào chưa?", content: (<div className="mt-8"><input type="text" value={data.venue} onChange={e => setData({ ...data, venue: e.target.value })} placeholder="Nhập tên nhà hàng (nếu có)..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
@@ -172,7 +221,12 @@
             const handleFinish = async () => {
                 if (isSubmitting) return;
                 setIsSubmitting(true);
-                try { await onComplete({...data, budget: utils.parseInput(data.budget)}); } catch (e) { setIsSubmitting(false); alert("Có lỗi xảy ra, vui lòng thử lại."); }
+                try { 
+                    // Gửi thêm vibes trong object data
+                    await onComplete({...data, budget: utils.parseInput(data.budget)}); 
+                } catch (e) { 
+                    setIsSubmitting(false); alert("Có lỗi xảy ra, vui lòng thử lại."); 
+                }
             };
 
             return (
@@ -778,12 +832,15 @@
             if (!userData) return <div className="h-screen flex items-center justify-center text-stone-400"><div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin"></div></div>;
 
             // Kiểm tra chặt chẽ trạng thái hoàn tất
+           // --- BẮT ĐẦU ĐOẠN CẦN THAY THẾ ---
+            
+            // Kiểm tra trạng thái hoàn tất thiết lập
             if (!userData.profile?.isSetupComplete) {
                 const onWiz = async (w) => {
                     const { db, doc, updateDoc } = firebase;
                     const pref = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
                     
-                    // Cập nhật profile với các trường thông tin MỚI
+                    // Cập nhật profile User + Thêm trường vibes (Gu thẩm mỹ)
                     await updateDoc(pref, { 
                         role: w.role, 
                         partnerName: w.partnerName || "", 
@@ -792,13 +849,19 @@
                         location: w.location || "",
                         venue: w.venue || "",
                         preWedding: w.preWedding || "",
+                        
+                        // [QUAN TRỌNG] Lưu mảng style vào đây để sau này AI chạy thuật toán
+                        vibes: w.vibes || [], 
+                        
                         isSetupComplete: true, 
                         name: currentUser.displayName || userData.profile.name 
                     });
 
-                    // Cập nhật ngân sách
+                    // Cập nhật ngân sách vào Wedding Data chung
                     if (userData.weddingId) {
-                        await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { budgetLimit: w.budget || 300000000 });
+                        await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { 
+                            budgetLimit: w.budget || 300000000 
+                        });
                     }
                 };
                 
@@ -810,6 +873,8 @@
 
                 return <GettingStartedWizard onComplete={onWiz} onSkip={onSkip} />;
             }
+            
+            // --- KẾT THÚC ĐOẠN CẦN THAY THẾ ---
             
             const updateDB = async (k, v) => { 
                 if (!userData.weddingId) return;
