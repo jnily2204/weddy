@@ -52,9 +52,9 @@
         const { useState, useEffect, useRef, useMemo } = React;
         const APP_ID = 'weddy-stable-final';
 
-        // ---------------------------------------------------------
-        // 1. UTILS & ICONS (Phải nằm đầu tiên)
-        // ---------------------------------------------------------
+        // ==========================================
+        // 1. CÔNG CỤ & ICON (UTILS) - LUÔN ĐỂ ĐẦU TIÊN
+        // ==========================================
         const utils = {
             formatMoney: (a) => (a || 0).toLocaleString('vi-VN') + " đ",
             formatInput: (v) => v ? v.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : "",
@@ -63,7 +63,8 @@
                 if (!d) return "---";
                 const diff = Math.ceil((new Date(d).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                 return diff > 0 ? `${diff} NGÀY NỮA` : "ĐÃ QUA";
-            }
+            },
+            genInvite: () => Math.floor(100000 + Math.random() * 900000).toString()
         };
 
         const Icon = ({ children, size = 24, ...props }) => (
@@ -92,9 +93,9 @@
             User: (p) => <Icon {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></Icon>
         };
 
-        // ---------------------------------------------------------
-        // 2. HOOKS & UI BASE
-        // ---------------------------------------------------------
+        // ==========================================
+        // 2. COMPONENT CƠ BẢN (HOOKS, MODAL, LOGO)
+        // ==========================================
         const useFirebase = () => {
             const [services, setServices] = useState(null);
             useEffect(() => {
@@ -127,9 +128,9 @@
             </div>
         );
 
-        // ---------------------------------------------------------
-        // 3. AI & DATA ENGINE
-        // ---------------------------------------------------------
+        // ==========================================
+        // 3. DỮ LIỆU & THUẬT TOÁN AI (Định nghĩa trước khi dùng)
+        // ==========================================
         const MOCK_VENDORS = [
             { id: 1, name: "TuArt Wedding", category: "photography", location: "Hanoi", price: 15000000, tags: ['modern', 'luxury', 'korean'], image: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=500" },
             { id: 2, name: "Gem Center", category: "venue", location: "HCM", price: 200000000, tags: ['luxury', 'modern'], image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=500" },
@@ -141,24 +142,31 @@
         const getRecommendations = (userProfile, vendors) => {
             if (!userProfile) return vendors;
             const userLoc = (userProfile.location || "").toLowerCase();
-            const userBudget = parseInt(userProfile.budgetLimit || 300000000);
+            const rawBudget = userProfile.budgetLimit || 300000000;
+            const userBudget = typeof rawBudget === 'string' ? parseInt(rawBudget.replace(/\./g, '')) : rawBudget;
             const userVibes = Array.isArray(userProfile.vibes) ? userProfile.vibes : [];
+
+            // Ước tính ngân sách cho từng mục
+            const budgetAllocation = { photography: userBudget * 0.15, venue: userBudget * 0.50, makeup: userBudget * 0.05, planner: userBudget * 0.10, decoration: userBudget * 0.10 };
 
             return vendors.map(v => {
                 let score = 0; let reasons = [];
+                // 1. Địa điểm (+30)
                 if (userLoc && v.location.toLowerCase().includes(userLoc)) { score += 30; reasons.push("📍 Cùng khu vực"); }
-                if (v.price <= userBudget * 0.2) { score += 40; reasons.push("💰 Giá tốt"); }
+                // 2. Ngân sách (+40)
+                const est = budgetAllocation[v.category] || userBudget * 0.1;
+                if (v.price <= est * 1.2) { score += 40; reasons.push("💰 Giá tốt"); } else { score -= 20; }
+                // 3. Gu thẩm mỹ (+20/tag)
                 const matchVibes = v.tags.filter(t => userVibes.includes(t));
                 if (matchVibes.length > 0) { score += matchVibes.length * 20; reasons.push(`✨ Gu ${matchVibes.join(', ')}`); }
                 return { ...v, score, reasons };
             }).filter(v => v.score > 0).sort((a, b) => b.score - a.score);
         };
 
-        // ---------------------------------------------------------
-        // 4. SUB-COMPONENTS (Phải định nghĩa trước FullPlannerApp)
-        // ---------------------------------------------------------
-        
-        // Vendor Marketplace Component
+        // ==========================================
+        // 4. CÁC COMPONENT CON (Phải định nghĩa TRƯỚC khi được gọi)
+        // ==========================================
+
         const VendorMarketplace = ({ userProfile, weddingData }) => {
             const recommendations = useMemo(() => {
                 try {
@@ -166,44 +174,56 @@
                 } catch (e) { return MOCK_VENDORS; }
             }, [userProfile, weddingData]);
 
+            const getVibeText = () => { 
+                if (!userProfile?.vibes || !Array.isArray(userProfile.vibes) || userProfile.vibes.length === 0) return "của bạn"; 
+                return userProfile.vibes.join(', '); 
+            };
+
             return (
                 <div className="pt-24 pb-32 px-4 max-w-6xl mx-auto animate-in">
                     <div className="text-center mb-8">
                         <h2 className="text-3xl font-title font-bold mb-2">Đối tác hoàn hảo</h2>
-                        <p className="text-stone-500 text-sm">Gợi ý dựa trên gu của bạn</p>
+                        <p className="text-stone-500 text-sm">Gợi ý dựa trên gu thẩm mỹ <b>{getVibeText()}</b></p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {recommendations.map(item => (
-                            <div key={item.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all">
+                            <div key={item.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all relative">
                                 <div className="h-48 bg-gray-200 relative">
                                     <img src={item.image} className="w-full h-full object-cover" />
+                                    {item.score > 60 && <div className="absolute top-2 left-2 bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded-full">🔥 Phù hợp nhất</div>}
                                     <div className="absolute bottom-2 right-2 bg-white/90 px-2 py-1 rounded text-xs font-bold">{utils.formatMoney(item.price)}</div>
                                 </div>
                                 <div className="p-4">
-                                    <h3 className="font-bold text-lg">{item.name}</h3>
-                                    <p className="text-xs text-stone-400 uppercase mb-2">{item.category}</p>
-                                    <div className="flex flex-wrap gap-1 mb-4">
-                                        {item.reasons.map((r, i) => <span key={i} className="text-[10px] bg-stone-100 px-2 py-1 rounded">{r}</span>)}
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-[10px] uppercase text-stone-400 font-bold">{item.category}</p>
+                                            <h3 className="font-bold text-lg leading-tight">{item.name}</h3>
+                                        </div>
+                                        <div className="text-xs font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full">{item.score}đ</div>
                                     </div>
-                                    <button className="w-full py-2 bg-stone-800 text-white rounded-xl text-xs font-bold uppercase">Liên hệ</button>
+                                    <div className="flex flex-wrap gap-1 mt-3 mb-4">
+                                        {item.reasons.map((r, i) => <span key={i} className="text-[10px] bg-stone-100 px-2 py-1 rounded text-stone-500 font-medium">{r}</span>)}
+                                    </div>
+                                    <button className="w-full py-3 bg-stone-800 text-white rounded-xl text-xs font-bold uppercase hover:bg-stone-700 transition-colors">Liên hệ ngay</button>
                                 </div>
                             </div>
                         ))}
                     </div>
-                    {recommendations.length === 0 && <div className="text-center py-20 text-stone-400">Chưa có đối tác phù hợp.</div>}
+                    {recommendations.length === 0 && <div className="text-center py-20 text-stone-400">Chưa tìm thấy đối tác phù hợp.</div>}
                 </div>
             );
         };
 
         const GettingStartedWizard = ({ onComplete, onSkip }) => {
             const [step, setStep] = useState(0);
-            const [data, setData] = useState({ role: "", partnerName: "", engagementDate: "", weddingDate: "", location: "", budget: "", vibes: [] });
+            const [data, setData] = useState({ role: "", partnerName: "", engagementDate: "", weddingDate: "", location: "", venue: "", preWedding: "", budget: "", vibes: [] });
             const [isSubmitting, setIsSubmitting] = useState(false);
             const handleNext = () => setStep(prev => prev + 1);
             
             const vibes = [
                 { id: 'traditional', label: 'Truyền thống', icon: '🏮' }, { id: 'modern', label: 'Hiện đại', icon: '✨' },
-                { id: 'luxury', label: 'Sang trọng', icon: '💎' }, { id: 'rustic', label: 'Mộc mạc', icon: '🌿' }
+                { id: 'luxury', label: 'Sang trọng', icon: '💎' }, { id: 'rustic', label: 'Mộc mạc', icon: '🌿' },
+                { id: 'vintage', label: 'Cổ điển', icon: '📷' }, { id: 'minimalist', label: 'Tối giản', icon: '⚪' }
             ];
             const toggleVibe = (id) => setData(p => ({...p, vibes: p.vibes.includes(id) ? p.vibes.filter(x=>x!==id) : [...p.vibes, id]}));
 
@@ -213,6 +233,8 @@
                 { title: "Ngân sách?", content: <div className="mt-4"><input type="text" value={data.budget} onChange={e => setData({...data, budget: utils.formatInput(e.target.value)})} placeholder="300.000.000" className="w-full p-4 border rounded-xl text-center text-2xl font-bold" /></div> },
                 { title: "Địa điểm?", content: <div className="mt-4"><input type="text" value={data.location} onChange={e => setData({...data, location: e.target.value})} placeholder="TP. Hồ Chí Minh" className="w-full p-4 border rounded-xl text-center" /></div> }
             ];
+            
+            const current = steps[step] || steps[0]; // Fallback an toàn
 
             const handleFinish = async () => {
                 if(isSubmitting) return; setIsSubmitting(true);
@@ -221,9 +243,9 @@
 
             return (
                 <div className="fixed inset-0 z-50 bg-[#F0EBE5] flex items-center justify-center p-6">
-                    <div className="w-full max-w-md text-center">
-                        <h2 className="text-3xl font-title font-bold mb-2">{steps[step].title}</h2>
-                        {steps[step].content}
+                    <div className="w-full max-w-md text-center bg-white p-8 rounded-[2.5rem] shadow-xl">
+                        <h2 className="text-3xl font-title font-bold mb-2">{current.title}</h2>
+                        {current.content}
                         <div className="mt-8 flex gap-3">
                             {step < steps.length - 1 ? 
                                 <button onClick={handleNext} disabled={step===0 && !data.role} className="flex-1 py-4 bg-stone-800 text-white rounded-full font-bold uppercase text-xs disabled:opacity-50">Tiếp tục</button> :
@@ -236,20 +258,144 @@
             );
         };
 
-        // --- 5. LOGIC WRAPPER (FullPlannerApp) ---
-        // (Phải định nghĩa SAU các component con nhưng TRƯỚC App)
+        const PlannerOverview = ({ spentAmount, completedTasks, totalTasks, guestCount, budgetLimit, onInvite, onEditBudget, onOpenGuests }) => {
+            const percentage = Math.min((spentAmount / (budgetLimit || 300000000)) * 100, 100);
+            return (
+                <div className="max-w-6xl mx-auto space-y-6 animate-in px-2 md:px-0">
+                    <div className="bg-stone-800 text-white p-8 rounded-[2.5rem] relative overflow-hidden shadow-xl">
+                        <div className="relative z-10 flex justify-between items-end">
+                            <div>
+                                <p className="text-xs font-bold uppercase opacity-50 mb-2">Tổng chi tiêu</p>
+                                <p className="text-5xl md:text-6xl font-title font-bold">{utils.formatMoney(spentAmount)}</p>
+                                <div className="flex items-center gap-2 mt-4 cursor-pointer hover:opacity-80" onClick={onEditBudget}>
+                                    <p className="text-xs font-bold uppercase opacity-70">Ngân sách: {utils.formatMoney(budgetLimit)}</p>
+                                    <Icons.Edit size={12} />
+                                </div>
+                            </div>
+                            <div className="w-16 h-16 rounded-full border-4 border-white/20 flex items-center justify-center text-xs font-bold">{Math.round(percentage)}%</div>
+                        </div>
+                        <div className="absolute bottom-0 left-0 h-2 bg-white/20 w-full"><div className="h-full bg-white transition-all duration-1000" style={{width: `${percentage}%`}}></div></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                         <div className="bg-white p-6 rounded-[2rem] shadow-sm">
+                            <div className="flex justify-between items-start mb-4"><span className="text-xs font-black uppercase text-stone-400">Tiến độ</span><Icons.Check size={20}/></div>
+                            <div className="text-3xl font-title font-bold">{completedTasks}<span className="text-sm text-stone-300">/{totalTasks}</span></div>
+                        </div>
+                        <div className="bg-white p-6 rounded-[2rem] shadow-sm cursor-pointer hover:shadow-md transition-all" onClick={onOpenGuests}>
+                            <div className="flex justify-between items-start mb-4"><span className="text-xs font-black uppercase text-stone-400">Khách mời</span><Icons.Users size={20}/></div>
+                            <div className="text-3xl font-title font-bold">{guestCount}</div>
+                        </div>
+                    </div>
+                    
+                    <button onClick={onInvite} className="w-full py-4 bg-white border border-stone-200 rounded-full font-bold uppercase text-xs flex items-center justify-center gap-2 shadow-sm hover:bg-stone-50">
+                        <Icons.Share size={16}/> Mời bạn đời cùng quản lý
+                    </button>
+                </div>
+            );
+        };
+
+        const PlannerTasks = ({ tasks, onAddTask, onToggleTask, onDeleteTask }) => {
+            const [title, setTitle] = useState("");
+            const [isOpen, setIsOpen] = useState(false);
+            const handleAdd = () => { if(title.trim()) { onAddTask({ title, status: 'pending', id: Date.now() }); setTitle(""); setIsOpen(false); } };
+            return (
+                <div className="max-w-6xl mx-auto space-y-4 px-2 animate-in">
+                    <div className="flex justify-between items-center"><h3 className="font-bold text-xl">Công việc</h3><button onClick={()=>setIsOpen(true)} className="w-10 h-10 bg-stone-800 text-white rounded-full flex items-center justify-center shadow-lg"><Icons.Plus size={20}/></button></div>
+                    <div className="space-y-3">
+                        {tasks.map(t => (
+                            <div key={t.id} className="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm">
+                                <div onClick={() => onToggleTask(t.id)} className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center cursor-pointer ${t.status==='done'?'bg-emerald-500 border-emerald-500 text-white':'border-stone-300'}`}>{t.status==='done' && <Icons.Check size={14}/>}</div>
+                                <span className={`flex-1 font-bold ${t.status==='done'?'line-through text-stone-300':'text-stone-700'}`}>{t.title}</span>
+                                <button onClick={() => onDeleteTask(t.id)} className="text-stone-300 hover:text-rose-500"><Icons.Trash size={18}/></button>
+                            </div>
+                        ))}
+                        {tasks.length === 0 && <div className="text-center py-10 text-stone-400 text-sm">Chưa có công việc nào.</div>}
+                    </div>
+                    <Modal isOpen={isOpen} onClose={()=>setIsOpen(false)} title="Thêm việc"><input value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-4 border rounded-xl mb-4" placeholder="Tên công việc..." autoFocus /><button onClick={handleAdd} className="w-full py-4 bg-stone-800 text-white rounded-xl font-bold uppercase text-xs">Lưu lại</button></Modal>
+                </div>
+            );
+        };
+
+        const PlannerGuests = ({ guests, onAddGuest, onDeleteGuest }) => {
+            const [name, setName] = useState("");
+            const [isOpen, setIsOpen] = useState(false);
+            const handleAdd = () => { if(name.trim()) { onAddGuest({ name, id: Date.now() }); setName(""); setIsOpen(false); } };
+            return (
+                <div className="max-w-6xl mx-auto space-y-4 px-2 animate-in">
+                    <div className="flex justify-between items-center"><h3 className="font-bold text-xl">Khách mời ({guests.length})</h3><button onClick={()=>setIsOpen(true)} className="w-10 h-10 bg-stone-800 text-white rounded-full flex items-center justify-center shadow-lg"><Icons.Plus size={20}/></button></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {guests.map(g => (
+                            <div key={g.id} className="bg-white p-4 rounded-2xl flex items-center justify-between shadow-sm">
+                                <div className="flex items-center gap-3"><div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center font-bold text-stone-500">{g.name[0]}</div><span className="font-bold">{g.name}</span></div>
+                                <button onClick={() => onDeleteGuest(g.id)} className="text-stone-300 hover:text-rose-500"><Icons.Trash size={18}/></button>
+                            </div>
+                        ))}
+                    </div>
+                    <Modal isOpen={isOpen} onClose={()=>setIsOpen(false)} title="Thêm khách"><input value={name} onChange={e=>setName(e.target.value)} className="w-full p-4 border rounded-xl mb-4" placeholder="Tên khách mời..." autoFocus /><button onClick={handleAdd} className="w-full py-4 bg-stone-800 text-white rounded-xl font-bold uppercase text-xs">Lưu lại</button></Modal>
+                </div>
+            );
+        };
+
+        // --- 5. CÁC MÀN HÌNH CHÍNH (VIEW COMPONENTS) ---
+        // (Định nghĩa SAU components con, TRƯỚC FullPlannerApp)
+        
+        const HomeView = ({ onNavigate }) => (
+            <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center animate-in">
+                <div className="mb-12">
+                    <div className="inline-block px-4 py-2 bg-rose-50 rounded-full text-rose-500 text-xs font-black uppercase tracking-widest mb-6">Weddy Planner</div>
+                    <h1 className="text-5xl md:text-7xl font-title font-bold text-stone-800 mb-6 tracking-tighter">Kế hoạch cưới <br/><span className="text-rose-500">Tinh tế & Hoàn hảo</span></h1>
+                    <p className="text-stone-500 max-w-2xl mx-auto text-lg mb-10 leading-relaxed">Weddy giúp bạn quản lý ngân sách, danh sách khách mời và công việc cần làm cho ngày trọng đại.</p>
+                    <button onClick={() => onNavigate('planner')} className="px-10 py-5 bg-stone-800 text-white rounded-full font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all active:scale-95">Bắt đầu ngay</button>
+                </div>
+            </div>
+        );
+
+        const ComingSoon = ({ title }) => (
+            <div className="pt-32 pb-20 text-center animate-in"><h2 className="text-3xl font-title font-bold mb-4">{title}</h2><p className="text-stone-400">Đang phát triển...</p></div>
+        );
+
+        const AccountView = ({ user, firebase }) => (
+            <div className="pt-32 text-center animate-in"><div className="w-20 h-20 bg-stone-200 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold text-stone-500">{user.email[0].toUpperCase()}</div><h2 className="text-2xl font-bold">{user.displayName || user.email}</h2><button onClick={()=>firebase.signOut(firebase.auth)} className="mt-6 px-6 py-3 bg-stone-100 rounded-full font-bold text-xs uppercase hover:bg-rose-50 hover:text-rose-500 transition-colors">Đăng xuất</button></div>
+        );
+
+        const MobileNav = ({ activeTab, onNavigate }) => (
+            <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-stone-200 p-3 pb-safe z-50 flex justify-around">
+                {[{id:'home',icon:Icons.Home,l:'Home'},{id:'planner',icon:Icons.Layout,l:'Planner'},{id:'invitation',icon:Icons.Link,l:'Thiệp'},{id:'vendors',icon:Icons.Star,l:'Dịch vụ'},{id:'account',icon:Icons.User,l:'Tôi'}].map(t => (
+                    <button key={t.id} onClick={()=>onNavigate(t.id)} className={`flex flex-col items-center gap-1 p-2 ${activeTab===t.id?'text-stone-800':'text-stone-400'}`}><t.icon size={24} fill={activeTab===t.id?"currentColor":"none"}/><span className="text-[10px] font-black uppercase">{t.l}</span></button>
+                ))}
+            </div>
+        );
+
+        const Footer = () => <footer className="py-12 text-center text-stone-300 text-xs font-bold uppercase tracking-widest">© 2024 Weddy Planner</footer>;
+
+
+        // ==========================================
+        // 6. LOGIC TỔNG HỢP (FULL PLANNER APP)
+        // ==========================================
+        // (Định nghĩa sau cùng vì nó dùng tất cả các component ở trên)
         const FullPlannerApp = ({ currentUser, firebase, initialTab }) => {
             const [subTab, setSubTab] = useState(initialTab || 'overview');
             const [userProfile, setUserProfile] = useState(null);
             const [weddingData, setWeddingData] = useState(null);
             
+            // Modal States
+            const [isBudgetOpen, setIsBudgetOpen] = useState(false);
+            const [tempBudget, setTempBudget] = useState("");
+            const [isGuestsOpen, setIsGuestsOpen] = useState(false);
+            const [isInviteOpen, setIsInviteOpen] = useState(false);
+            const [inviteCode, setInviteCode] = useState("");
+            const [isJoinOpen, setIsJoinOpen] = useState(false);
+            const [joinInput, setJoinInput] = useState("");
+
             useEffect(() => { if(initialTab) setSubTab(initialTab); }, [initialTab]);
 
-            // Fetch Profile & Data Logic (Rút gọn cho ngắn)
+            // Fetch Data
             useEffect(() => {
                 if(!firebase || !currentUser) return;
                 const { db, doc, onSnapshot, setDoc, updateDoc } = firebase;
                 const pref = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
+                
                 const unsub = onSnapshot(pref, async (s) => {
                     if(!s.exists()) await setDoc(pref, { email: currentUser.email, isSetupComplete: false });
                     else {
@@ -264,15 +410,18 @@
                 if(!userProfile?.weddingId) return;
                 const { db, doc, onSnapshot, setDoc, getDoc } = firebase;
                 const wref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userProfile.weddingId);
-                getDoc(wref).then(s => { if(!s.exists()) setDoc(wref, { tasks: [], budgetLimit: 300000000 }); });
+                
+                getDoc(wref).then(s => { if(!s.exists()) setDoc(wref, { tasks: [], guests: [], budgetLimit: 300000000 }); });
                 const unsub = onSnapshot(wref, s => { if(s.exists()) setWeddingData({...s.data(), weddingId: userProfile.weddingId}); });
                 return () => unsub();
             }, [firebase, userProfile]);
 
             const userData = useMemo(() => (userProfile && weddingData) ? {...weddingData, profile: userProfile} : null, [userProfile, weddingData]);
 
-            if (!userData) return <div className="h-screen flex items-center justify-center">Loading...</div>;
+            // Loading
+            if (!userData) return <div className="h-screen flex items-center justify-center text-stone-300 font-bold uppercase tracking-widest animate-pulse">Đang tải dữ liệu...</div>;
 
+            // Wizard Check
             if (!userData.profile?.isSetupComplete) {
                 return <GettingStartedWizard 
                     onComplete={async (w) => {
@@ -283,42 +432,68 @@
                 />;
             }
 
+            // Actions
+            const updateDB = async (k, v) => { await firebase.updateDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { [k]: v }); };
+            const onAddTask = async (t) => updateDB('tasks', [t, ...(userData.tasks||[])]);
+            const onToggleTask = async (id) => updateDB('tasks', userData.tasks.map(t => t.id===id ? {...t, status: t.status==='done'?'pending':'done'} : t));
+            const onDeleteTask = async (id) => updateDB('tasks', userData.tasks.filter(t => t.id!==id));
+            const onAddGuest = async (g) => updateDB('guests', [g, ...(userData.guests||[])]);
+            const onDeleteGuest = async (id) => updateDB('guests', userData.guests.filter(x => x.id!==id));
+            
+            const handleInvite = async () => {
+                const code = Math.floor(100000 + Math.random()*900000).toString();
+                await firebase.setDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'public', 'data', 'invites', code), { weddingId: userData.weddingId });
+                setInviteCode(code); setIsInviteOpen(true);
+            };
+            const joinSync = async () => {
+                const snap = await firebase.getDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'public', 'data', 'invites', joinInput));
+                if(snap.exists()) {
+                    await firebase.updateDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main'), { weddingId: snap.data().weddingId });
+                    setIsJoinOpen(false); alert("Thành công!");
+                } else alert("Mã sai!");
+            };
+
+            const spentAmount = (userData.tasks||[]).filter(t=>t.status==='done').reduce((acc,t)=>acc+(t.cost||0),0); // Simplified calculation
+
             return (
                 <div className="pb-24">
-                    {/* Header */}
-                    <div className="pt-24 px-6 mb-8">
-                        <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Planner của</p>
-                        <h2 className="text-3xl font-title font-bold">{userData.profile.name || 'Bạn'}</h2>
+                    {/* Header Planner */}
+                    <div className="pt-24 px-6 mb-8 flex justify-between items-end">
+                        <div>
+                            <p className="text-xs font-bold uppercase tracking-widest text-stone-400">Planner của</p>
+                            <h2 className="text-3xl font-title font-bold text-stone-800">{userData.profile.name}</h2>
+                        </div>
+                        <button onClick={()=>setIsJoinOpen(true)} className="p-3 bg-white rounded-full shadow-sm text-stone-400 hover:text-stone-800"><Icons.Link size={20}/></button>
                     </div>
 
-                    {/* Navigation Tabs */}
+                    {/* Sub Tabs */}
                     <div className="flex justify-center mb-8 px-4">
-                        <div className="bg-white/50 p-1 rounded-full flex gap-1">
-                            {[{id:'overview', l:'Tổng quan'}, {id:'vendors', l:'Dịch vụ'}].map(t => (
-                                <button key={t.id} onClick={() => setSubTab(t.id)} className={`px-6 py-2 rounded-full text-xs font-bold uppercase transition-all ${subTab===t.id ? 'bg-stone-800 text-white' : 'text-stone-500'}`}>{t.l}</button>
+                        <div className="bg-white/50 p-1 rounded-full flex gap-1 shadow-sm border border-white/50">
+                            {[{id:'overview',l:'Tổng quan'},{id:'tasks',l:'Việc'},{id:'guests',l:'Khách'},{id:'vendors',l:'Dịch vụ'}].map(t => (
+                                <button key={t.id} onClick={()=>setSubTab(t.id)} className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase transition-all ${subTab===t.id?'bg-stone-800 text-white shadow-md':'text-stone-400 hover:text-stone-600'}`}>{t.l}</button>
                             ))}
                         </div>
                     </div>
 
-                    {/* Content */}
-                    {subTab === 'overview' && (
-                        <div className="px-4 max-w-4xl mx-auto space-y-6 animate-in">
-                            <div className="bg-stone-800 text-white p-8 rounded-[2.5rem] relative overflow-hidden">
-                                <p className="text-xs font-bold uppercase opacity-50 mb-2">Đã chi tiêu</p>
-                                <p className="text-5xl font-title font-bold">0 đ</p>
-                                <p className="mt-4 text-xs font-bold uppercase opacity-50">Ngân sách: {utils.formatMoney(userData.budgetLimit)}</p>
-                            </div>
-                        </div>
-                    )}
+                    {/* Content Views */}
+                    <div className="animate-in">
+                        {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={(userData.tasks||[]).filter(t=>t.status==='done').length} totalTasks={(userData.tasks||[]).length} guestCount={(userData.guests||[]).length} budgetLimit={userData.budgetLimit} onInvite={handleInvite} onEditBudget={()=>{setTempBudget(utils.formatInput(userData.budgetLimit));setIsBudgetOpen(true)}} onOpenGuests={()=>setSubTab('guests')} />}
+                        {subTab === 'tasks' && <PlannerTasks tasks={userData.tasks||[]} onAddTask={onAddTask} onToggleTask={onToggleTask} onDeleteTask={onDeleteTask} />}
+                        {subTab === 'guests' && <PlannerGuests guests={userData.guests||[]} onAddGuest={onAddGuest} onDeleteGuest={onDeleteGuest} />}
+                        {subTab === 'vendors' && <VendorMarketplace userProfile={userData.profile} weddingData={userData} />}
+                    </div>
 
-                    {subTab === 'vendors' && <VendorMarketplace userProfile={userData.profile} weddingData={userData} />}
+                    {/* Modals */}
+                    <Modal isOpen={isBudgetOpen} onClose={()=>setIsBudgetOpen(false)} title="Ngân sách"><input value={tempBudget} onChange={e=>setTempBudget(utils.formatInput(e.target.value))} className="w-full p-4 border rounded-xl mb-4 text-lg font-bold" /><button onClick={()=>{updateDB('budgetLimit', utils.parseInput(tempBudget)); setIsBudgetOpen(false)}} className="w-full py-4 bg-stone-800 text-white rounded-xl font-bold uppercase text-xs">Lưu</button></Modal>
+                    <Modal isOpen={isInviteOpen} onClose={()=>setIsInviteOpen(false)} title="Mã kết nối"><div className="text-center py-8"><h2 className="text-5xl font-black tracking-widest text-stone-700 mb-4">{inviteCode}</h2><p className="text-stone-400 text-xs">Đưa mã này cho người ấy để đồng bộ.</p></div></Modal>
+                    <Modal isOpen={isJoinOpen} onClose={()=>setIsJoinOpen(false)} title="Nhập mã"><input value={joinInput} onChange={e=>setJoinInput(e.target.value)} className="w-full p-4 border rounded-xl mb-4 text-center text-2xl font-bold uppercase" placeholder="XXXXXX" /><button onClick={joinSync} className="w-full py-4 bg-stone-800 text-white rounded-xl font-bold uppercase text-xs">Kết nối ngay</button></Modal>
                 </div>
             );
         };
 
-        // ---------------------------------------------------------
-        // 6. MAIN APP (Defined LAST - Nơi gọi mọi thứ)
-        // ---------------------------------------------------------
+        // ==========================================
+        // 7. APP ROOT (Chạy đầu tiên, gọi mọi thứ)
+        // ==========================================
         const App = () => {
             const [activeTab, setActiveTab] = useState('home');
             const [user, setUser] = useState(null);
@@ -330,54 +505,48 @@
             }, [firebase]);
 
             const navigateTo = (t) => {
-                if (t !== 'home' && !user) { setShowLogin(true); return; }
+                if(t !== 'home' && t !== 'invitation' && t !== 'vendors' && !user) { setShowLogin(true); return; }
                 setActiveTab(t);
                 window.scrollTo({top:0, behavior:'smooth'});
             }
 
-            const handleLogin = async () => {
-                try {
-                    const res = await firebase.signInWithPopup(firebase.auth, new firebase.GoogleAuthProvider());
-                    navigateTo('planner');
-                } catch(e) { alert("Lỗi đăng nhập"); }
-            }
+            const AuthForm = () => {
+                const handleGoogle = async () => {
+                    try { await firebase.signInWithPopup(firebase.auth, new firebase.GoogleAuthProvider()); navigateTo('planner'); }
+                    catch(e) { alert("Lỗi: "+e.message); }
+                };
+                return <div className="text-center py-8"><button onClick={handleGoogle} className="px-8 py-4 bg-stone-800 text-white rounded-full font-bold uppercase text-xs shadow-xl">Tiếp tục với Google</button></div>
+            };
 
             return (
                 <div className="min-h-screen relative">
                     {/* Top Nav */}
                     <div className="fixed top-4 left-0 w-full z-40 flex justify-center px-4">
                         <nav className="bg-white/80 backdrop-blur-md border border-white/40 shadow-lg px-6 py-3 rounded-full flex items-center gap-6">
-                            <div onClick={() => navigateTo('home')}><Logo /></div>
-                            {['home', 'planner', 'vendors'].map(t => (
-                                <button key={t} onClick={() => navigateTo(t)} className={`text-xs font-bold uppercase ${activeTab===t ? 'text-stone-900' : 'text-stone-400'}`}>{t === 'vendors' ? 'Dịch vụ' : (t==='home' ? 'Trang chủ' : 'Planner')}</button>
-                            ))}
-                            {user ? <button onClick={() => firebase.signOut(firebase.auth)}><Icons.LogOut size={16}/></button> : <button onClick={() => setShowLogin(true)} className="bg-stone-800 text-white px-4 py-2 rounded-full text-xs font-bold uppercase">Login</button>}
+                            <div onClick={()=>navigateTo('home')}><Logo /></div>
+                            <div className="hidden md:flex gap-1">
+                                {['home','planner','vendors'].map(t => <button key={t} onClick={()=>navigateTo(t)} className={`px-4 py-2 rounded-full text-xs font-bold uppercase ${activeTab===t?'bg-stone-100 text-stone-800':'text-stone-400 hover:text-stone-600'}`}>{t==='home'?'Trang chủ':(t==='planner'?'Planner':'Dịch vụ')}</button>)}
+                            </div>
+                            {user ? <button onClick={()=>firebase.signOut(firebase.auth)}><Icons.LogOut size={16}/></button> : <button onClick={()=>setShowLogin(true)} className="px-4 py-2 bg-stone-800 text-white rounded-full text-xs font-bold uppercase">Login</button>}
                         </nav>
                     </div>
 
-                    {/* Views */}
-                    {activeTab === 'home' && (
-                        <div className="pt-40 text-center px-4 animate-in">
-                            <div className="inline-block px-4 py-1 bg-rose-100 text-rose-600 rounded-full text-[10px] font-bold uppercase mb-4">Weddy Planner</div>
-                            <h1 className="text-6xl font-title font-bold text-stone-800 mb-6">Đám cưới trong mơ</h1>
-                            <button onClick={() => navigateTo('planner')} className="px-8 py-4 bg-stone-800 text-white rounded-full font-bold uppercase text-xs shadow-xl hover:scale-105 transition-transform">Bắt đầu ngay</button>
-                        </div>
-                    )}
+                    {/* Main Content */}
+                    <main className="pb-safe">
+                        {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
+                        
+                        {/* Logic: Nếu vào Planner hoặc Vendors mà đã login -> Gọi FullPlannerApp */}
+                        {(activeTab === 'planner' || activeTab === 'vendors') && user && <FullPlannerApp currentUser={user} firebase={firebase} initialTab={activeTab === 'vendors' ? 'vendors' : 'overview'} />}
+                        
+                        {/* Logic: Nếu vào Vendors mà chưa login -> Hiện ComingSoon/Intro */}
+                        {activeTab === 'vendors' && !user && <ComingSoon title="Dịch Vụ Cưới" />}
+                        {activeTab === 'invitation' && <ComingSoon title="Thiệp Online" />}
+                        {activeTab === 'account' && user && <AccountView user={user} firebase={firebase} />}
+                    </main>
 
-                    {activeTab === 'planner' && user && <FullPlannerApp currentUser={user} firebase={firebase} initialTab='overview' />}
-                    
-                    {/* Logic quan trọng: Tab Dịch vụ gọi FullPlannerApp để có data chạy AI */}
-                    {activeTab === 'vendors' && user && <FullPlannerApp currentUser={user} firebase={firebase} initialTab='vendors' />}
-
-                    {/* Login Modal */}
-                    <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title="Đăng nhập">
-                        <div className="py-8 text-center">
-                            <p className="mb-6 text-stone-500">Đăng nhập để lưu kế hoạch của bạn</p>
-                            <button onClick={handleLogin} className="w-full py-4 border rounded-xl flex items-center justify-center gap-2 font-bold hover:bg-stone-50 transition-colors">
-                                Tiếp tục với Google
-                            </button>
-                        </div>
-                    </Modal>
+                    <Footer />
+                    {user && <MobileNav activeTab={activeTab} onNavigate={navigateTo} />}
+                    <Modal isOpen={showLogin} onClose={()=>setShowLogin(false)} title="Đăng nhập"><AuthForm /></Modal>
                 </div>
             );
         };
