@@ -1088,7 +1088,212 @@
                 </div>
             );
         };
+// --- CÁC COMPONENT BỊ THIẾU (Paste đoạn này vào) ---
 
+        const ComingSoon = ({ title, desc }) => (
+            <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center animate-in min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mb-8 text-stone-300 shadow-inner">
+                    <Icons.Star size={40} />
+                </div>
+                <h2 className="text-3xl md:text-5xl font-title font-bold text-stone-700 mb-4 tracking-tighter uppercase">{title}</h2>
+                <p className="text-stone-400 max-w-md mx-auto text-sm md:text-base font-bold uppercase tracking-widest leading-relaxed mb-8">
+                    {desc}
+                </p>
+                <div className="inline-block px-6 py-3 bg-stone-50 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 border border-stone-100">
+                    Đang phát triển
+                </div>
+            </div>
+        );
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('home');
+            const [scrolled, setScrolled] = useState(false);
+            const [showLogin, setShowLogin] = useState(false);
+            const [user, setUser] = useState(null);
+            const [notifications, setNotifications] = useState([]);
+            const [showNotifications, setShowNotifications] = useState(false);
+            const firebase = useFirebase();
+            const notificationRef = useRef(null);
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 20);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            useEffect(() => {
+                if (firebase) {
+                    const unsubAuth = firebase.onAuthStateChanged(firebase.auth, (u) => { 
+                        setUser(u); if (u) setShowLogin(false);
+                    });
+                    return () => unsubAuth();
+                }
+            }, [firebase]);
+
+            useEffect(() => {
+                if (firebase && user) {
+                    const { db, doc, onSnapshot } = firebase;
+                    const unsubProfile = onSnapshot(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), (pSnap) => {
+                        if (pSnap.exists() && pSnap.data().weddingId) {
+                            onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', pSnap.data().weddingId), (wSnap) => {
+                                if (wSnap.exists()) setNotifications(wSnap.data().activities || []);
+                            });
+                        }
+                    });
+                    return () => unsubProfile();
+                }
+            }, [firebase, user]);
+
+            useEffect(() => {
+                const handleClickOutside = (e) => { if (notificationRef.current && !notificationRef.current.contains(e.target)) setShowNotifications(false); };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+            }, []);
+
+            const navigateTo = (tab) => { 
+                if (tab !== 'home' && tab !== 'invitation' && tab !== 'vendors' && !user) { setShowLogin(true); return; } 
+                setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'smooth' }); 
+            };
+            
+            const handleGoogleLogin = async () => {
+                const { auth, db, GoogleAuthProvider, signInWithPopup, doc, getDoc, setDoc } = firebase;
+                try {
+                    const result = await signInWithPopup(auth, new GoogleAuthProvider());
+                    const profileRef = doc(db, 'artifacts', APP_ID, 'users', result.user.uid, 'profile', 'main');
+                    if (!(await getDoc(profileRef)).exists()) await setDoc(profileRef, { email: result.user.email, name: result.user.displayName, weddingId: null, isSetupComplete: false });
+                    setActiveTab('planner');
+                } catch (e) { console.error(e); alert("Lỗi đăng nhập Google: " + e.message); }
+            };
+
+            const AuthForm = () => {
+                const [isRegister, setIsRegister] = useState(false);
+                const [email, setEmail] = useState(""); 
+                const [password, setPassword] = useState(""); 
+                const [name, setName] = useState("");
+                const [error, setError] = useState("");
+                const [loading, setLoading] = useState(false);
+
+                const handleSubmit = async () => { 
+                    setError("");
+                    setLoading(true);
+                    try {
+                        if (isRegister) {
+                            if (!name.trim()) throw new Error("Vui lòng nhập họ tên.");
+                            const { user } = await firebase.createUserWithEmailAndPassword(firebase.auth, email, password);
+                            await firebase.setDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { 
+                                email: user.email, 
+                                name: name, 
+                                weddingId: null, 
+                                isSetupComplete: false 
+                            });
+                        } else {
+                            await firebase.signInWithEmailAndPassword(firebase.auth, email, password);
+                        }
+                        setActiveTab('planner'); 
+                    } catch (err) { 
+                        let msg = "Đã có lỗi xảy ra.";
+                        if (err.code === 'auth/invalid-email') msg = "Email không hợp lệ.";
+                        if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') msg = "Sai email hoặc mật khẩu.";
+                        if (err.code === 'auth/email-already-in-use') msg = "Email này đã được đăng ký.";
+                        if (err.code === 'auth/weak-password') msg = "Mật khẩu quá yếu (tối thiểu 6 ký tự).";
+                        if (err.message) msg = err.message;
+                        setError(msg); 
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                return (
+                    <div className="pt-2 animate-in">
+                        <div className="flex bg-stone-100 p-1 rounded-2xl mb-8 relative">
+                            <div className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out transform ${isRegister ? 'translate-x-full' : 'translate-x-0'}`}></div>
+                            <button onClick={() => { setIsRegister(false); setError(""); }} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors ${!isRegister ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>Đăng nhập</button>
+                            <button onClick={() => { setIsRegister(true); setError(""); }} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors ${isRegister ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>Đăng ký</button>
+                        </div>
+
+                        <div className="space-y-5 text-left">
+                            {isRegister && (
+                                <div className="animate-in">
+                                    <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Họ và tên</label>
+                                    <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="VD: NGUYỄN VĂN A" />
+                                </div>
+                            )}
+                            <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="WEDDY@EXAMPLE.COM" /></div>
+                            <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Mật khẩu</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="••••••••" /></div>
+                            {error && <div className="p-3 bg-rose-50 text-rose-500 rounded-xl text-xs font-bold uppercase tracking-wide text-center animate-in"><Icons.X size={12} className="inline mr-1" /> {error}</div>}
+                            <button onClick={handleSubmit} disabled={loading} className="w-full py-5 mt-2 bg-stone-800 text-white rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">{loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : (isRegister ? 'Tạo tài khoản' : 'Vào hệ thống')}</button>
+                        </div>
+                        <div className="relative flex py-6 items-center"><div className="flex-grow border-t border-stone-100"></div><span className="flex-shrink-0 mx-4 text-stone-300 text-[9px] font-black uppercase tracking-widest">Hoặc</span><div className="flex-grow border-t border-stone-100"></div></div>
+                        <button onClick={handleGoogleLogin} className="w-full py-5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-sm hover:bg-stone-50 hover:border-stone-300 active:scale-95 transition-all">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Tiếp tục với Google
+                        </button>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen">
+                    <div className="fixed top-2 md:top-4 left-0 w-full z-50 flex justify-center px-2 md:px-4 transition-all duration-500">
+                        <nav className={`flex items-center justify-between px-4 py-2 md:px-6 md:py-2 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/80 backdrop-blur-2xl border border-white/40 shadow-lg' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
+                            
+                            <div onClick={() => navigateTo('home')}>
+                                <Logo animated={true} />
+                            </div>
+
+                            <div className="hidden md:flex items-center gap-1 font-bold uppercase tracking-widest font-black text-xs">
+                                {[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (
+                                    <button key={item.id} onClick={() => navigateTo(item.id)} className={`px-5 py-2.5 rounded-full transition-all uppercase ${activeTab === item.id ? 'bg-stone-800 text-white shadow-lg' : 'text-stone-500 hover:text-stone-900 hover:bg-white/50'}`}>
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center gap-3 md:gap-4 font-bold uppercase">
+                                {user && <span onClick={() => navigateTo('account')} className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2 truncate max-w-[120px] cursor-pointer hover:text-stone-600 transition-colors">{user.displayName || user.email}</span>}
+                                {user && (
+                                    <div className="relative" ref={notificationRef}>
+                                        <button onClick={() => setShowNotifications(!showNotifications)} className="w-9 h-9 md:w-10 md:h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors relative"><Icons.Bell size={18} />{notifications.length > 0 && (<span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>)}</button>
+                                        {showNotifications && (
+                                            <div className="absolute right-0 mt-3 w-[280px] md:w-80 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-stone-100 py-6 animate-in zoom-in-95 origin-top-right overflow-hidden z-[60]">
+                                                <div className="px-6 mb-4 flex justify-between items-center text-stone-800 font-bold uppercase"><h4 className="text-[10px] md:text-xs">Thông báo</h4><span className="text-[9px] text-stone-400">{notifications.length} mới</span></div>
+                                                <div className="max-h-96 overflow-y-auto hide-scrollbar px-2 text-stone-600 text-left">
+                                                    {notifications.length > 0 ? notifications.map((n, i) => (
+                                                        <div key={i} className="p-4 rounded-2xl hover:bg-stone-50 transition-colors flex gap-4 items-start cursor-pointer group text-left"><div className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-stone-200 transition-colors shadow-sm"><Icons.Heart size={14} className="text-stone-400 group-hover:text-rose-500 transition-colors" /></div><div className="flex-1"><p className="text-xs font-bold leading-snug">{n.text}</p><p className="text-[9px] font-bold text-stone-300 uppercase mt-1">{n.time}</p></div></div>
+                                                    )) : <div className="py-10 text-center text-stone-300 text-xs italic font-medium">Không có thông báo mới</div>}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                {user ? (
+                                    <>
+                                        <button onClick={() => firebase.signOut(firebase.auth)} className="hidden sm:block px-6 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase shadow-sm active:scale-95 transition-all hover:bg-stone-50 hover:border-stone-300">Đăng xuất</button>
+                                        <button onClick={() => firebase.signOut(firebase.auth)} className="sm:hidden w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors"><Icons.LogOut size={16} /></button>
+                                    </>
+                                ) : <button onClick={() => setShowLogin(true)} className="px-6 py-2.5 bg-stone-800 text-white rounded-full text-[10px] font-black uppercase shadow-xl active:scale-95 transition-all hover:bg-stone-700">Đăng nhập</button>}
+                            </div>
+                        </nav>
+                    </div>
+
+                    <main className="pb-safe">
+                        {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
+                        {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} firebase={firebase} /> : <div className="h-screen flex flex-col gap-4 items-center justify-center text-stone-400 p-6 text-center animate-in font-bold uppercase font-black uppercase font-bold"><Icons.Users size={48} className="opacity-10" /><p className="font-medium text-sm text-stone-300 font-bold uppercase tracking-widest uppercase uppercase font-black uppercase font-bold">Vui lòng đăng nhập Planner.</p><button onClick={() => setShowLogin(true)} className="px-8 py-3 bg-stone-500 text-white rounded-full text-xs font-bold uppercase shadow-lg font-bold transition-all active:scale-95 font-bold uppercase font-black uppercase font-bold">Đăng nhập ngay</button></div>)}
+                        {activeTab === 'invitation' && <ComingSoon title="Thiệp Mời Online" desc="Tính năng thiết kế và gửi thiệp mời trực tuyến đang được phát triển." />}
+                        {activeTab === 'vendors' && <ComingSoon title="Dịch Vụ Cưới" desc="Hệ thống kết nối nhà cung cấp dịch vụ uy tín sẽ sớm ra mắt." />}
+                        {activeTab === 'account' && (user ? <AccountView user={user} firebase={firebase} /> : null)}
+                    </main>
+
+                    {/* Footer Component Added Here */}
+                    <Footer />
+
+                    {user && <MobileNav activeTab={activeTab} onNavigate={navigateTo} />}
+
+                    <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title={null}>
+                        <AuthForm />
+                    </Modal>
+                </div>
+            );
+        };
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
