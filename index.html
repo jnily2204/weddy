@@ -749,6 +749,135 @@
             </footer>
         );
 
+// --- 4. DATA & ALGORITHM (AI ENGINE) ---
+        
+        // Dữ liệu giả lập các nhà cung cấp (Sau này sẽ lấy từ Database thật)
+        const MOCK_VENDORS = [
+            { id: 1, name: "TuArt Wedding", category: "photography", location: "Hanoi", price: 15000000, tags: ['modern', 'luxury', 'korean'], image: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&q=80&w=500" },
+            { id: 2, name: "Gem Center", category: "venue", location: "HCM", price: 200000000, tags: ['luxury', 'modern'], image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=500" },
+            { id: 3, name: "Mộc Studio", category: "photography", location: "HCM", price: 8000000, tags: ['rustic', 'vintage', 'minimalist'], image: "https://images.unsplash.com/photo-1520854221256-17451cc330e7?auto=format&fit=crop&q=80&w=500" },
+            { id: 4, name: "Trống Đồng Palace", category: "venue", location: "Hanoi", price: 80000000, tags: ['traditional', 'modern'], image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=500" },
+            { id: 5, name: "Hà Nội Wedding Planner", category: "planner", location: "Hanoi", price: 30000000, tags: ['traditional', 'luxury'], image: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=500" },
+            { id: 6, name: "Nupakachi", category: "photography", location: "HCM", price: 25000000, tags: ['luxury', 'modern'], image: "https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&q=80&w=500" },
+            { id: 7, name: "Chill Decor", category: "decoration", location: "Danang", price: 12000000, tags: ['rustic', 'minimalist'], image: "https://images.unsplash.com/photo-1478146059778-26028b07395a?auto=format&fit=crop&q=80&w=500" },
+            { id: 8, name: "White Dress", category: "makeup", location: "Hanoi", price: 5000000, tags: ['korean', 'modern'], image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=500" },
+        ];
+
+        // Thuật toán chấm điểm độ phù hợp (Matching Engine)
+        const getRecommendations = (userProfile, vendors) => {
+            if (!userProfile) return vendors;
+
+            const userLocation = userProfile.location || "";
+            const userBudget = parseInt(userProfile.budgetLimit || 300000000); // Lấy budget từ weddingData (truyền vào sau)
+            const userVibes = userProfile.vibes || [];
+
+            // Ước tính ngân sách cho từng hạng mục (Rule-based)
+            const budgetAllocation = {
+                photography: userBudget * 0.15, // Dành 15% cho chụp ảnh
+                venue: userBudget * 0.50,       // 50% cho nhà hàng
+                makeup: userBudget * 0.05,
+                planner: userBudget * 0.10,
+                decoration: userBudget * 0.10
+            };
+
+            return vendors.map(vendor => {
+                let score = 0;
+                let reasons = [];
+
+                // 1. Chấm điểm Địa điểm (+30đ)
+                // Logic: Tìm tương đối (vd: User "TP.HCM" vẫn match Vendor "HCM")
+                if (userLocation && vendor.location && userLocation.toLowerCase().includes(vendor.location.toLowerCase())) {
+                    score += 30;
+                    reasons.push("📍 Cùng khu vực");
+                }
+
+                // 2. Chấm điểm Ngân sách (+40đ)
+                const estimatedBudget = budgetAllocation[vendor.category] || userBudget * 0.1;
+                if (vendor.price <= estimatedBudget * 1.2) { // Cho phép vượt ngân sách 20%
+                    score += 40;
+                    reasons.push("💰 Vừa túi tiền");
+                } else {
+                    score -= 20; // Trừ điểm nếu quá đắt
+                }
+
+                // 3. Chấm điểm Phong cách (+20đ/tag) - Đây là phần AI học từ Wizard
+                const commonTags = vendor.tags.filter(tag => userVibes.includes(tag));
+                if (commonTags.length > 0) {
+                    score += commonTags.length * 20;
+                    reasons.push(`✨ Gu ${commonTags.join(', ')}`);
+                }
+
+                return { ...vendor, score, reasons };
+            })
+            .filter(v => v.score > 0) // Chỉ lấy những ông có điểm dương
+            .sort((a, b) => b.score - a.score); // Sắp xếp điểm từ cao xuống thấp
+        };
+
+        // Component hiển thị danh sách (Thay thế Coming Soon)
+        const VendorMarketplace = ({ userProfile, weddingData }) => {
+            // Tính toán danh sách gợi ý ngay khi load
+            // Kết hợp thông tin từ Profile (Vibes, Location) và Wedding Data (Budget)
+            const recommendations = useMemo(() => {
+                const combinedProfile = { ...userProfile, budgetLimit: weddingData?.budgetLimit };
+                return getRecommendations(combinedProfile, MOCK_VENDORS);
+            }, [userProfile, weddingData]);
+
+            return (
+                <div className="pt-24 pb-32 container mx-auto px-4 max-w-6xl animate-in">
+                    <div className="text-center mb-10">
+                        <h2 className="text-3xl font-title font-bold text-stone-800 uppercase tracking-wide mb-2">Đối tác hoàn hảo</h2>
+                        <p className="text-stone-500 text-sm">Dựa trên gu thẩm mỹ <b>{userProfile?.vibes?.join(', ') || 'của bạn'}</b></p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {recommendations.map((item, index) => (
+                            <div key={item.id} className="group bg-white rounded-[2rem] border border-stone-100 overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
+                                {/* Image Area */}
+                                <div className="h-48 bg-stone-200 relative overflow-hidden">
+                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    {index === 0 && <div className="absolute top-3 left-3 bg-rose-500 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-lg">🔥 Phù hợp nhất</div>}
+                                    <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur text-stone-800 text-xs font-bold px-3 py-1 rounded-lg shadow-sm">
+                                        {utils.formatMoney(item.price)}
+                                    </div>
+                                </div>
+                                
+                                {/* Content Area */}
+                                <div className="p-5 text-left">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase text-stone-400 tracking-wider mb-1">{item.category}</p>
+                                            <h3 className="font-bold text-lg text-stone-800 leading-tight">{item.name}</h3>
+                                        </div>
+                                        {/* Score Badge */}
+                                        <div className="w-10 h-10 rounded-full border-2 border-emerald-100 flex items-center justify-center text-xs font-black text-emerald-600 bg-emerald-50">
+                                            {item.score}
+                                        </div>
+                                    </div>
+
+                                    {/* Lý do phù hợp (AI Explanation) */}
+                                    <div className="flex flex-wrap gap-1.5 mt-3 mb-4">
+                                        {item.reasons.map((r, i) => (
+                                            <span key={i} className="px-2 py-1 bg-stone-50 border border-stone-100 rounded-md text-[10px] font-bold text-stone-500">{r}</span>
+                                        ))}
+                                    </div>
+
+                                    <button className="w-full py-3 rounded-xl bg-stone-800 text-white text-xs font-bold uppercase tracking-widest hover:bg-stone-700 active:scale-95 transition-all">
+                                        Liên hệ ngay
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    {recommendations.length === 0 && (
+                        <div className="text-center py-20 text-stone-400">
+                            <p>Chưa tìm thấy đối tác phù hợp ở khu vực của bạn.</p>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
         // --- 6. LOGIC WRAPPER FOR PLANNER ---
         const FullPlannerApp = ({ currentUser, firebase }) => {
             const [subTab, setSubTab] = useState('overview');
@@ -1198,7 +1327,7 @@
                         {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
                         {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} firebase={firebase} /> : <div className="h-screen flex flex-col gap-4 items-center justify-center text-stone-400 p-6 text-center animate-in font-bold uppercase font-black uppercase font-bold"><Icons.Users size={48} className="opacity-10" /><p className="font-medium text-sm text-stone-300 font-bold uppercase tracking-widest uppercase uppercase font-black uppercase font-bold">Vui lòng đăng nhập Planner.</p><button onClick={() => setShowLogin(true)} className="px-8 py-3 bg-stone-500 text-white rounded-full text-xs font-bold uppercase shadow-lg font-bold transition-all active:scale-95 font-bold uppercase font-black uppercase font-bold">Đăng nhập ngay</button></div>)}
                         {activeTab === 'invitation' && <ComingSoon title="Thiệp Mời Online" desc="Tính năng thiết kế và gửi thiệp mời trực tuyến đang được phát triển." />}
-                        {activeTab === 'vendors' && <ComingSoon title="Dịch Vụ Cưới" desc="Hệ thống kết nối nhà cung cấp dịch vụ uy tín sẽ sớm ra mắt." />}
+                        {activeTab === 'vendors' && <VendorMarketplace userProfile={userData.profile} weddingData={userData} />}
                         {activeTab === 'account' && (user ? <AccountView user={user} firebase={firebase} /> : null)}
                     </main>
 
