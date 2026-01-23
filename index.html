@@ -1,316 +1,1223 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Weddy - Nền tảng quản lý đám cưới tinh tế</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        /* Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Raleway:wght@300;400;500;600;700;800;900&display=swap');
+        
+        body { 
+            font-family: 'Raleway', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            font-size: 16px; 
+        }
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { APP_ID, utils, db } from '../../core/firebase';
-import { doc, setDoc, updateDoc, onSnapshot, getDoc } from "firebase/firestore";
-import { Icons, Modal } from '../../components/UI';
-import type { User } from 'firebase/auth';
+        h1, h2, h3, h4, h5, h6, .font-title {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes fadeIn { 
+            0% { opacity: 0; transform: translateY(15px); filter: blur(4px); } 
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); } 
+        }
+        .animate-in { animation: fadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
-// --- HELPER FUNCTIONS ---
-const getDaysLeft = (d: string | undefined) => { // Cho phép nhận undefined để tránh lỗi Type
-    if (!d || d === "Chưa đặt") return "---";
-    const diff = Math.ceil((new Date(d).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    return diff > 0 ? `${diff} NGÀY NỮA` : (diff === 0 ? "HÔM NAY" : "ĐÃ QUA");
-};
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @keyframes professional-pulse { 
+            0% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); } 
+            50% { transform: scale(1.08); filter: drop-shadow(0 10px 20px rgba(244, 63, 94, 0.4)); } 
+            100% { transform: scale(1); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); } 
+        }
+        .animate-professional { animation: professional-pulse 4s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+        
+        html { scroll-behavior: smooth; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+</head>
+<body class="bg-[#F0EBE5] text-stone-700 transition-colors duration-500 overflow-x-hidden text-base">
+    <div id="root"></div>
 
-// --- DEFINING TYPES ---
-interface Task { id: number; title: string; status: 'done' | 'pending'; cost: number; paid: number; tag: string; paidBy?: string; }
-interface Guest { id: number; name: string; relationship: string; phone: string; }
-interface Activity { text: string; time: string; }
-interface WeddingData { tasks: Task[]; guests: Guest[]; budgetLimit: number; weddingId: string; activities: Activity[]; }
-interface UserProfile { name?: string; email?: string; weddingId?: string; isSetupComplete?: boolean; role?: string; budget?: number; location?: string; partnerName?: string; weddingDate?: string; venue?: string; preWedding?: string; vibes?: string[]; engagementDate?: string; }
-interface WizardStep { title: string; subtitle: string; content: React.ReactNode; }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// --- COMPONENTS ---
-
-// 1. GettingStartedWizard
-const GettingStartedWizard = ({ onComplete, onSkip }: { onComplete: (d: any) => void, onSkip: () => void }) => {
-    const [step, setStep] = useState(0);
-    const [data, setData] = useState<any>({ role: "", partnerName: "", engagementDate: "", weddingDate: "", location: "", venue: "", preWedding: "", budget: "", vibes: [] });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const handleNext = () => setStep(prev => prev + 1);
-    
-    const weddingVibes = [
-        { id: 'traditional', label: 'Truyền thống', icon: '🏮' }, { id: 'modern', label: 'Hiện đại', icon: '✨' }, { id: 'luxury', label: 'Sang trọng', icon: '💎' }, { id: 'rustic', label: 'Mộc mạc', icon: '🌿' }, { id: 'vintage', label: 'Cổ điển', icon: '📷' }, { id: 'minimalist', label: 'Tối giản', icon: '⚪' }
-    ];
-    const toggleVibe = (id: string) => setData((prev: any) => ({ ...prev, vibes: prev.vibes.includes(id) ? prev.vibes.filter((v: string) => v !== id) : [...prev.vibes, id] }));
-
-    const steps: WizardStep[] = [
-        { title: "Chào bạn,", subtitle: "Bạn là Cô Dâu hay Chú Rể, và tên thân mật của người ấy là gì?", content: (<div className="space-y-6 mt-6"><div className="grid grid-cols-2 gap-4 font-bold">{["Cô dâu", "Chú rể"].map(r => (<button key={r} onClick={() => setData({ ...data, role: r })} className={`p-6 rounded-[2rem] border transition-all shadow-sm ${data.role === r ? 'border-stone-800 bg-stone-800 text-white shadow-xl scale-105' : 'border-white bg-white hover:border-stone-300'}`}>{r}</button>))}</div><input type="text" value={data.partnerName} onChange={e => setData({ ...data, partnerName: e.target.value })} placeholder="Tên thân mật của người ấy..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
-        { title: "Gu của hai bạn?", subtitle: "Hãy chọn những phong cách đám cưới mà bạn yêu thích", content: (<div className="grid grid-cols-2 gap-4 mt-6 animate-in">{weddingVibes.map(v => (<button key={v.id} onClick={() => toggleVibe(v.id)} className={`p-4 rounded-[1.5rem] border transition-all flex flex-col items-center gap-2 ${data.vibes.includes(v.id) ? 'border-stone-800 bg-stone-100 text-stone-800 shadow-md ring-1 ring-stone-200' : 'border-white bg-white hover:bg-stone-50 text-stone-400'}`}><span className="text-3xl mb-1">{v.icon}</span><span className="text-xs font-black uppercase tracking-widest">{v.label}</span></button>))}</div>) },
-        { title: "Ngày lành tháng tốt", subtitle: "Hai bạn đã chọn được ngày đẹp cho Lễ Ăn Hỏi và Lễ Cưới chưa?", content: (<div className="space-y-6 mt-6"><div><label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Ăn Hỏi (Đính hôn)</label><input type="date" value={data.engagementDate} onChange={e => setData({ ...data, engagementDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div><div><label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Cưới (Thành hôn)</label><input type="date" value={data.weddingDate} onChange={e => setData({ ...data, weddingDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div></div>) },
-        { title: "Nơi diễn ra", subtitle: "Đám cưới sẽ diễn ra tại Tỉnh/Thành phố nào?", content: (<div className="mt-8"><input type="text" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Vd: TP. Hồ Chí Minh, Hà Nội..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
-        { title: "Địa điểm tiệc", subtitle: "Bạn đã nhắm được Nhà hàng/Khách sạn cụ thể nào chưa?", content: (<div className="mt-8"><input type="text" value={data.venue} onChange={e => setData({ ...data, venue: e.target.value })} placeholder="Nhập tên nhà hàng (nếu có)..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
-        { title: "Lưu giữ khoảnh khắc", subtitle: "Hai bạn dự định chụp ảnh Pre-wedding ở đâu?", content: (<div className="mt-8"><input type="text" value={data.preWedding} onChange={e => setData({ ...data, preWedding: e.target.value })} placeholder="Vd: Studio, Đà Lạt, Hàn Quốc..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
-        { title: "Ngân sách dự kiến?", subtitle: "Con số tối đa mà hai bạn muốn chi cho đám cưới này là bao nhiêu?", content: (<div className="mt-8"><div className="relative"><input type="text" value={data.budget} onChange={e => setData({ ...data, budget: utils.formatInput(e.target.value) })} placeholder="300.000.000" className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 pl-8 pr-20 text-3xl font-black text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-200 text-center"/><div className="absolute right-8 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm uppercase tracking-widest">VNĐ</div></div></div>) }
-    ];
-    const current = steps[step];
-    const handleFinish = async () => { if (isSubmitting) return; setIsSubmitting(true); try { await onComplete({...data, budget: utils.parseInput(data.budget)}); } catch (e) { setIsSubmitting(false); alert("Có lỗi xảy ra, vui lòng thử lại."); } };
-    return (
-        <div className="fixed inset-0 z-[200] bg-[#F0EBE5]/95 backdrop-blur-xl flex flex-col animate-in overflow-y-auto">
-            <div className="absolute top-6 right-6 z-50"><button onClick={onSkip} className="text-stone-400 font-bold text-xs uppercase tracking-widest hover:text-stone-600 transition-colors px-4 py-2 bg-white/50 rounded-full hover:bg-white">Bỏ qua tất cả</button></div>
-            <div className="flex-1 flex flex-col justify-center px-6 max-w-lg mx-auto w-full text-center py-10">
-                <div className="mb-8"><div className="flex justify-center gap-1.5 mb-8">{steps.map((_, i) => (<div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-stone-800 w-8' : 'bg-stone-300/50 w-2'}`}></div>))}</div><h2 className="text-3xl md:text-4xl font-title font-bold tracking-tighter text-stone-800 mb-3">{current.title}</h2><p className="text-stone-500 text-base font-medium leading-relaxed">{current.subtitle}</p></div>
-                <div className="min-h-[160px] flex flex-col justify-center mb-8">{current.content}</div>
-                <div className="space-y-4">{step < steps.length - 1 ? (<><button onClick={handleNext} disabled={step === 0 && !data.role} className="w-full py-5 bg-stone-800 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95">Tiếp tục</button><button onClick={handleNext} className="text-stone-400 text-xs font-bold uppercase tracking-widest hover:text-stone-600 transition-colors p-2">Bỏ qua câu này</button></>) : (<><button onClick={handleFinish} disabled={isSubmitting} className="w-full py-5 bg-emerald-700 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-800 disabled:opacity-70 transition-all active:scale-95 flex items-center justify-center gap-3">{isSubmitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null} {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất thiết lập'}</button><button onClick={handleFinish} className="text-stone-400 text-xs font-bold uppercase tracking-widest hover:text-stone-600 transition-colors p-2">Bỏ qua câu này</button></>)}</div>
-            </div>
-        </div>
-    );
-};
-
-// 2. AccountView
-export const AccountView = ({ user }: { user: User }) => {
-    const [data, setData] = useState({ name: "", role: "Cô dâu", partnerName: "", date: "", location: "", budget: "" });
-    const [loading, setLoading] = useState(true);
-    const [msg, setMsg] = useState("");
-    useEffect(() => {
-        const init = async () => {
-            if (!user) return;
-            try {
-                const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
-                const pSnap = await getDoc(profileRef);
-                if (pSnap.exists()) {
-                    const p = pSnap.data();
-                    let b = "";
-                    if (p.weddingId) {
-                        const wSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', p.weddingId));
-                        if (wSnap.exists()) { const limit = wSnap.data().budgetLimit; b = limit ? utils.formatInput(limit) : ""; }
-                    }
-                    setData({ name: p.name || user.displayName || "", role: p.role || "Cô dâu", partnerName: p.partnerName || "", date: p.weddingDate || "", location: p.location || "", budget: b });
-                }
-            } catch (e) { console.error(e); }
-            setLoading(false);
+        const firebaseConfig = {
+            apiKey: "AIzaSyD_F3OI5GexlAqgC8TZ1CN1JB5O3RacQqs",
+            authDomain: "weddyvn.firebaseapp.com",
+            projectId: "weddyvn",
+            storageBucket: "weddyvn.firebasestorage.app",
+            messagingSenderId: "504927899297",
+            appId: "1:504927899297:web:1a3d3a1b6cfafe0716aae0",
+            measurementId: "G-KK4B3RXVNV"
         };
-        init();
-    }, [user]);
 
-    const handleSave = async () => {
-        setMsg("Đang lưu...");
         try {
-            const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
-            await updateDoc(profileRef, { name: data.name, role: data.role, partnerName: data.partnerName, weddingDate: data.date, location: data.location });
-            const pSnap = await getDoc(profileRef);
-            const wid = pSnap.data()?.weddingId;
-            if(wid) { await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', wid), { budgetLimit: utils.parseInput(data.budget) }); }
-            setMsg("Đã cập nhật thành công!"); setTimeout(() => setMsg(""), 3000);
-        } catch (e) { setMsg("Lỗi khi lưu."); }
-    };
-    if (loading) return <div className="pt-40 text-center"><div className="w-8 h-8 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mx-auto"></div></div>;
-    return (
-        <div className="pt-32 pb-32 px-4 max-w-2xl mx-auto animate-in">
-            <div className="text-center mb-12"><div className="w-24 h-24 bg-stone-200 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-title font-bold text-stone-500 uppercase shadow-inner border-4 border-white">{data.name ? data.name.charAt(0) : (user.email ? user.email.charAt(0).toUpperCase() : '?')}</div><h2 className="text-3xl font-title font-bold text-stone-800 uppercase tracking-wide mb-2">{data.name}</h2><p className="text-stone-400 text-sm font-medium tracking-wide">{user.email}</p></div>
-            <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-xl shadow-stone-200/50 space-y-8">
-                <div className="flex items-center gap-3 border-b border-stone-100 pb-4"><div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500"><Icons.Edit size={14}/></div><h3 className="text-lg font-bold text-stone-700 uppercase tracking-widest">Thông tin đám cưới</h3></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Vai trò</label><div className="relative"><select value={data.role} onChange={e => setData({...data, role: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none appearance-none border border-transparent focus:border-stone-200 focus:bg-white transition-all uppercase text-sm"><option value="Cô dâu">Cô dâu</option><option value="Chú rể">Chú rể</option></select><div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div></div></div><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Tên người ấy</label><input type="text" value={data.partnerName} onChange={e => setData({...data, partnerName: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase placeholder:text-stone-300" placeholder="Chưa nhập" /></div></div>
-                <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Ngày cưới</label><input type="date" value={data.date} onChange={e => setData({...data, date: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase" /></div>
-                <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Địa điểm tổ chức</label><input type="text" value={data.location} onChange={e => setData({...data, location: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase placeholder:text-stone-300" placeholder="Chưa nhập" /></div>
-                <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Ngân sách dự kiến (VNĐ)</label><input type="text" value={data.budget} onChange={e => setData({...data, budget: utils.formatInput(e.target.value)})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase placeholder:text-stone-300" placeholder="0" /></div>
-                <div className="pt-4"><button onClick={handleSave} className="w-full py-5 bg-stone-800 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-stone-700 active:scale-95 transition-all shadow-lg">{msg || "Lưu thay đổi"}</button></div>
-            </div>
-        </div>
-    );
-};
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            window.firebaseServices = { auth, db, signInWithEmailAndPassword, onAuthStateChanged, doc, setDoc, updateDoc, onSnapshot, getDoc, collection, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword };
+        } catch (e) { console.error("Firebase Error:", e); }
+    </script>
 
-// 3. PlannerOverview
-const PlannerOverview = ({ spentAmount, completedTasks, totalTasks, guestCount, budgetLimit, role, activities, onInvite, onEditBudget, onOpenGuests }: any) => {
-    const percentage = Math.min((spentAmount / (budgetLimit || 300000000)) * 100, 100);
-    return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 text-left px-2 md:px-0">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                <div className="lg:col-span-2 space-y-6 md:space-y-8">
-                    <div className="bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-stone-200/50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm text-stone-800"><div className="flex items-center gap-4"><div className="w-12 h-12 bg-rose-100/50 rounded-full flex items-center justify-center text-rose-500 shrink-0"><Icons.Heart size={24} fill="currentColor"/></div><div><h4 className="font-title font-bold text-lg">Ví chung đôi mình</h4><p className="text-sm text-stone-400">Kết nối và đồng bộ kế hoạch với bạn đời.</p></div></div><button onClick={onInvite} className="w-full md:w-auto px-8 py-4 bg-stone-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-sm hover:bg-stone-600 transition-all flex items-center justify-center gap-2"><Icons.Share size={16}/> Mời bạn đời</button></div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 text-left"><div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Tiến độ</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-300"><Icons.Check size={20}/></div></div><div><div className="flex items-baseline gap-2 mb-3 text-left font-title font-bold text-stone-600 text-4xl md:text-5xl"><span>{completedTasks}</span><span className="text-stone-300 uppercase text-xs">/ {totalTasks} việc</span></div><div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-stone-500 transition-all duration-700" style={{width: `${totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0}%`}}></div></div></div></div>
-                        <div onClick={onOpenGuests} className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 cursor-pointer hover:border-stone-300 transition-all active:scale-[0.98]"><div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Khách mời</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={20}/></div></div><div className="flex items-baseline gap-2 text-stone-700 text-left font-title font-bold text-5xl md:text-6xl"><span>{guestCount}</span><span className="text-stone-300 font-bold uppercase text-xs">Người</span></div></div>
-                    </div>
-                    <div className="bg-stone-500 p-6 md:p-12 rounded-[3rem] text-white relative overflow-hidden shadow-xl group"><div className="absolute top-0 right-0 w-80 h-80 bg-stone-400 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-40 transition-opacity duration-700"></div><div className="relative z-10 text-left"><h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/70 mb-6 md:mb-8 text-left">Tài chính tổng quát ({role || 'Bạn'})</h3><div className="flex flex-col md:flex-row justify-between gap-6 md:gap-8"><div className="flex-1 text-white text-left"><div className="text-xs uppercase font-black text-white/30 mb-2 text-left">Đã chi tiêu</div><div className="text-5xl md:text-7xl font-title font-bold tracking-tighter text-left tabular-nums">{utils.formatMoney(spentAmount)}</div><div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><div className="flex items-center gap-2 group/budget inline-flex cursor-pointer text-white/80" onClick={onEditBudget}><p className="text-sm font-black uppercase tracking-widest font-bold">Ngân sách: {utils.formatMoney(budgetLimit)}</p><Icons.Edit size={16} className="text-white/20 group-hover/budget:text-white transition-colors" /></div></div><div className="md:w-48 flex flex-col gap-4 justify-center text-white"><div className="bg-white/10 backdrop-blur-sm p-6 rounded-3xl border border-white/5 text-center md:text-left shadow-sm shadow-inner"><p className="text-xs font-black text-white/40 uppercase mb-2 text-left">Còn lại</p><p className="text-2xl font-title font-bold text-left">{utils.formatMoney((budgetLimit || 300000000) - spentAmount)}</p></div></div></div></div></div>
-                </div>
-                <div className="bg-white/60 backdrop-blur-md p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm h-full flex flex-col"><h3 className="text-sm font-black uppercase tracking-[0.2em] mb-8 text-stone-700 border-b border-stone-100 pb-6 font-bold text-left uppercase">Hoạt động gần đây</h3><div className="space-y-6 flex-1 overflow-y-auto hide-scrollbar max-h-[400px] md:max-h-[500px]">{activities?.length > 0 ? activities.map((act: Activity, i: number) => (<div key={i} className="flex gap-4 items-start group animate-in text-left"><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-stone-500 group-hover:text-white transition-colors shadow-sm"><Icons.ArrowUpRight size={18} className="text-stone-300 group-hover:text-white" /></div><div className="text-left text-stone-600"><p className="text-sm font-bold leading-snug text-left">{act.text}</p><p className="text-xs font-black text-stone-300 uppercase tracking-widest mt-1 text-left">{act.time}</p></div></div>)) : <p className="text-base text-stone-300 italic font-medium text-center">Chưa có thông báo mới.</p>}</div></div>
-            </div>
-        </div>
-    );
-};
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo, useCallback } = React;
+        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'weddy-stable-final';
+        
+        const utils = {
+            formatMoney: (a) => {
+                if (!a || a === 0) return "0 VNĐ";
+                return a >= 1000000000 ? (a/1000000000).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + " Tỷ VNĐ" : (a/1000000).toLocaleString('vi-VN', { maximumFractionDigits: 2 }) + " Triệu VNĐ";
+            },
+            formatInput: (v) => v ? v.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : "",
+            parseInput: (v) => v ? parseInt(v.toString().replace(/\./g, '')) || 0 : 0,
+            getDaysLeft: (d) => {
+                if (!d || d === "Chưa đặt") return "---";
+                const diff = Math.ceil((new Date(d).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                return diff > 0 ? `${diff} NGÀY NỮA` : (diff === 0 ? "HÔM NAY" : "ĐÃ QUA");
+            },
+            genInvite: () => Math.floor(100000 + Math.random() * 900000).toString()
+        };
 
-// 4. PlannerTasks
-const PlannerTasks = ({ tasks, onAddTask, onToggleTask, onDeleteTask }: any) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [title, setTitle] = useState(""); const [cat, setCat] = useState("Đặt tiệc cưới"); const [cost, setCost] = useState("");
-    const [pendingPage, setPendingPage] = useState(1); const [donePage, setDonePage] = useState(1);
-    const pendingListRef = useRef<HTMLDivElement>(null);
-    const doneListRef = useRef<HTMLDivElement>(null);
+        const Icon = ({ children, size = 24, ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
+        );
 
-    const handleAdd = () => { if (title.trim()) { onAddTask({ title: title.trim(), tag: cat, status: "pending", cost: utils.parseInput(cost), paid: 0, id: Date.now() }); setTitle(""); setCost(""); setIsOpen(false); setPendingPage(1); } };
-    const pending = tasks?.filter((t: Task) => t.status !== 'done') || [];
-    const done = tasks?.filter((t: Task) => t.status === 'done') || [];
-    const currentPending = pending.slice((pendingPage - 1) * 5, pendingPage * 5);
-    const currentDone = done.slice((donePage - 1) * 3, donePage * 3);
-    
-    // Pagination effect
-    useEffect(() => { if(pendingListRef.current && pendingPage > 1) pendingListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [pendingPage]);
-    useEffect(() => { if(doneListRef.current && donePage > 1) doneListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [donePage]);
+        const Icons = {
+            Heart: (p) => <Icon {...p}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></Icon>,
+            Check: (p) => <Icon {...p}><polyline points="20 6 9 17 4 12" /></Icon>,
+            Users: (p) => <Icon {...p}><g><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></g></Icon>,
+            Plus: (p) => <Icon {...p}><path d="M5 12h14" /><path d="M12 5v14" /></Icon>,
+            Layout: (p) => <Icon {...p}><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><path d="M3 9h18" /><path d="M9 21V9" /></Icon>,
+            DollarSign: (p) => <Icon {...p}><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></Icon>,
+            X: (p) => <Icon {...p}><path d="M18 6 6 18" /><path d="m6 6 12 12" /></Icon>,
+            ChevronRight: (p) => <Icon {...p}><path d="m9 18 6-6-6-6" /></Icon>,
+            Link: (p) => <Icon {...p}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></Icon>,
+            Share: (p) => <Icon {...p}><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" x2="15.42" y1="13.51" y2="17.49" /><line x1="15.41" x2="8.59" y1="6.51" y2="10.49" /></Icon>,
+            Trash: (p) => <Icon {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></Icon>,
+            Bell: (p) => <Icon {...p}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /></Icon>,
+            Menu: (p) => <Icon {...p}><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></Icon>,
+            Edit: (p) => <Icon {...p}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></Icon>,
+            ArrowUpRight: (p) => <Icon {...p}><path d="M7 7h10v10" /><path d="M7 17 17 7" /></Icon>,
+            Star: (p) => <Icon {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></Icon>,
+            Home: (p) => <Icon {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></Icon>,
+            LogOut: (p) => <Icon {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></Icon>,
+            Undo: (p) => <Icon {...p}><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></Icon>,
+            User: (p) => <Icon {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></Icon>
+        };
 
-    return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 text-left px-2 md:px-0">
-             <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4"><div className="text-left"><h3 className="text-3xl font-title font-bold text-stone-700 uppercase tracking-tighter">Danh sách công việc</h3><p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">{pending.length} việc cần làm</p></div><button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"><Icons.Plus size={12} /></span> Thêm việc mới</button></div>
-             <div className="space-y-4 animate-in" key={pendingPage} ref={pendingListRef}>{pending.length > 0 ? currentPending.map((t: Task) => (<div key={t.id} onClick={() => onToggleTask(t.id)} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all cursor-pointer flex items-center gap-6 relative"><div className="w-8 h-8 rounded-xl border-2 border-stone-200 group-hover:border-stone-400 group-hover:bg-stone-50 transition-all shrink-0"></div><div className="flex-1"><h4 className="font-bold text-stone-800 text-lg leading-tight uppercase">{t.title}</h4><span className="inline-block mt-2 text-[10px] font-black uppercase tracking-wider text-stone-400">{t.tag}</span></div><button onClick={(e) => { e.stopPropagation(); onDeleteTask(t.id); }} className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all absolute top-4 right-4 md:relative md:top-0 md:right-0"><Icons.Trash size={20} /></button></div>)) : <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><p className="text-stone-400 font-bold uppercase text-sm tracking-widest">Mọi việc đã hoàn tất! ✨</p></div>}</div>
-             {done.length > 0 && (<div className="pt-10 opacity-60 hover:opacity-100 transition-opacity duration-300" ref={doneListRef}><h4 className="mb-6 text-xs font-black uppercase tracking-widest text-stone-400">Đã hoàn thành ({done.length})</h4><div className="space-y-3 animate-in" key={donePage}>{currentDone.map((t: Task) => (<div key={t.id} className="p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center justify-between gap-4 text-stone-400 transition-colors"><div className="flex items-center gap-5 cursor-pointer flex-1" onClick={() => onToggleTask(t.id)}><div className="w-8 h-8 rounded-xl bg-stone-300 flex items-center justify-center text-white shrink-0"><Icons.Check size={16} /></div><h4 className="text-base font-bold line-through uppercase">{t.title}</h4></div></div>))}</div>
-                {/* --- Đã thêm nút phân trang cho phần Đã hoàn thành (Fix lỗi warning setDonePage) --- */}
-                {Math.ceil(done.length/3) > 1 && (
-                    <div className="flex justify-center items-center gap-4 pt-4">
-                        <button onClick={() => setDonePage(prev => Math.max(prev - 1, 1))} disabled={donePage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
-                        <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {donePage}</span>
-                        <button onClick={() => setDonePage(prev => Math.min(prev + 1, Math.ceil(done.length/3)))} disabled={donePage === Math.ceil(done.length/3)} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
-                    </div>
-                )}
-             </div>)}
-             <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Công việc mới"><div className="space-y-6 pt-2"><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên công việc</label><input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner uppercase" placeholder="VD: ĐẶT HOA CƯỚI" autoFocus /></div><div className="grid grid-cols-2 gap-6"><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Phân loại</label><div className="relative"><select value={cat} onChange={e=>setCat(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl text-base font-bold uppercase appearance-none focus:outline-none focus:border-stone-400 focus:bg-white transition-all shadow-inner"><option value="Đặt tiệc cưới">Tiệc cưới</option><option value="Chụp ảnh">Chụp ảnh</option><option value="Trang phục">Trang phục</option><option value="Khác">Khác</option></select><div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={16} className="rotate-90" /></div></div></div><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Dự chi (VNĐ)</label><input type="text" value={cost} onChange={e=>setCost(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner" placeholder="0" /></div></div><div className="pt-8 border-t border-stone-50"><button onClick={handleAdd} className="w-full py-5 bg-stone-800 text-white rounded-full font-black uppercase text-sm tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={16} strokeWidth={3}/> Lưu lại</button></div></div></Modal>
-        </div>
-    );
-};
+        // --- 2. HOOKS ---
+        const useFirebase = () => {
+            const [services, setServices] = useState(null);
+            useEffect(() => {
+                const interval = setInterval(() => { if (window.firebaseServices) { setServices(window.firebaseServices); clearInterval(interval); } }, 100);
+                return () => clearInterval(interval);
+            }, []);
+            return services;
+        };
 
-// 5. PlannerGuests
-const PlannerGuests = ({ guests, onAddGuest, onDeleteGuest }: any) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [name, setName] = useState(""); const [rel, setRel] = useState("Bạn bè"); const [phone, setPhone] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
-    const listRef = useRef<HTMLDivElement>(null);
-
-    const currentGuests = guests?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-    const handleAdd = () => { if (name.trim()) { onAddGuest({ name: name.trim(), relationship: rel, phone, id: Date.now() }); setName(""); setPhone(""); setIsOpen(false); setCurrentPage(1); } };
-    const relationshipColors: any = { "Bạn bè": "bg-blue-50 text-blue-600", "Gia đình": "bg-rose-50 text-rose-600", "Đồng nghiệp": "bg-purple-50 text-purple-600", "Khác": "bg-stone-50 text-stone-600" };
-    
-    // Pagination Effect
-    useEffect(() => { if(listRef.current && currentPage > 1) listRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [currentPage]);
-
-    return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in px-2 md:px-0">
-            <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4"><div className="text-left w-full md:w-auto"><h3 className="text-3xl font-title font-bold text-stone-700 uppercase tracking-tighter">Danh sách khách mời</h3><p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">Tổng cộng: <span className="text-stone-700">{guests?.length || 0}</span> người</p></div><button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"><Icons.Plus size={12} /></span> Thêm khách mới</button></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in" key={currentPage} ref={listRef}>{guests?.length === 0 ? <div className="col-span-full py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-400 shadow-inner"><Icons.Users size={32} /></div><p className="text-stone-400 font-bold uppercase text-xs tracking-widest">Danh sách trống</p></div> : currentGuests?.map((g: Guest) => (<div key={g.id} className="group bg-white p-6 rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all flex items-center justify-between cursor-default relative"><div className="flex items-center gap-5"><div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black uppercase shadow-inner shrink-0 ${relationshipColors[g.relationship] || 'bg-stone-100 text-stone-500'}`}>{g.name.charAt(0)}</div><div className="text-left"><h4 className="font-bold text-stone-700 text-lg leading-tight uppercase">{g.name}</h4><div className="flex items-center gap-2 mt-2 flex-wrap"><span className="text-[10px] font-black uppercase tracking-wider text-stone-400 border border-stone-100 px-3 py-1 rounded-lg bg-stone-50">{g.relationship}</span>{g.phone && <span className="text-[11px] font-bold text-stone-400 tabular-nums tracking-wide">{g.phone}</span>}</div></div></div><button onClick={() => onDeleteGuest(g.id)} className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all absolute top-4 right-4 md:relative md:top-0 md:right-0"><Icons.Trash size={20} /></button></div>))}</div>
-            <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Thêm khách mời"><div className="space-y-6 pt-2"><div className="space-y-5 text-left"><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Họ và tên</label><input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="NHẬP TÊN KHÁCH MỜI..." autoFocus /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-6"><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Mối quan hệ</label><div className="relative"><select value={rel} onChange={e => setRel(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl appearance-none font-bold text-base text-stone-700 focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all uppercase"><option value="Bạn bè">Bạn bè</option><option value="Gia đình">Gia đình</option><option value="Đồng nghiệp">Đồng nghiệp</option><option value="Khác">Khác</option></select><div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={16} className="rotate-90" /></div></div></div><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Số điện thoại</label><input type="text" value={phone} onChange={e => setPhone(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 tabular-nums tracking-wider" placeholder="09..." /></div></div></div><div className="pt-8 border-t border-stone-50"><button onClick={handleAdd} className="w-full py-5 bg-stone-800 text-white rounded-full font-black uppercase text-sm tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={16} strokeWidth={3} /> Lưu khách mời</button></div></div></Modal>
-        </div>
-    );
-};
-
-// 6. PlannerBudget
-const PlannerBudget = ({ tasks, onAddExpense, onDeleteTask }: any) => {
-    const [isOpen, setIsOpen] = useState(false); const [activeFilter, setActiveFilter] = useState('all');
-    const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [paid, setPaid] = useState(""); const [category, setCategory] = useState("Đặt tiệc cưới");
-    const [currentPage, setCurrentPage] = useState(1);
-    const allBudgetTasks = (tasks || []).filter((t: Task) => t.cost > 0);
-    const displayTasks = activeFilter === 'all' ? allBudgetTasks : allBudgetTasks.filter((t: Task) => t.paidBy === (activeFilter === 'groom' ? 'Chú rể' : 'Cô dâu'));
-    const totalBudget = displayTasks.reduce((acc: number, curr: Task) => acc + curr.cost, 0);
-    const totalPaid = displayTasks.reduce((acc: number, curr: Task) => acc + (curr.paid || (curr.status === 'done' ? curr.cost : 0)), 0);
-    const currentTransactions = displayTasks.slice((currentPage - 1) * 5, currentPage * 5);
-    const handleSave = () => { if (title.trim() && cost) { onAddExpense({ title: title.trim(), tag: category, status: utils.parseInput(paid) >= utils.parseInput(cost) ? 'done' : 'pending', cost: utils.parseInput(cost), paid: utils.parseInput(paid), id: Date.now() }); setTitle(""); setCost(""); setPaid(""); setIsOpen(false); setCurrentPage(1); } };
-    return (
-        <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 px-2 md:px-0">
-             <div className="flex justify-center"><div className="bg-stone-100 p-1.5 rounded-full flex gap-1">{[{ id: 'all', label: 'Ví chung' }, { id: 'groom', label: 'Chú rể' }, { id: 'bride', label: 'Cô dâu' }].map(f => (<button key={f.id} onClick={() => setActiveFilter(f.id)} className={`px-4 md:px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-white shadow-md text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>{f.label}</button>))}</div></div>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48"><div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Dự kiến chi</p><div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.DollarSign size={20}/></div></div><p className="text-3xl font-title font-bold text-stone-800 tracking-tighter">{utils.formatMoney(totalBudget)}</p></div><div className="bg-stone-800 p-8 rounded-[2.5rem] shadow-xl flex flex-col justify-between h-48 text-white"><div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-white/50">Đã thanh toán</p><div className="p-3 bg-white/10 rounded-full text-white"><Icons.Check size={20}/></div></div><p className="text-3xl font-title font-bold tracking-tighter">{utils.formatMoney(totalPaid)}</p></div><div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48"><div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Còn lại</p><div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.Layout size={20}/></div></div><p className={`text-3xl font-title font-bold tracking-tighter ${totalBudget - totalPaid < 0 ? 'text-rose-500' : 'text-stone-800'}`}>{utils.formatMoney(totalBudget - totalPaid)}</p></div></div>
-             <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4"><div className="text-left"><h3 className="text-3xl font-title font-bold text-stone-700 uppercase tracking-tighter">Chi tiết khoản chi</h3></div><button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-200 text-stone-600 hover:bg-stone-300 rounded-full text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm"><Icons.Plus size={16}/> Thêm khoản chi</button></div>
-             <div className="space-y-4 animate-in" key={currentPage}>{currentTransactions.map((item: Task) => (<div key={item.id} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 relative"><div className="flex items-center gap-5"><div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${(item.paid || 0) >= item.cost ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-50 text-stone-400'}`}><Icons.DollarSign size={24} /></div><div className="text-left"><h4 className="font-bold text-lg text-stone-700 leading-tight uppercase">{item.title}</h4><div className="flex gap-2 mt-2"><span className="inline-block text-[10px] font-black uppercase tracking-wider text-stone-400 bg-stone-50 px-3 py-1 rounded-lg border border-stone-100">{item.tag}</span></div></div></div><div className="flex flex-col items-end gap-1"><p className="font-bold text-xl text-stone-800 tracking-tight">{utils.formatMoney(item.cost)}</p><div className="flex items-center gap-2">{(item.paid || 0) >= item.cost ? <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">Đã xong</span> : <span className="text-[10px] font-black uppercase tracking-widest text-stone-400 bg-stone-50 px-3 py-1.5 rounded-lg">Đã trả: {utils.formatMoney(item.paid || 0)}</span>}</div></div><button onClick={() => onDeleteTask(item.id)} className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all absolute top-4 right-4 md:relative md:top-0 md:right-0"><Icons.Trash size={20} /></button></div>))}</div>
-             <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Thêm khoản chi"><div className="space-y-6 pt-2"><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên khoản chi</label><input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold uppercase shadow-inner" placeholder="VD: CHỤP ẢNH CƯỚI" autoFocus /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-6"><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Hạng mục</label><div className="relative"><select value={category} onChange={e=>setCategory(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl text-base font-bold uppercase appearance-none focus:outline-none focus:border-stone-400 focus:bg-white transition-all shadow-inner"><option value="Đặt tiệc cưới">Tiệc cưới</option><option value="Chụp ảnh">Chụp ảnh</option><option value="Trang phục">Trang phục</option><option value="Khác">Khác</option></select><div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={16} className="rotate-90" /></div></div></div><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Số tiền (VNĐ)</label><input type="text" value={cost} onChange={e=>setCost(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner" placeholder="0" /></div></div><div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Đã trả trước (VNĐ)</label><input type="text" value={paid} onChange={e=>setPaid(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner" placeholder="0" /></div><div className="pt-8 border-t border-stone-50"><button onClick={handleSave} className="w-full py-5 bg-stone-800 text-white rounded-full font-black uppercase text-sm tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={16} strokeWidth={3}/> Lưu lại</button></div></div></Modal>
-        </div>
-    );
-};
-
-// --- MAIN MODULE EXPORT ---
-export const WeddingPlannerModule = ({ currentUser }: { currentUser: User }) => {
-    const [subTab, setSubTab] = useState('overview');
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [weddingData, setWeddingData] = useState<WeddingData | null>(null);
-    const [isBudgetOpen, setIsBudgetOpen] = useState(false); const [isGuestOpen, setIsGuestOpen] = useState(false); const [isInviteOpen, setIsInviteOpen] = useState(false); const [isJoinOpen, setIsJoinOpen] = useState(false);
-    const [inviteCode, setInviteCode] = useState(""); const [joinInput, setJoinInput] = useState(""); const [tempBudget, setTempBudget] = useState("");
-
-    useEffect(() => {
-        const pref = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
-        const unsub = onSnapshot(pref, async (s) => {
-            if (!s.exists()) await setDoc(pref, { email: currentUser.email, name: currentUser.displayName, isSetupComplete: false, weddingId: currentUser.uid });
-            else { setUserProfile(s.data() as UserProfile); if(!s.data()?.weddingId) await updateDoc(pref, { weddingId: currentUser.uid }); }
-        });
-        return () => unsub();
-    }, [currentUser]);
-
-    useEffect(() => {
-        if(!userProfile?.weddingId) return;
-        const wref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userProfile.weddingId);
-        getDoc(wref).then(s => { if(!s.exists()) setDoc(wref, { tasks: [], guests: [], activities: [], budgetLimit: 300000000, owners: [currentUser.uid] }); });
-        const unsub = onSnapshot(wref, s => { if(s.exists()) setWeddingData({...s.data(), weddingId: userProfile.weddingId} as WeddingData); });
-        return () => unsub();
-    }, [userProfile]);
-
-    const userData = useMemo(() => (userProfile && weddingData) ? {...weddingData, profile: userProfile} : null, [userProfile, weddingData]);
-    if (!userData) return <div className="h-screen flex items-center justify-center text-stone-300 animate-pulse">Đang tải...</div>;
-
-    if (!userData.profile?.isSetupComplete) {
-        return <GettingStartedWizard onComplete={async (w) => {
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main'), { role: w.role, partnerName: w.partnerName, weddingDate: w.weddingDate, engagementDate: w.engagementDate, location: w.location, venue: w.venue, preWedding: w.preWedding, vibes: w.vibes || [], isSetupComplete: true, name: currentUser.displayName });
-            if (userData.weddingId) await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { budgetLimit: w.budget || 300000000 });
-        }} onSkip={async () => await updateDoc(doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main'), { isSetupComplete: true })} />;
-    }
-
-    const updateDB = async (k: string, v: any) => { if(!userData.weddingId) return; await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { [k]: v }); };
-    const addAct = async (t: string) => { const n = { text: t, time: new Date().toLocaleTimeString('vi-VN') }; await updateDB('activities', [n, ...(userData.activities || [])].slice(0, 15)); };
-    const onAddTask = async (t: Task) => { const nt = [{ ...t, paidBy: userData.profile?.role, id: t.id || Date.now() }, ...(userData.tasks || [])]; await updateDB('tasks', nt); await addAct(`Thêm: ${t.title}`); };
-    const onToggleTask = async (id: number) => { const nt = (userData.tasks||[]).map(t => t.id === id ? { ...t, status: t.status === 'done' ? 'pending' : 'done' } : t); const task = nt.find(t=>t.id===id); if(task) await addAct(`Cập nhật: ${task.title}`); await updateDB('tasks', nt); };
-    const onDeleteTask = async (id: number) => { await updateDB('tasks', (userData.tasks||[]).filter(t => t.id !== id)); await addAct(`Xóa 1 công việc`); };
-    const onAddGuest = async (g: Guest) => { await updateDB('guests', [g, ...(userData.guests||[])]); await addAct(`Khách mới: ${g.name}`); };
-    const onDeleteGuest = async (id: number) => { await updateDB('guests', (userData.guests||[]).filter(x => x.id !== id)); await addAct(`Xóa khách`); };
-    const handleInvite = async () => { const code = Math.floor(100000 + Math.random() * 900000).toString(); await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'invites', code), { weddingId: userData.weddingId, createdAt: Date.now() }); setInviteCode(code); setIsInviteOpen(true); };
-    const joinSync = async () => { const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'invites', joinInput.toUpperCase())); if (snap.exists()) { await updateDoc(doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main'), { weddingId: snap.data().weddingId }); setIsJoinOpen(false); alert("Đồng bộ thành công!"); } else alert("Mã không hợp lệ."); };
-    const spentAmount = (userData.tasks || []).reduce((acc, t) => acc + (t.paid ?? (t.status === 'done' ? t.cost : 0)), 0);
-
-    return (
-        <div className="pb-24">
-            {/* Header Phần Planner - Đã sửa giống HTML Source */}
-            <div className="pt-24 px-4 md:px-8 mb-12 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div>
-                    <span className="text-[10px] tracking-[0.3em] text-[#B5A896] mb-2 block font-bold uppercase">Planner của {userData.profile?.name || 'bạn'}</span>
-                    <h2 className="text-3xl md:text-5xl font-title font-bold tracking-tighter text-stone-800">Weddy Planner</h2>
-                </div>
-                <div className="flex gap-4">
-                    <div className="bg-white/70 p-4 rounded-[2.5rem] border border-stone-100 shadow-sm flex items-center gap-4">
-                        <div className="w-10 h-10 bg-rose-100/40 rounded-full flex items-center justify-center text-rose-300">
-                            <Icons.Heart size={20} fill="currentColor"/>
+        // --- 3. SUB-COMPONENTS ---
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in">
+                    <div className="absolute inset-0 transition-all" onClick={onClose}></div>
+                    <div className="relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-8 w-full max-w-md shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-stone-100 flex flex-col max-h-[90vh] overflow-y-auto hide-scrollbar text-stone-700">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-title font-bold uppercase tracking-widest text-stone-600">{title}</h3>
+                            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-stone-50 hover:bg-stone-100 transition-colors shrink-0"><Icons.X size={20} /></button>
                         </div>
-                        <div className="text-xs font-bold uppercase">
-                            <p className="text-[10px] text-stone-300">Ngày trọng đại</p>
-                            <div className="flex items-center gap-2">
-                                <p className="text-stone-600 text-base">{userData.profile?.weddingDate || 'Chưa đặt'}</p>
-                                <p className="text-[10px] text-rose-400">{getDaysLeft(userData.profile?.weddingDate)}</p>
+                        {children}
+                    </div>
+                </div>
+            );
+        };
+
+        const Logo = ({ className, animated = false }) => (
+            <div className={`flex items-center gap-1.5 group cursor-pointer ${className}`} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                <span className="text-lg md:text-xl font-black text-stone-700 tracking-tight group-hover:text-rose-500 transition-colors uppercase" style={{ fontFamily: '"Raleway", sans-serif', fontWeight: 900 }}>WEDDY</span>
+                <img src="https://www.svgrepo.com/show/247211/wedding-rings-diamond.svg" alt="Wedding Rings" className={`w-3 h-3 md:w-4 md:h-4 object-contain transition-all duration-500 ${animated ? 'animate-professional' : 'grayscale hover:grayscale-0 opacity-80 hover:opacity-100'}`} />
+            </div>
+        );
+
+        const GettingStartedWizard = ({ onComplete, onSkip }) => {
+            const [step, setStep] = useState(0);
+            // THÊM: vibes để lưu sở thích
+            const [data, setData] = useState({ 
+                role: "", partnerName: "", engagementDate: "", weddingDate: "", 
+                location: "", venue: "", preWedding: "", budget: "",
+                vibes: [] // <--- Mảng chứa các tag sở thích
+            });
+            const [isSubmitting, setIsSubmitting] = useState(false);
+
+            const handleNext = () => setStep(prev => prev + 1);
+
+            // Danh sách các Style đám cưới để User chọn
+            const weddingVibes = [
+                { id: 'traditional', label: 'Truyền thống', icon: '🏮' },
+                { id: 'modern', label: 'Hiện đại', icon: '✨' },
+                { id: 'luxury', label: 'Sang trọng', icon: '💎' },
+                { id: 'rustic', label: 'Mộc mạc', icon: '🌿' },
+                { id: 'vintage', label: 'Cổ điển', icon: '📷' },
+                { id: 'minimalist', label: 'Tối giản', icon: '⚪' }
+            ];
+
+            // Hàm xử lý chọn/bỏ chọn Style
+            const toggleVibe = (id) => {
+                setData(prev => {
+                    const exists = prev.vibes.includes(id);
+                    return { 
+                        ...prev, 
+                        vibes: exists ? prev.vibes.filter(v => v !== id) : [...prev.vibes, id] 
+                    };
+                });
+            };
+
+            const steps = [
+                { 
+                    title: "Chào bạn,", 
+                    subtitle: "Bạn là Cô Dâu hay Chú Rể, và tên thân mật của người ấy là gì?", 
+                    content: (<div className="space-y-6 mt-6"><div className="grid grid-cols-2 gap-4 font-bold">{["Cô dâu", "Chú rể"].map(r => (<button key={r} onClick={() => setData({ ...data, role: r })} className={`p-6 rounded-[2rem] border transition-all shadow-sm ${data.role === r ? 'border-stone-800 bg-stone-800 text-white shadow-xl scale-105' : 'border-white bg-white hover:border-stone-300'}`}>{r}</button>))}</div><input type="text" value={data.partnerName} onChange={e => setData({ ...data, partnerName: e.target.value })} placeholder="Tên thân mật của người ấy..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) 
+                },
+                // --- BƯỚC MỚI: CHỌN VIBE (STYLE) ---
+                {
+                    title: "Gu của hai bạn?",
+                    subtitle: "Hãy chọn những phong cách đám cưới mà bạn yêu thích (Chọn nhiều)",
+                    content: (
+                        <div className="grid grid-cols-2 gap-4 mt-6 animate-in">
+                            {weddingVibes.map(v => (
+                                <button 
+                                    key={v.id} 
+                                    onClick={() => toggleVibe(v.id)} 
+                                    className={`p-4 rounded-[1.5rem] border transition-all flex flex-col items-center gap-2 ${data.vibes.includes(v.id) ? 'border-stone-800 bg-stone-100 text-stone-800 shadow-md ring-1 ring-stone-200' : 'border-white bg-white hover:bg-stone-50 text-stone-400'}`}
+                                >
+                                    <span className="text-3xl mb-1">{v.icon}</span>
+                                    <span className="text-xs font-black uppercase tracking-widest">{v.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )
+                },
+                { title: "Ngày lành tháng tốt", subtitle: "Hai bạn đã chọn được ngày đẹp cho Lễ Ăn Hỏi và Lễ Cưới chưa?", content: (<div className="space-y-6 mt-6"><div><label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Ăn Hỏi (Đính hôn)</label><input type="date" value={data.engagementDate} onChange={e => setData({ ...data, engagementDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div><div><label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-2">Lễ Cưới (Thành hôn)</label><input type="date" value={data.weddingDate} onChange={e => setData({ ...data, weddingDate: e.target.value })} className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-4 text-lg font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm text-center uppercase tracking-widest"/></div></div>) },
+                { title: "Nơi diễn ra", subtitle: "Đám cưới sẽ diễn ra tại Tỉnh/Thành phố nào?", content: (<div className="mt-8"><input type="text" value={data.location} onChange={e => setData({ ...data, location: e.target.value })} placeholder="Vd: TP. Hồ Chí Minh, Hà Nội..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
+                { title: "Địa điểm tiệc", subtitle: "Bạn đã nhắm được Nhà hàng/Khách sạn cụ thể nào chưa?", content: (<div className="mt-8"><input type="text" value={data.venue} onChange={e => setData({ ...data, venue: e.target.value })} placeholder="Nhập tên nhà hàng (nếu có)..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
+                { title: "Lưu giữ khoảnh khắc", subtitle: "Hai bạn dự định chụp ảnh Pre-wedding ở đâu?", content: (<div className="mt-8"><input type="text" value={data.preWedding} onChange={e => setData({ ...data, preWedding: e.target.value })} placeholder="Vd: Studio, Đà Lạt, Hàn Quốc..." className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 text-xl font-bold text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-300 text-center"/></div>) },
+                { title: "Ngân sách dự kiến?", subtitle: "Con số tối đa mà hai bạn muốn chi cho đám cưới này là bao nhiêu?", content: (<div className="mt-8"><div className="relative"><input type="text" value={data.budget} onChange={e => setData({ ...data, budget: utils.formatInput(e.target.value) })} placeholder="300.000.000" className="w-full bg-white border-0 ring-1 ring-stone-200 rounded-[1.5rem] px-6 py-5 pl-8 pr-20 text-3xl font-black text-stone-700 focus:ring-2 focus:ring-stone-500 outline-none shadow-sm placeholder:text-stone-200 text-center"/><div className="absolute right-8 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm uppercase tracking-widest">VNĐ</div></div></div>) }
+            ];
+
+            const current = steps[step];
+
+            const handleFinish = async () => {
+                if (isSubmitting) return;
+                setIsSubmitting(true);
+                try { 
+                    // Gửi thêm vibes trong object data
+                    await onComplete({...data, budget: utils.parseInput(data.budget)}); 
+                } catch (e) { 
+                    setIsSubmitting(false); alert("Có lỗi xảy ra, vui lòng thử lại."); 
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 z-[200] bg-[#F0EBE5]/95 backdrop-blur-xl flex flex-col animate-in overflow-y-auto">
+                    <div className="absolute top-6 right-6 z-50"><button onClick={onSkip} className="text-stone-400 font-bold text-xs uppercase tracking-widest hover:text-stone-600 transition-colors px-4 py-2 bg-white/50 rounded-full hover:bg-white">Bỏ qua tất cả</button></div>
+                    <div className="flex-1 flex flex-col justify-center px-6 max-w-lg mx-auto w-full text-center py-10">
+                        <div className="mb-8"><div className="flex justify-center gap-1.5 mb-8">{steps.map((_, i) => (<div key={i} className={`h-1.5 rounded-full transition-all duration-700 ${i <= step ? 'bg-stone-800 w-8' : 'bg-stone-300/50 w-2'}`}></div>))}</div><h2 className="text-3xl md:text-4xl font-title font-bold tracking-tighter text-stone-800 mb-3">{current.title}</h2><p className="text-stone-500 text-base font-medium leading-relaxed">{current.subtitle}</p></div>
+                        <div className="min-h-[160px] flex flex-col justify-center mb-8">{current.content}</div>
+                        <div className="space-y-4">{step < steps.length - 1 ? (<><button onClick={handleNext} disabled={step === 0 && !data.role} className="w-full py-5 bg-stone-800 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-stone-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95">Tiếp tục</button><button onClick={handleNext} className="text-stone-400 text-xs font-bold uppercase tracking-widest hover:text-stone-600 transition-colors p-2">Bỏ qua câu này</button></>) : (<><button onClick={handleFinish} disabled={isSubmitting} className="w-full py-5 bg-emerald-700 text-white rounded-full text-sm font-black uppercase tracking-[0.2em] shadow-xl hover:bg-emerald-800 disabled:opacity-70 transition-all active:scale-95 flex items-center justify-center gap-3">{isSubmitting ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : null} {isSubmitting ? 'Đang xử lý...' : 'Hoàn tất thiết lập'}</button><button onClick={handleFinish} className="text-stone-400 text-xs font-bold uppercase tracking-widest hover:text-stone-600 transition-colors p-2">Bỏ qua câu này</button></>)}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        const PlannerOverview = ({ spentAmount, completedTasks, totalTasks, guestCount, budgetLimit, role, activities, onInvite, onEditBudget, onOpenGuests }) => {
+            const percentage = Math.min((spentAmount / (budgetLimit || 300000000)) * 100, 100);
+            return (
+                <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 text-left px-2 md:px-0">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        <div className="lg:col-span-2 space-y-6 md:space-y-8">
+                            <div className="bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-stone-200/50 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm text-stone-800">
+                                <div className="flex items-center gap-4"><div className="w-12 h-12 bg-rose-100/50 rounded-full flex items-center justify-center text-rose-500 shrink-0"><Icons.Heart size={24} fill="currentColor"/></div><div><h4 className="font-title font-bold text-lg">Ví chung đôi mình</h4><p className="text-sm text-stone-400">Kết nối và đồng bộ kế hoạch với bạn đời.</p></div></div>
+                                <button onClick={onInvite} className="w-full md:w-auto px-8 py-4 bg-stone-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-sm hover:bg-stone-600 transition-all flex items-center justify-center gap-2"><Icons.Share size={16}/> Mời bạn đời</button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 text-left"><div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Tiến độ</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-300"><Icons.Check size={20}/></div></div><div><div className="flex items-baseline gap-2 mb-3 text-left font-title font-bold text-stone-600 text-4xl md:text-5xl"><span>{completedTasks}</span><span className="text-stone-300 uppercase text-xs">/ {totalTasks} việc</span></div><div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden"><div className="h-full bg-stone-500 transition-all duration-700" style={{width: `${totalTasks > 0 ? (completedTasks/totalTasks)*100 : 0}%`}}></div></div></div></div>
+                                <div onClick={onOpenGuests} className="bg-white/80 p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48 cursor-pointer hover:border-stone-300 transition-all active:scale-[0.98]"><div className="flex justify-between items-start text-left uppercase tracking-widest text-xs font-bold text-stone-400"><span>Khách mời</span><div className="w-10 h-10 bg-stone-50/50 rounded-2xl flex items-center justify-center text-stone-400"><Icons.Users size={20}/></div></div><div className="flex items-baseline gap-2 text-stone-700 text-left font-title font-bold text-5xl md:text-6xl"><span>{guestCount}</span><span className="text-stone-300 font-bold uppercase text-xs">Người</span></div></div>
+                            </div>
+                            <div className="bg-stone-500 p-6 md:p-12 rounded-[3rem] text-white relative overflow-hidden shadow-xl group"><div className="absolute top-0 right-0 w-80 h-80 bg-stone-400 rounded-full blur-[150px] opacity-20 -translate-y-1/2 translate-x-1/2 group-hover:opacity-40 transition-opacity duration-700"></div><div className="relative z-10 text-left"><h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/70 mb-6 md:mb-8 text-left">Tài chính tổng quát ({role || 'Bạn'})</h3><div className="flex flex-col md:flex-row justify-between gap-6 md:gap-8"><div className="flex-1 text-white text-left"><div className="text-xs uppercase font-black text-white/30 mb-2 text-left">Đã chi tiêu</div><div className="text-5xl md:text-7xl font-title font-bold tracking-tighter text-left tabular-nums">{utils.formatMoney(spentAmount)}</div><div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mt-6 mb-4"><div className="h-full bg-white transition-all duration-700" style={{width: `${percentage}%`}}></div></div><div className="flex items-center gap-2 group/budget inline-flex cursor-pointer text-white/80" onClick={onEditBudget}><p className="text-sm font-black uppercase tracking-widest font-bold">Ngân sách: {utils.formatMoney(budgetLimit)}</p><Icons.Edit size={16} className="text-white/20 group-hover/budget:text-white transition-colors" /></div></div><div className="md:w-48 flex flex-col gap-4 justify-center text-white"><div className="bg-white/10 backdrop-blur-sm p-6 rounded-3xl border border-white/5 text-center md:text-left shadow-sm shadow-inner"><p className="text-xs font-black text-white/40 uppercase mb-2 text-left">Còn lại</p><p className="text-2xl font-title font-bold text-left">{utils.formatMoney((budgetLimit || 300000000) - spentAmount)}</p></div></div></div></div></div>
+                        </div>
+                        <div className="bg-white/60 backdrop-blur-md p-6 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-sm h-full flex flex-col">
+                            <h3 className="text-sm font-black uppercase tracking-[0.2em] mb-8 text-stone-700 border-b border-stone-100 pb-6 font-bold text-left uppercase">Hoạt động gần đây</h3>
+                            <div className="space-y-6 flex-1 overflow-y-auto hide-scrollbar max-h-[400px] md:max-h-[500px]">
+                                {activities?.length > 0 ? activities.map((act, i) => (<div key={i} className="flex gap-4 items-start group animate-in text-left"><div className="w-10 h-10 bg-stone-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-stone-500 group-hover:text-white transition-colors shadow-sm"><Icons.ArrowUpRight size={18} className="text-stone-300 group-hover:text-white" /></div><div className="text-left text-stone-600"><p className="text-sm font-bold leading-snug text-left">{act.text}</p><p className="text-xs font-black text-stone-300 uppercase tracking-widest mt-1 text-left">{act.time}</p></div></div>)) : <p className="text-base text-stone-300 italic font-medium text-center">Chưa có thông báo mới.</p>}
                             </div>
                         </div>
                     </div>
-                    <button onClick={()=>setIsJoinOpen(true)} className="bg-stone-500 text-white px-6 py-4 rounded-[2.5rem] shadow-xl hover:bg-stone-600 transition-colors flex items-center gap-2">
-                        <Icons.Link size={20}/>
-                        <span className="text-xs font-bold uppercase hidden md:inline">Nhập mã kết nối</span>
-                    </button>
                 </div>
-            </div>
+            );
+        };
+
+        const PlannerBudget = ({ tasks, onAddExpense, onDeleteTask }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [activeFilter, setActiveFilter] = useState('all');
+            const [title, setTitle] = useState(""); const [cost, setCost] = useState(""); const [paid, setPaid] = useState(""); const [category, setCategory] = useState("Đặt tiệc cưới");
+            const [confirmDeleteId, setConfirmDeleteId] = useState(null);
             
-            <div className="flex justify-center mb-12 px-4">
-                <div className="bg-white/50 p-1.5 rounded-full flex gap-1 shadow-sm border border-white/50 overflow-x-auto hide-scrollbar">
-                    {[{id:'overview',l:'Tổng quan'},{id:'tasks',l:'Công việc'},{id:'budget',l:'Ngân sách'},{id:'guests',l:'Khách mời'}].map(t => (
-                        <button 
-                            key={t.id} 
-                            onClick={()=>setSubTab(t.id)} 
-                            className={`px-6 py-3 rounded-full text-xs md:text-sm font-black uppercase transition-all whitespace-nowrap ${subTab===t.id?'bg-stone-500 text-white shadow-xl':'text-stone-400 hover:text-stone-600'}`}
-                        >
-                            {t.l}
+            // --- Pagination ---
+            const [currentPage, setCurrentPage] = useState(1);
+            const itemsPerPage = 5;
+            const listRef = useRef(null); // Ref for scroll
+
+            const allBudgetTasks = (tasks || []).filter(t => t.cost > 0);
+            const groomTasks = allBudgetTasks.filter(t => t.paidBy === 'Chú rể');
+            const brideTasks = allBudgetTasks.filter(t => t.paidBy === 'Cô dâu');
+
+            let displayTasks = allBudgetTasks;
+            if (activeFilter === 'groom') displayTasks = groomTasks;
+            if (activeFilter === 'bride') displayTasks = brideTasks;
+
+            useEffect(() => { setCurrentPage(1); }, [activeFilter, tasks]);
+
+            // Scroll top when page changes
+            useEffect(() => {
+                if(listRef.current && currentPage > 1) listRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, [currentPage]);
+
+            const totalBudget = displayTasks.reduce((acc, curr) => acc + curr.cost, 0);
+            const totalPaid = displayTasks.reduce((acc, curr) => acc + (curr.paid || (curr.status === 'done' ? curr.cost : 0)), 0);
+
+            // Calc pagination
+            const totalPages = Math.ceil(displayTasks.length / itemsPerPage);
+            const currentTransactions = displayTasks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            
+            const handleSave = () => { 
+                if (title.trim() && cost) { 
+                    onAddExpense({ title: title.trim(), tag: category, status: utils.parseInput(paid) >= utils.parseInput(cost) ? 'done' : 'pending', cost: utils.parseInput(cost), paid: utils.parseInput(paid), id: Date.now() }); 
+                    setTitle(""); setCost(""); setPaid(""); setIsOpen(false); 
+                    setCurrentPage(1); 
+                } 
+            };
+            
+            return (
+                <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 px-2 md:px-0">
+                    <div className="flex justify-center"><div className="bg-stone-100 p-1.5 rounded-full flex gap-1">{[{ id: 'all', label: 'Ví chung' }, { id: 'groom', label: 'Chú rể' }, { id: 'bride', label: 'Cô dâu' }].map(f => (<button key={f.id} onClick={() => setActiveFilter(f.id)} className={`px-4 md:px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-white shadow-md text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>{f.label}</button>))}</div></div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48"><div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Dự kiến chi ({activeFilter === 'all' ? 'Tổng' : (activeFilter === 'groom' ? 'Nhà trai' : 'Nhà gái')})</p><div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.DollarSign size={20}/></div></div><p className="text-3xl font-title font-bold text-stone-800 tracking-tighter">{utils.formatMoney(totalBudget)}</p></div>
+                        <div className="bg-stone-800 p-8 rounded-[2.5rem] shadow-xl flex flex-col justify-between h-48 text-white"><div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-white/50">Đã thanh toán</p><div className="p-3 bg-white/10 rounded-full text-white"><Icons.Check size={20}/></div></div><p className="text-3xl font-title font-bold tracking-tighter">{utils.formatMoney(totalPaid)}</p></div>
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm flex flex-col justify-between h-48"><div className="flex justify-between items-start"><p className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">Còn lại</p><div className="p-3 bg-stone-50 rounded-full text-stone-400"><Icons.Layout size={20}/></div></div><p className={`text-3xl font-title font-bold tracking-tighter ${totalBudget - totalPaid < 0 ? 'text-rose-500' : 'text-stone-800'}`}>{utils.formatMoney(totalBudget - totalPaid)}</p></div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+                         <div className="text-left"><h3 className="text-3xl font-title font-bold text-stone-700 uppercase tracking-tighter">Chi tiết khoản chi</h3><p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">{activeFilter === 'all' ? 'Toàn bộ danh sách' : (activeFilter === 'groom' ? 'Chi phí của Chú rể' : 'Chi phí của Cô dâu')}</p></div>
+                         <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-200 text-stone-600 hover:bg-stone-300 rounded-full text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm"><Icons.Plus size={16}/> Thêm khoản chi</button>
+                    </div>
+
+                    <div className="space-y-4 animate-in" key={currentPage} ref={listRef}>
+                        {displayTasks.length === 0 ? <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem]"><p className="text-stone-400 text-sm font-bold uppercase tracking-widest">Chưa có dữ liệu</p></div> : currentTransactions.map((item) => (
+                            <div key={item.id} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
+                                <div className="flex items-center gap-5">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${(item.paid || 0) >= item.cost ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-50 text-stone-400'}`}><Icons.DollarSign size={24} /></div>
+                                    <div className="text-left"><h4 className="font-bold text-lg text-stone-700 leading-tight uppercase">{item.title}</h4><div className="flex gap-2 mt-2"><span className="inline-block text-[10px] font-black uppercase tracking-wider text-stone-400 bg-stone-50 px-3 py-1 rounded-lg border border-stone-100">{item.tag}</span>{item.paidBy && <span className={`inline-block text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border border-transparent ${item.paidBy === 'Chú rể' ? 'bg-blue-50 text-blue-500' : (item.paidBy === 'Cô dâu' ? 'bg-rose-50 text-rose-500' : 'bg-stone-100 text-stone-500')}`}>{item.paidBy}</span>}</div></div>
+                                </div>
+                                <div className="flex flex-col items-end gap-1"><p className="font-bold text-xl text-stone-800 tracking-tight">{utils.formatMoney(item.cost)}</p><div className="flex items-center gap-2">{(item.paid || 0) >= item.cost ? <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">Đã xong</span> : <span className="text-[10px] font-black uppercase tracking-widest text-stone-400 bg-stone-50 px-3 py-1.5 rounded-lg">Đã trả: {utils.formatMoney(item.paid || 0)}</span>}</div></div>
+                                <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(item.id); }} className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all opacity-100 md:opacity-0 group-hover:opacity-100 absolute top-4 right-4 md:relative md:top-0 md:right-0"><Icons.Trash size={20} /></button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 pt-6 pb-4">
+                            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
+                            <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {currentPage} / {totalPages}</span>
+                            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
+                        </div>
+                    )}
+
+                    <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Thêm khoản chi">
+                        <div className="space-y-6 pt-2">
+                            <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên khoản chi</label><input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold uppercase shadow-inner" placeholder="VD: CHỤP ẢNH CƯỚI" autoFocus /></div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Hạng mục</label><div className="relative"><select value={category} onChange={e=>setCategory(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl text-base font-bold uppercase appearance-none focus:outline-none focus:border-stone-400 focus:bg-white transition-all shadow-inner"><option value="Đặt tiệc cưới">Tiệc cưới</option><option value="Chụp ảnh">Chụp ảnh</option><option value="Trang phục">Trang phục</option><option value="Khác">Khác</option></select><div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={16} className="rotate-90" /></div></div></div>
+                                <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Số tiền (VNĐ)</label><input type="text" value={cost} onChange={e=>setCost(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner" placeholder="0" /></div>
+                            </div>
+                            <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Đã trả trước (VNĐ)</label><input type="text" value={paid} onChange={e=>setPaid(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner" placeholder="0" /></div>
+                            <div className="pt-8 border-t border-stone-50"><button onClick={handleSave} className="w-full py-5 bg-stone-800 text-white rounded-full font-black uppercase text-sm tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={16} strokeWidth={3}/> Lưu lại</button></div>
+                        </div>
+                    </Modal>
+
+                    <Modal isOpen={confirmDeleteId !== null} onClose={() => setConfirmDeleteId(null)} title="Xác nhận xoá">
+                        <div className="text-center space-y-6 pt-4">
+                            <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-2 text-rose-500"><Icons.Trash size={28} /></div>
+                            <p className="text-stone-500 text-base font-medium">Bạn có chắc chắn muốn xóa khoản chi này không?<br/>Hành động này không thể hoàn tác.</p>
+                            <div className="flex gap-4 justify-center">
+                                <button onClick={() => setConfirmDeleteId(null)} className="px-8 py-4 bg-stone-100 text-stone-600 rounded-full font-black text-xs uppercase tracking-widest hover:bg-stone-200 transition-all">Hủy</button>
+                                <button onClick={() => { onDeleteTask(confirmDeleteId); setConfirmDeleteId(null); }} className="px-8 py-4 bg-rose-500 text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-200">Xóa luôn</button>
+                            </div>
+                        </div>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const PlannerTasks = ({ tasks, onAddTask, onToggleTask, onDeleteTask }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [title, setTitle] = useState(""); const [cat, setCat] = useState("Đặt tiệc cưới"); const [cost, setCost] = useState("");
+            const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+            // --- Pagination State ---
+            const [pendingPage, setPendingPage] = useState(1);
+            const [donePage, setDonePage] = useState(1);
+            const pendingPerPage = 5; 
+            const donePerPage = 3;
+            
+            const pendingListRef = useRef(null);
+            const doneListRef = useRef(null);
+
+            const handleAdd = () => { 
+                if (title.trim()) { 
+                    onAddTask({ title: title.trim(), tag: cat, status: "pending", cost: utils.parseInput(cost), paid: 0, id: Date.now() }); 
+                    setTitle(""); setCost(""); setIsOpen(false); 
+                    setPendingPage(1); 
+                } 
+            };
+
+            const pending = tasks?.filter(t => t.status !== 'done') || [];
+            const done = tasks?.filter(t => t.status === 'done') || [];
+
+            // Calculate Pagination
+            const totalPendingPages = Math.ceil(pending.length / pendingPerPage) || 1;
+            const currentPending = pending.slice((pendingPage - 1) * pendingPerPage, pendingPage * pendingPerPage);
+
+            const totalDonePages = Math.ceil(done.length / donePerPage) || 1;
+            const currentDone = done.slice((donePage - 1) * donePerPage, donePage * donePerPage);
+
+            useEffect(() => { if (pendingPage > totalPendingPages) setPendingPage(totalPendingPages); }, [pending.length]);
+            useEffect(() => { if (donePage > totalDonePages) setDonePage(totalDonePages); }, [done.length]);
+            
+            // Scroll Effects
+            useEffect(() => { if(pendingListRef.current && pendingPage > 1) pendingListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [pendingPage]);
+            useEffect(() => { if(doneListRef.current && donePage > 1) doneListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [donePage]);
+
+            return (
+                <div className="max-w-6xl mx-auto space-y-8 animate-in text-stone-700 text-left px-2 md:px-0">
+                    <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+                         <div className="text-left"><h3 className="text-3xl font-title font-bold text-stone-700 uppercase tracking-tighter">Danh sách công việc</h3><p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">{pending.length} việc cần làm</p></div>
+                         <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"><Icons.Plus size={12} /></span> Thêm việc mới</button>
+                    </div>
+
+                    {/* Pending List - UPDATED: Added key={pendingPage} and className="animate-in" */}
+                    <div className="space-y-4 animate-in" key={pendingPage} ref={pendingListRef}>
+                        {pending.length > 0 ? currentPending.map((t) => (
+                            <div key={t.id || t.title} onClick={() => onToggleTask(t.id)} className="group p-6 bg-white rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all cursor-pointer flex items-center gap-6 relative">
+                                <div className="w-8 h-8 rounded-xl border-2 border-stone-200 group-hover:border-stone-400 group-hover:bg-stone-50 transition-all shrink-0"></div>
+                                <div className="flex-1"><h4 className="font-bold text-stone-800 text-lg leading-tight uppercase">{t.title}</h4><span className="inline-block mt-2 text-[10px] font-black uppercase tracking-wider text-stone-400">{t.tag}</span></div>
+                                <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(t.id); }} className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all opacity-100 md:opacity-0 group-hover:opacity-100 absolute top-4 right-4 md:relative md:top-0 md:right-0"><Icons.Trash size={20} /></button>
+                            </div>
+                        )) : <div className="py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><p className="text-stone-400 font-bold uppercase text-sm tracking-widest">Mọi việc đã hoàn tất! ✨</p></div>}
+                    </div>
+
+                    {/* Pending Pagination */}
+                    {totalPendingPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 pt-2">
+                            <button onClick={() => setPendingPage(prev => Math.max(prev - 1, 1))} disabled={pendingPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
+                            <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {pendingPage} / {totalPendingPages}</span>
+                            <button onClick={() => setPendingPage(prev => Math.min(prev + 1, totalPendingPages))} disabled={pendingPage === totalPendingPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
+                        </div>
+                    )}
+
+                    {/* Done List - UPDATED: Added key={donePage} and className="animate-in" to the list container */}
+                    {done.length > 0 && (
+                        <div className="pt-10 opacity-60 hover:opacity-100 transition-opacity duration-300" ref={doneListRef}>
+                            <h4 className="mb-6 text-xs font-black uppercase tracking-widest text-stone-400">Đã hoàn thành ({done.length})</h4>
+                            <div className="space-y-3 animate-in" key={donePage}>
+                                {currentDone.map((t) => (
+                                <div key={t.id || t.title} className="p-5 bg-stone-50 rounded-[1.5rem] border border-stone-100 flex items-center justify-between gap-4 text-stone-400 transition-colors">
+                                    <div className="flex items-center gap-5 cursor-pointer flex-1" onClick={() => onToggleTask(t.id)}>
+                                        <div className="w-8 h-8 rounded-xl bg-stone-300 flex items-center justify-center text-white shrink-0"><Icons.Check size={16} /></div>
+                                        <h4 className="text-base font-bold line-through uppercase">{t.title}</h4>
+                                    </div>
+                                    <button onClick={() => onToggleTask(t.id)} className="group/undo flex items-center gap-2 px-4 py-2 bg-white border border-stone-100 rounded-full shadow-sm hover:bg-stone-100 hover:border-stone-300 transition-all shrink-0" title="Hoàn tác"><Icons.Undo size={14} className="text-stone-400 group-hover/undo:text-stone-600" /><span className="text-[10px] font-black uppercase tracking-widest text-stone-400 group-hover/undo:text-stone-600 hidden sm:inline">Hoàn tác</span></button>
+                                </div>
+                            ))}</div>
+
+                            {/* Done Pagination */}
+                            {totalDonePages > 1 && (
+                                <div className="flex justify-center items-center gap-4 pt-4">
+                                    <button onClick={() => setDonePage(prev => Math.max(prev - 1, 1))} disabled={donePage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
+                                    <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {donePage} / {totalDonePages}</span>
+                                    <button onClick={() => setDonePage(prev => Math.min(prev + 1, totalDonePages))} disabled={donePage === totalDonePages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Công việc mới">
+                        <div className="space-y-6 pt-2">
+                            <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Tên công việc</label><input type="text" value={title} onChange={e=>setTitle(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner uppercase" placeholder="VD: ĐẶT HOA CƯỚI" autoFocus /></div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Phân loại</label><div className="relative"><select value={cat} onChange={e=>setCat(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl text-base font-bold uppercase appearance-none focus:outline-none focus:border-stone-400 focus:bg-white transition-all shadow-inner"><option value="Đặt tiệc cưới">Tiệc cưới</option><option value="Chụp ảnh">Chụp ảnh</option><option value="Trang phục">Trang phục</option><option value="Khác">Khác</option></select><div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={16} className="rotate-90" /></div></div></div>
+                                <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Dự chi (VNĐ)</label><input type="text" value={cost} onChange={e=>setCost(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white transition-all text-base font-bold shadow-inner" placeholder="0" /></div>
+                            </div>
+                            <div className="pt-8 border-t border-stone-50"><button onClick={handleAdd} className="w-full py-5 bg-stone-800 text-white rounded-full font-black uppercase text-sm tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={16} strokeWidth={3}/> Lưu lại</button></div>
+                        </div>
+                    </Modal>
+
+                    <Modal isOpen={confirmDeleteId !== null} onClose={() => setConfirmDeleteId(null)} title="Xác nhận xoá">
+                        <div className="text-center space-y-6 pt-4">
+                            <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-2 text-rose-500"><Icons.Trash size={28} /></div>
+                            <p className="text-stone-500 text-base font-medium">Bạn có chắc chắn muốn xóa công việc này không?<br/>Hành động này không thể hoàn tác.</p>
+                            <div className="flex gap-4 justify-center">
+                                <button onClick={() => setConfirmDeleteId(null)} className="px-8 py-4 bg-stone-100 text-stone-600 rounded-full font-black text-xs uppercase tracking-widest hover:bg-stone-200 transition-all">Hủy</button>
+                                <button onClick={() => { onDeleteTask(confirmDeleteId); setConfirmDeleteId(null); }} className="px-8 py-4 bg-rose-500 text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-200">Xóa luôn</button>
+                            </div>
+                        </div>
+                    </Modal>
+                </div>
+            );
+        };
+
+        const PlannerGuests = ({ guests, onAddGuest, onDeleteGuest }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            const [name, setName] = useState(""); const [rel, setRel] = useState("Bạn bè"); const [phone, setPhone] = useState("");
+            const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+            
+            // --- Pagination State ---
+            const [currentPage, setCurrentPage] = useState(1);
+            const itemsPerPage = 10;
+            const listRef = useRef(null);
+
+            // Reset page if needed when items deleted
+            useEffect(() => {
+                const maxPage = Math.ceil((guests?.length || 0) / itemsPerPage) || 1;
+                if (currentPage > maxPage) setCurrentPage(maxPage);
+            }, [guests?.length]);
+            
+            // Scroll top when page changes
+            useEffect(() => {
+                if(listRef.current && currentPage > 1) listRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, [currentPage]);
+
+            const handleAdd = () => { 
+                if (name.trim()) { 
+                    onAddGuest({ name: name.trim(), relationship: rel, phone, id: Date.now() }); 
+                    setName(""); setPhone(""); setIsOpen(false); 
+                    setCurrentPage(1); 
+                } 
+            };
+
+            // Calculate paginated data
+            const indexOfLastItem = currentPage * itemsPerPage;
+            const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+            const currentGuests = guests?.slice(indexOfFirstItem, indexOfLastItem);
+            const totalPages = Math.ceil((guests?.length || 0) / itemsPerPage);
+
+            const relationshipColors = { "Bạn bè": "bg-blue-50 text-blue-600", "Gia đình": "bg-rose-50 text-rose-600", "Đồng nghiệp": "bg-purple-50 text-purple-600", "Khác": "bg-stone-50 text-stone-600" };
+
+            return (
+                <div className="max-w-6xl mx-auto space-y-8 animate-in px-2 md:px-0">
+                    <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+                         <div className="text-left w-full md:w-auto"><h3 className="text-3xl font-title font-bold text-stone-700 uppercase tracking-tighter">Danh sách khách mời</h3><p className="text-xs font-bold text-stone-400 uppercase tracking-widest mt-1">Tổng cộng: <span className="text-stone-700">{guests?.length || 0}</span> người</p></div>
+                         <button onClick={() => setIsOpen(true)} className="group w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-stone-800 text-white rounded-full text-xs font-black uppercase tracking-widest hover:bg-stone-700 transition-all active:scale-95 shadow-xl hover:shadow-2xl"><span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"><Icons.Plus size={12} /></span> Thêm khách mới</button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in" key={currentPage} ref={listRef}>
+                        {guests?.length === 0 ? <div className="col-span-full py-24 text-center border-2 border-dashed border-stone-200 rounded-[2.5rem] bg-white/50"><div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-400 shadow-inner"><Icons.Users size={32} /></div><p className="text-stone-400 font-bold uppercase text-xs tracking-widest">Danh sách trống</p><button onClick={() => setIsOpen(true)} className="mt-3 text-sm font-black underline uppercase text-stone-600 hover:text-stone-900 transition-colors">Thêm khách đầu tiên</button></div> : currentGuests?.map((g) => (
+                            <div key={g.id} className="group bg-white p-6 rounded-[2rem] border border-stone-100 hover:border-stone-300 hover:shadow-lg transition-all flex items-center justify-between cursor-default relative">
+                                <div className="flex items-center gap-5">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-lg font-black uppercase shadow-inner shrink-0 ${relationshipColors[g.relationship] || 'bg-stone-100 text-stone-500'}`}>{g.name.charAt(0)}</div>
+                                    <div className="text-left"><h4 className="font-bold text-stone-700 text-lg leading-tight uppercase">{g.name}</h4><div className="flex items-center gap-2 mt-2 flex-wrap"><span className="text-[10px] font-black uppercase tracking-wider text-stone-400 border border-stone-100 px-3 py-1 rounded-lg bg-stone-50">{g.relationship}</span>{g.phone && <span className="text-[11px] font-bold text-stone-400 tabular-nums tracking-wide">{g.phone}</span>}</div></div>
+                                </div>
+                                <button onClick={() => setConfirmDeleteId(g.id)} className="w-10 h-10 flex items-center justify-center rounded-full text-stone-300 hover:bg-rose-50 hover:text-rose-500 transition-all opacity-100 md:opacity-0 group-hover:opacity-100 absolute top-4 right-4 md:relative md:top-0 md:right-0"><Icons.Trash size={20} /></button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Pagination UI */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-4 pt-6 pb-4">
+                            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} className="rotate-180" /></button>
+                            <span className="text-xs font-black uppercase tracking-widest text-stone-400">Trang {currentPage} / {totalPages}</span>
+                            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"><Icons.ChevronRight size={16} /></button>
+                        </div>
+                    )}
+                    
+                    <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Thêm khách mời">
+                        <div className="space-y-6 pt-2">
+                            <div className="space-y-5 text-left">
+                                <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Họ và tên</label><input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="NHẬP TÊN KHÁCH MỜI..." autoFocus /></div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Mối quan hệ</label><div className="relative"><select value={rel} onChange={e => setRel(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl appearance-none font-bold text-base text-stone-700 focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all uppercase"><option value="Bạn bè">Bạn bè</option><option value="Gia đình">Gia đình</option><option value="Đồng nghiệp">Đồng nghiệp</option><option value="Khác">Khác</option></select><div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={16} className="rotate-90" /></div></div></div>
+                                    <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2.5 ml-1">Số điện thoại</label><input type="text" value={phone} onChange={e => setPhone(utils.formatInput(e.target.value))} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 tabular-nums tracking-wider" placeholder="09..." /></div>
+                                </div>
+                            </div>
+                            <div className="pt-8 border-t border-stone-50"><button onClick={handleAdd} className="w-full py-5 bg-stone-800 text-white rounded-full font-black uppercase text-sm tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3"><Icons.Plus size={16} strokeWidth={3} /> Lưu khách mời</button></div>
+                        </div>
+                    </Modal>
+
+                    <Modal isOpen={confirmDeleteId !== null} onClose={() => setConfirmDeleteId(null)} title="Xác nhận xoá">
+                        <div className="text-center space-y-6 pt-4">
+                            <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-2 text-rose-500"><Icons.Trash size={28} /></div>
+                            <p className="text-stone-500 text-base font-medium">Bạn có chắc chắn muốn xóa khách mời này không?<br/>Hành động này không thể hoàn tác.</p>
+                            <div className="flex gap-4 justify-center">
+                                <button onClick={() => setConfirmDeleteId(null)} className="px-8 py-4 bg-stone-100 text-stone-600 rounded-full font-black text-xs uppercase tracking-widest hover:bg-stone-200 transition-all">Hủy</button>
+                                <button onClick={() => { onDeleteGuest(confirmDeleteId); setConfirmDeleteId(null); }} className="px-8 py-4 bg-rose-500 text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-200">Xóa luôn</button>
+                            </div>
+                        </div>
+                    </Modal>
+                </div>
+            );
+        };
+
+        // --- NEW: Mobile Bottom Navigation Component ---
+        const MobileNav = ({ activeTab, onNavigate }) => (
+            <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-stone-200 p-3 md:hidden z-50 pb-safe">
+                <div className="flex justify-around items-center">
+                    {[{id: 'home', icon: Icons.Home, label: 'Home'}, {id: 'planner', icon: Icons.Layout, label: 'Planner'}, {id: 'invitation', icon: Icons.Link, label: 'Thiệp'}, {id: 'vendors', icon: Icons.Star, label: 'Dịch vụ'}, {id: 'account', icon: Icons.User, label: 'Tài khoản'}].map(item => (
+                        <button key={item.id} onClick={() => onNavigate(item.id)} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${activeTab === item.id ? 'text-stone-800 bg-stone-100' : 'text-stone-400'}`}>
+                            <item.icon size={24} fill={activeTab === item.id ? "currentColor" : "none"} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+                            <span className="text-[10px] font-black uppercase tracking-wider">{item.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
+        );
 
-            <div className="px-1 md:px-0 animate-in">
-                {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={userData.tasks.filter(t=>t.status==='done').length} totalTasks={userData.tasks.length} guestCount={userData.guests.length} budgetLimit={userData.budgetLimit} role={userData.profile?.role} activities={userData.activities} onInvite={handleInvite} onEditBudget={()=>{setTempBudget(utils.formatInput(userData.budgetLimit));setIsBudgetOpen(true)}} onOpenGuests={()=>setSubTab('guests')} />}
-                {subTab === 'tasks' && <PlannerTasks tasks={userData.tasks} onAddTask={onAddTask} onToggleTask={onToggleTask} onDeleteTask={onDeleteTask} />}
-                {subTab === 'budget' && <PlannerBudget tasks={userData.tasks} onAddExpense={onAddTask} onDeleteTask={onDeleteTask} />}
-                {subTab === 'guests' && <PlannerGuests guests={userData.guests} onAddGuest={onAddGuest} onDeleteGuest={onDeleteGuest} />}
+        // --- NEW: Account View Component ---
+        const AccountView = ({ user, firebase }) => {
+            const [data, setData] = useState({ name: "", role: "Cô dâu", partnerName: "", date: "", location: "", budget: "" });
+            const [loading, setLoading] = useState(true);
+            const [msg, setMsg] = useState("");
+
+            useEffect(() => {
+                const init = async () => {
+                    if (!user) return;
+                    try {
+                        const db = firebase.db;
+                        const profileRef = firebase.doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
+                        const pSnap = await firebase.getDoc(profileRef);
+                        if (pSnap.exists()) {
+                            const p = pSnap.data();
+                            let b = "";
+                            if (p.weddingId) {
+                                const wSnap = await firebase.getDoc(firebase.doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', p.weddingId));
+                                if (wSnap.exists()) {
+                                    const limit = wSnap.data().budgetLimit;
+                                    b = limit ? utils.formatInput(limit) : "";
+                                }
+                            }
+                            setData({
+                                name: p.name || user.displayName || "",
+                                role: p.role || "Cô dâu",
+                                partnerName: p.partnerName || "",
+                                date: p.weddingDate || "",
+                                location: p.location || "",
+                                budget: b
+                            });
+                        }
+                    } catch (e) { console.error(e); }
+                    setLoading(false);
+                };
+                init();
+            }, [user, firebase]);
+
+            const handleSave = async () => {
+                setMsg("Đang lưu...");
+                try {
+                    const db = firebase.db;
+                    const profileRef = firebase.doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
+                    await firebase.updateDoc(profileRef, {
+                        name: data.name,
+                        role: data.role,
+                        partnerName: data.partnerName,
+                        weddingDate: data.date,
+                        location: data.location
+                    });
+                    
+                    const pSnap = await firebase.getDoc(profileRef);
+                    const wid = pSnap.data().weddingId;
+                    if(wid) {
+                        await firebase.updateDoc(firebase.doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', wid), {
+                            budgetLimit: utils.parseInput(data.budget)
+                        });
+                    }
+                    setMsg("Đã cập nhật thành công!");
+                    setTimeout(() => setMsg(""), 3000);
+                } catch (e) { setMsg("Lỗi khi lưu."); }
+            };
+
+            if (loading) return <div className="pt-40 text-center"><div className="w-8 h-8 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin mx-auto"></div></div>;
+
+            return (
+                <div className="pt-32 pb-32 px-4 max-w-2xl mx-auto animate-in">
+                    <div className="text-center mb-12">
+                        <div className="w-24 h-24 bg-stone-200 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl font-title font-bold text-stone-500 uppercase shadow-inner border-4 border-white">
+                            {data.name ? data.name.charAt(0) : (user.email ? user.email.charAt(0).toUpperCase() : '?')}
+                        </div>
+                        <h2 className="text-3xl font-title font-bold text-stone-800 uppercase tracking-wide mb-2">{data.name}</h2>
+                        <p className="text-stone-400 text-sm font-medium tracking-wide">{user.email}</p>
+                    </div>
+
+                    <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-stone-100 shadow-xl shadow-stone-200/50 space-y-8">
+                        <div className="flex items-center gap-3 border-b border-stone-100 pb-4">
+                            <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-500"><Icons.Edit size={14}/></div>
+                            <h3 className="text-lg font-bold text-stone-700 uppercase tracking-widest">Thông tin đám cưới</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Vai trò</label>
+                                <div className="relative">
+                                    <select value={data.role} onChange={e => setData({...data, role: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none appearance-none border border-transparent focus:border-stone-200 focus:bg-white transition-all uppercase text-sm">
+                                        <option value="Cô dâu">Cô dâu</option>
+                                        <option value="Chú rể">Chú rể</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><Icons.ChevronRight size={14} className="rotate-90" /></div>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Tên người ấy</label>
+                                <input type="text" value={data.partnerName} onChange={e => setData({...data, partnerName: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase placeholder:text-stone-300" placeholder="Chưa nhập" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Ngày cưới</label>
+                            <input type="date" value={data.date} onChange={e => setData({...data, date: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase" />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Địa điểm tổ chức</label>
+                            <input type="text" value={data.location} onChange={e => setData({...data, location: e.target.value})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase placeholder:text-stone-300" placeholder="Chưa nhập" />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-3 ml-1">Ngân sách dự kiến (VNĐ)</label>
+                            <input type="text" value={data.budget} onChange={e => setData({...data, budget: utils.formatInput(e.target.value)})} className="w-full p-4 bg-stone-50 rounded-2xl font-bold text-stone-700 outline-none border border-transparent focus:border-stone-200 focus:bg-white transition-all text-sm uppercase placeholder:text-stone-300" placeholder="0" />
+                        </div>
+
+                        <div className="pt-4">
+                            <button onClick={handleSave} className="w-full py-5 bg-stone-800 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-stone-700 active:scale-95 transition-all shadow-lg">{msg || "Lưu thay đổi"}</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- NEW: Footer Component ---
+        const Footer = () => (
+            <footer className="bg-white/60 backdrop-blur-md border-t border-stone-100 py-12 mt-16 mb-24 md:mb-0">
+                <div className="max-w-6xl mx-auto px-6">
+                    <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8">
+                        {/* Left: Brand Info */}
+                        <div className="text-center md:text-left flex flex-col items-center md:items-start">
+                            <div className="mb-3">
+                                <Logo /> 
+                            </div>
+                            <p className="text-stone-500 text-sm max-w-xs font-medium leading-relaxed">
+                                Nền tảng lập kế hoạch đám cưới tinh tế, giúp bạn và người ấy đồng hành trên hành trình hạnh phúc.
+                            </p>
+                        </div>
+                        
+                        {/* Right: Links & Copyright */}
+                        <div className="flex flex-col items-center md:items-end gap-6">
+                            <div className="flex flex-wrap justify-center md:justify-end gap-6 md:gap-8">
+                                {['Về chúng tôi', 'Điều khoản', 'Riêng tư', 'Liên hệ'].map(item => (
+                                    // UPDATED: Removed 'uppercase', adjusted font weight slightly for readability
+                                    <a key={item} href="#" className="text-sm font-bold tracking-wide text-stone-500 hover:text-stone-800 transition-colors">
+                                        {item}
+                                    </a>
+                                ))}
+                            </div>
+                            <div className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">
+                                © 2024 Weddy. All rights reserved.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        );
+
+        // --- 6. LOGIC WRAPPER FOR PLANNER ---
+        const FullPlannerApp = ({ currentUser, firebase }) => {
+            const [subTab, setSubTab] = useState('overview');
+            
+            // FIX: Tách biệt state để tránh conflict dữ liệu gây vòng lặp Wizard
+            const [userProfile, setUserProfile] = useState(null);
+            const [weddingData, setWeddingData] = useState(null);
+            
+            const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+            const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
+            const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+            const [isInviteShowModal, setIsInviteShowModal] = useState(false);
+            const [inviteCode, setInviteCode] = useState("");
+            const [joinInput, setJoinInput] = useState("");
+            const [tempBudget, setTempBudget] = useState("");
+
+            // 1. Chỉ lắng nghe Profile User
+            useEffect(() => {
+                if (!firebase || !currentUser) return;
+                const { db, doc, onSnapshot, setDoc } = firebase;
+                const profileRef = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
+
+                const unsub = onSnapshot(profileRef, async (snap) => {
+                    if (!snap.exists()) {
+                        // Khởi tạo profile nếu chưa có
+                        await setDoc(profileRef, { 
+                            email: currentUser.email, 
+                            name: currentUser.displayName, 
+                            weddingId: null, 
+                            isSetupComplete: false 
+                        });
+                    } else {
+                        const data = snap.data();
+                        setUserProfile(data);
+                        
+                        // Tự động tạo weddingId nếu chưa có
+                        if (!data.weddingId) {
+                             const newWid = currentUser.uid;
+                             await firebase.updateDoc(profileRef, { weddingId: newWid });
+                        }
+                    }
+                }, (err) => console.error("Profile Error:", err));
+
+                return () => unsub();
+            }, [firebase, currentUser]);
+
+            // 2. Chỉ lắng nghe Wedding Data (khi đã có weddingId từ profile)
+            useEffect(() => {
+                if (!firebase || !userProfile?.weddingId) return;
+                const { db, doc, onSnapshot, getDoc, setDoc } = firebase;
+                const wid = userProfile.weddingId;
+                
+                // Đảm bảo document Wedding tồn tại
+                const ensureWedding = async () => {
+                     const wRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', wid);
+                     const wSnap = await getDoc(wRef);
+                     if (!wSnap.exists()) {
+                        await setDoc(wRef, { 
+                            tasks: [], guests: [], activities: [], 
+                            budgetLimit: 300000000, owners: [currentUser.uid] 
+                        });
+                     }
+                };
+                ensureWedding();
+
+                const unsub = onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', wid), (snap) => {
+                    if (snap.exists()) {
+                        setWeddingData({ ...snap.data(), weddingId: wid });
+                    }
+                });
+                return () => unsub();
+            }, [firebase, userProfile?.weddingId]); 
+
+            // 3. Gộp dữ liệu an toàn
+            const userData = useMemo(() => {
+                if (!userProfile || !weddingData) return null;
+                return { ...weddingData, profile: userProfile };
+            }, [userProfile, weddingData]);
+
+
+            if (!userData) return <div className="h-screen flex items-center justify-center text-stone-400"><div className="w-8 h-8 border-4 border-stone-300 border-t-transparent rounded-full animate-spin"></div></div>;
+
+            // Kiểm tra chặt chẽ trạng thái hoàn tất
+           // --- BẮT ĐẦU ĐOẠN CẦN THAY THẾ ---
+            
+            // Kiểm tra trạng thái hoàn tất thiết lập
+            if (!userData.profile?.isSetupComplete) {
+                const onWiz = async (w) => {
+                    const { db, doc, updateDoc } = firebase;
+                    const pref = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
+                    
+                    // Cập nhật profile User + Thêm trường vibes (Gu thẩm mỹ)
+                    await updateDoc(pref, { 
+                        role: w.role, 
+                        partnerName: w.partnerName || "", 
+                        weddingDate: w.weddingDate || "",
+                        engagementDate: w.engagementDate || "",
+                        location: w.location || "",
+                        venue: w.venue || "",
+                        preWedding: w.preWedding || "",
+                        
+                        // [QUAN TRỌNG] Lưu mảng style vào đây để sau này AI chạy thuật toán
+                        vibes: w.vibes || [], 
+                        
+                        isSetupComplete: true, 
+                        name: currentUser.displayName || userData.profile.name 
+                    });
+
+                    // Cập nhật ngân sách vào Wedding Data chung
+                    if (userData.weddingId) {
+                        await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { 
+                            budgetLimit: w.budget || 300000000 
+                        });
+                    }
+                };
+                
+                const onSkip = async () => {
+                    const { db, doc, updateDoc } = firebase;
+                    const pref = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
+                    await updateDoc(pref, { isSetupComplete: true });
+                };
+
+                return <GettingStartedWizard onComplete={onWiz} onSkip={onSkip} />;
+            }
+            
+            // --- KẾT THÚC ĐOẠN CẦN THAY THẾ ---
+            
+            const updateDB = async (k, v) => { 
+                if (!userData.weddingId) return;
+                await firebase.updateDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'public', 'data', 'weddings', userData.weddingId), { [k]: v }); 
+            };
+            const addAct = async (t) => { const n = { text: t, time: new Date().toLocaleTimeString('vi-VN') }; await updateDB('activities', [n, ...(userData.activities || [])].slice(0, 15)); };
+            
+            const onAddTask = async (t) => { 
+                const newTask = { ...t, paidBy: userData.profile?.role, id: t.id || Date.now() };
+                const nt = [newTask, ...(userData.tasks || [])]; 
+                await updateDB('tasks', nt); await addAct(`Thêm: ${t.title}`); 
+            };
+            
+            const onToggleTask = async (id) => { 
+                const nt = (userData.tasks || []).map(t => {
+                    if ((t.id && t.id === id) || (!t.id && t === id)) { 
+                         return t.id === id ? { ...t, status: t.status === 'done' ? 'pending' : 'done' } : t;
+                    }
+                    return t;
+                });
+                const task = nt.find(t => t.id === id);
+                if(task) await addAct(`Cập nhật: ${task.title}`);
+                await updateDB('tasks', nt); 
+            };
+            
+            const onDeleteTask = async (id) => { 
+                const nt = (userData.tasks || []).filter(t => t.id !== id); 
+                await updateDB('tasks', nt); await addAct(`Xóa 1 công việc`); 
+            };
+            
+            const onAddGuest = async (g) => { 
+                const ng = [g, ...(userData.guests || [])]; 
+                await updateDB('guests', ng); await addAct(`Khách mới: ${g.name}`); 
+            };
+            
+            const onDeleteGuest = async (id) => { 
+                const ng = (userData.guests || []).filter(x => x.id !== id); 
+                await updateDB('guests', ng); await addAct(`Xóa khách`); 
+            };
+
+            const handleInvite = async () => {
+                const code = Math.floor(100000 + Math.random() * 900000).toString();
+                await firebase.setDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'public', 'data', 'invites', code), { weddingId: userData.weddingId, createdAt: Date.now() });
+                setInviteCode(code); setIsInviteShowModal(true);
+            };
+
+            const joinSync = async () => {
+                const { db, doc, getDoc, updateDoc } = firebase;
+                const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'invites', joinInput.toUpperCase()));
+                if (snap.exists()) {
+                    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main'), { weddingId: snap.data().weddingId });
+                    setIsJoinModalOpen(false); alert("Đồng bộ Planner thành công!");
+                } else alert("Mã không hợp lệ.");
+            };
+
+            const spentAmount = (userData.tasks || []).reduce((acc, t) => acc + (t.paid ?? (t.status === 'done' ? t.cost : 0)), 0);
+
+            return (
+                <div className="pt-24 pb-32 md:pt-32 container mx-auto px-4 md:px-12 max-w-7xl animate-in text-stone-700">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-6 px-2 md:px-0 text-left font-bold uppercase">
+                            <div className="flex-1 w-full text-stone-600 text-left font-bold uppercase font-black uppercase font-bold text-left font-black uppercase font-bold"><span className="text-[10px] tracking-[0.3em] text-[#B5A896] mb-2 block">Planner của {userData.profile?.name || 'bạn'}</span><h2 className="text-3xl md:text-5xl font-title font-bold tracking-tighter">Weddy Planner</h2></div>
+                        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto text-left font-bold uppercase font-black uppercase font-bold">
+                            <div className="bg-white/70 p-5 md:p-6 rounded-[2.5rem] border border-stone-100 shadow-sm flex items-center gap-6 flex-1 min-w-0 sm:min-w-[280px] font-bold uppercase font-black uppercase font-bold">
+                                <div className="w-10 h-10 md:w-12 md:h-12 bg-rose-100/40 rounded-full flex items-center justify-center text-rose-300 shrink-0 shadow-inner"><Icons.Heart size={20} fill="currentColor"/></div>
+                                <div className="flex-1 text-sm overflow-hidden text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold text-left"><p className="text-[9px] font-black tracking-widest text-stone-300 mb-1 text-left uppercase font-black">Ngày trọng đại</p><div className="flex items-baseline gap-2 md:gap-3 font-bold text-left font-bold uppercase font-black uppercase font-bold font-bold uppercase font-black uppercase font-bold uppercase font-black uppercase font-bold text-left"><p className="text-base md:text-xl font-bold text-stone-600 truncate text-left">{userData.profile?.weddingDate || 'Chưa đặt'}</p><p className="text-[10px] font-bold text-rose-400 whitespace-nowrap uppercase text-left">{utils.getDaysLeft(userData.profile?.weddingDate)}</p></div></div>
+                            </div>
+                            <button onClick={() => setIsJoinModalOpen(true)} className="bg-stone-500 text-white p-5 md:p-6 rounded-[2.5rem] shadow-xl hover:bg-stone-600 active:scale-95 flex items-center justify-center gap-4 transition-all shrink-0 font-bold uppercase font-black uppercase font-bold uppercase font-black font-bold uppercase font-black uppercase font-bold"><Icons.Link size={20}/><span className="text-xs">Nhập mã kết nối</span></button>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-center mb-10 md:mb-16 -mx-4 px-4 md:mx-0 md:px-0 font-bold uppercase font-black uppercase font-bold">
+                        <div className="bg-white/40 p-1.5 rounded-full flex w-full max-w-6xl border border-white/60 backdrop-blur-sm overflow-x-auto hide-scrollbar font-bold uppercase font-black uppercase font-bold">
+                            {[{ id: 'overview', label: 'Tổng quan', icon: Icons.Layout }, { id: 'tasks', label: 'Công việc', icon: Icons.Check }, { id: 'budget', label: 'Ngân sách', icon: Icons.DollarSign }, { id: 'guests', label: 'Khách mời', icon: Icons.Users }].map((tab) => (
+                                <button key={tab.id} onClick={() => setSubTab(tab.id)} className={`flex-1 flex items-center justify-center gap-2 px-6 md:px-10 py-4 md:py-5 rounded-full text-[10px] md:text-sm tracking-widest transition-all whitespace-nowrap ${subTab === tab.id ? 'bg-stone-500 text-white shadow-xl scale-105 font-bold uppercase' : 'text-stone-400 hover:text-stone-700 hover:bg-white/50 font-bold uppercase font-black uppercase font-bold'}`}><tab.icon size={16} strokeWidth={3} className="md:w-[18px] md:h-[18px]" />{tab.label}</button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="px-1 md:px-0">
+                        <div key={subTab} className="animate-in">
+                            {subTab === 'overview' && <PlannerOverview spentAmount={spentAmount} completedTasks={userData.tasks.filter(t=>t.status==='done').length} totalTasks={userData.tasks.length} guestCount={userData.guests.length} budgetLimit={userData.budgetLimit} role={userData.profile?.role} weddingDate={userData.profile?.weddingDate} activities={userData.activities} onInvite={handleInvite} onEditBudget={() => { setTempBudget(utils.formatInput(userData.budgetLimit)); setIsBudgetModalOpen(true); }} onOpenGuests={() => setIsGuestModalOpen(true)} />}
+                            {subTab === 'tasks' && <PlannerTasks tasks={userData.tasks} onAddTask={onAddTask} onToggleTask={onToggleTask} onDeleteTask={onDeleteTask} />}
+                            {subTab === 'budget' && <PlannerBudget tasks={userData.tasks} onAddExpense={onAddTask} onDeleteTask={onDeleteTask} />}
+                            {subTab === 'guests' && <PlannerGuests guests={userData.guests} onAddGuest={onAddGuest} onDeleteGuest={onDeleteGuest} />}
+                        </div>
+                    </div>
+
+                    <Modal isOpen={isBudgetModalOpen} onClose={() => setIsBudgetModalOpen(false)} title="Ngân sách dự kiến"><div className="space-y-6 pt-4 text-stone-700 text-left font-bold uppercase font-black uppercase font-bold"><input type="text" value={tempBudget} onChange={(e) => setTempBudget(utils.formatInput(e.target.value))} className="w-full p-4 bg-white border border-stone-200 rounded-2xl focus:outline-none focus:border-stone-400 font-bold text-lg text-stone-800 shadow-sm shadow-inner uppercase" placeholder="0" /><button onClick={async () => { const nb = utils.parseInput(tempBudget); if (nb > 0) { await updateDB('budgetLimit', nb); setIsBudgetModalOpen(false); } }} className="w-full py-4 bg-stone-500 text-white rounded-full font-black uppercase text-xs shadow-lg hover:bg-stone-600 transition-all font-bold active:scale-95 uppercase font-black uppercase font-bold">Lưu lại</button></div></Modal>
+                    <Modal isOpen={isGuestModalOpen} onClose={() => setIsGuestModalOpen(false)} title="Khách mời"><PlannerGuests guests={userData.guests} onAddGuest={onAddGuest} onDeleteGuest={onDeleteGuest} /></Modal>
+                    <Modal isOpen={isInviteShowModal} onClose={() => setIsInviteShowModal(false)} title="Mã kết nối"><div className="text-center space-y-6 pt-2 font-bold uppercase font-black uppercase font-bold uppercase font-black"><p className="text-xs text-stone-400 font-black tracking-widest leading-relaxed px-4 uppercase font-black font-black uppercase font-bold">Hãy chia sẻ mã này để đồng bộ Planner.</p><div className="bg-stone-50 p-10 rounded-3xl border-2 border-dashed border-stone-200 font-bold font-black uppercase font-bold"><h2 className="text-5xl font-black tracking-[0.4em] text-stone-700">{inviteCode}</h2></div><button onClick={() => setIsInviteShowModal(false)} className="w-full py-4 bg-stone-500 text-white rounded-full font-black uppercase text-xs shadow-lg font-bold uppercase font-black uppercase font-bold">Đóng</button></div></Modal>
+                    <Modal isOpen={isJoinModalOpen} onClose={() => setIsJoinModalOpen(false)} title="Đồng bộ Planner"><div className="space-y-6 pt-4 text-center font-bold font-medium text-stone-700 uppercase font-black uppercase font-bold uppercase font-black"><p className="text-xs text-stone-400 font-black tracking-widest leading-relaxed px-4 uppercase font-black font-black uppercase font-bold">Nhập mã 6 ký tự nhận được để kết nối.</p><input type="text" value={joinInput} onChange={e=>setJoinInput(e.target.value.toUpperCase())} maxLength={6} className="w-full p-6 bg-stone-50 border-2 border-dashed border-stone-200 rounded-3xl focus:outline-none focus:border-stone-400 text-4xl font-black tracking-[0.4em] text-center text-stone-600 font-bold shadow-inner font-black uppercase font-bold" placeholder="000000" /><button onClick={joinSync} className="w-full py-4 bg-stone-500 text-white rounded-full font-black uppercase text-xs shadow-lg font-bold transition-all active:scale-95 uppercase uppercase font-black uppercase font-bold">Đồng bộ ngay</button></div></Modal>
+                </div>
+            );
+        };
+
+        const HomeView = ({ onNavigate }) => {
+            return (
+                <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center animate-in">
+                    <div className="mb-12">
+                        <div className="inline-block px-4 py-2 bg-rose-50 rounded-full text-rose-500 text-xs font-black uppercase tracking-widest mb-6">Weddy Planner</div>
+                        <h1 className="text-5xl md:text-7xl font-title font-bold text-stone-800 mb-6 tracking-tighter">
+                            Kế hoạch cưới <br/>
+                            <span className="text-silk">Tinh tế & Hoàn hảo</span>
+                        </h1>
+                        <p className="text-stone-500 max-w-2xl mx-auto text-lg mb-10 leading-relaxed">
+                            Weddy giúp bạn quản lý ngân sách, danh sách khách mời và công việc cần làm cho ngày trọng đại một cách dễ dàng và đồng bộ cùng người ấy.
+                        </p>
+                        <button 
+                            onClick={() => onNavigate('planner')}
+                            className="px-10 py-5 bg-stone-800 text-white rounded-full font-black uppercase tracking-widest shadow-xl hover:bg-stone-700 hover:scale-105 transition-all active:scale-95"
+                        >
+                            Bắt đầu ngay
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                        {[
+                            { title: "Quản lý Ngân sách", desc: "Theo dõi chi tiêu chi tiết, tránh phát sinh ngoài ý muốn.", icon: Icons.DollarSign },
+                            { title: "Danh sách Khách mời", desc: "Lưu trữ thông tin, sắp xếp chỗ ngồi và quản lý thiệp mời.", icon: Icons.Users },
+                            { title: "Đồng bộ Real-time", desc: "Cập nhật tức thì giữa cô dâu và chú rể trên mọi thiết bị.", icon: Icons.Link }
+                        ].map((item, i) => (
+                            <div key={i} className="bg-white/60 p-8 rounded-[2.5rem] border border-stone-100 hover:border-stone-200 transition-all">
+                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm text-stone-600">
+                                    <item.icon />
+                                </div>
+                                <h3 className="text-lg font-title font-bold text-stone-800 mb-2">{item.title}</h3>
+                                <p className="text-sm text-stone-500 leading-relaxed">{item.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )
+        }
+
+        const ComingSoon = ({ title, desc }) => (
+            <div className="pt-32 pb-20 px-4 max-w-7xl mx-auto text-center animate-in min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mb-8 text-stone-300 shadow-inner">
+                    <Icons.Star size={40} />
+                </div>
+                <h2 className="text-3xl md:text-5xl font-title font-bold text-stone-700 mb-4 tracking-tighter uppercase">{title}</h2>
+                <p className="text-stone-400 max-w-md mx-auto text-sm md:text-base font-bold uppercase tracking-widest leading-relaxed mb-8">
+                    {desc}
+                </p>
+                <div className="inline-block px-6 py-3 bg-stone-50 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 border border-stone-100">
+                    Đang phát triển
+                </div>
             </div>
-            <Modal isOpen={isBudgetOpen} onClose={()=>setIsBudgetOpen(false)} title="Ngân sách"><input value={tempBudget} onChange={e=>setTempBudget(utils.formatInput(e.target.value))} className="w-full p-4 border rounded-xl mb-4 font-bold uppercase" /><button onClick={async ()=>{const nb=utils.parseInput(tempBudget); if(nb>0) await updateDB('budgetLimit', nb); setIsBudgetOpen(false);}} className="w-full py-4 bg-stone-500 text-white rounded-full font-bold uppercase text-xs">Lưu</button></Modal>
-            <Modal isOpen={isGuestOpen} onClose={()=>setIsGuestOpen(false)} title="Khách mời"><PlannerGuests guests={userData.guests} onAddGuest={onAddGuest} onDeleteGuest={onDeleteGuest} /></Modal>
-            <Modal isOpen={isInviteOpen} onClose={()=>setIsInviteOpen(false)} title="Mã kết nối"><div className="text-center py-8"><h2 className="text-5xl font-black tracking-widest text-stone-700 mb-4">{inviteCode}</h2><p className="text-stone-400 text-xs uppercase font-bold">Chia sẻ mã này để đồng bộ Planner.</p></div></Modal>
-            <Modal isOpen={isJoinOpen} onClose={()=>setIsJoinOpen(false)} title="Đồng bộ Planner"><div className="text-center py-8"><input value={joinInput} onChange={e=>setJoinInput(e.target.value.toUpperCase())} maxLength={6} className="w-full p-6 bg-stone-50 border-2 border-dashed border-stone-200 rounded-3xl text-4xl font-black tracking-[0.4em] text-center mb-4 uppercase" placeholder="000000" /><button onClick={joinSync} className="w-full py-4 bg-stone-500 text-white rounded-full font-bold uppercase text-xs">Đồng bộ ngay</button></div></Modal>
-        </div>
-    );
-};
+        );
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('home');
+            const [scrolled, setScrolled] = useState(false);
+            const [showLogin, setShowLogin] = useState(false);
+            const [user, setUser] = useState(null);
+            const [notifications, setNotifications] = useState([]);
+            const [showNotifications, setShowNotifications] = useState(false);
+            const firebase = useFirebase();
+            const notificationRef = useRef(null);
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 20);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            useEffect(() => {
+                if (firebase) {
+                    const unsubAuth = firebase.onAuthStateChanged(firebase.auth, (u) => { 
+                        setUser(u); if (u) setShowLogin(false);
+                    });
+                    return () => unsubAuth();
+                }
+            }, [firebase]);
+
+            useEffect(() => {
+                if (firebase && user) {
+                    const { db, doc, onSnapshot } = firebase;
+                    const unsubProfile = onSnapshot(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), (pSnap) => {
+                        if (pSnap.exists() && pSnap.data().weddingId) {
+                            onSnapshot(doc(db, 'artifacts', APP_ID, 'public', 'data', 'weddings', pSnap.data().weddingId), (wSnap) => {
+                                if (wSnap.exists()) setNotifications(wSnap.data().activities || []);
+                            });
+                        }
+                    });
+                    return () => unsubProfile();
+                }
+            }, [firebase, user]);
+
+            useEffect(() => {
+                const handleClickOutside = (e) => { if (notificationRef.current && !notificationRef.current.contains(e.target)) setShowNotifications(false); };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+            }, []);
+
+            const navigateTo = (tab) => { 
+                if (tab !== 'home' && tab !== 'invitation' && tab !== 'vendors' && !user) { setShowLogin(true); return; } 
+                setActiveTab(tab); window.scrollTo({ top: 0, behavior: 'smooth' }); 
+            };
+            
+            const handleGoogleLogin = async () => {
+                const { auth, db, GoogleAuthProvider, signInWithPopup, doc, getDoc, setDoc } = firebase;
+                try {
+                    const result = await signInWithPopup(auth, new GoogleAuthProvider());
+                    const profileRef = doc(db, 'artifacts', APP_ID, 'users', result.user.uid, 'profile', 'main');
+                    if (!(await getDoc(profileRef)).exists()) await setDoc(profileRef, { email: result.user.email, name: result.user.displayName, weddingId: null, isSetupComplete: false });
+                    setActiveTab('planner');
+                } catch (e) { console.error(e); alert("Lỗi đăng nhập Google: " + e.message); }
+            };
+
+            const AuthForm = () => {
+                const [isRegister, setIsRegister] = useState(false);
+                const [email, setEmail] = useState(""); 
+                const [password, setPassword] = useState(""); 
+                const [name, setName] = useState("");
+                const [error, setError] = useState("");
+                const [loading, setLoading] = useState(false);
+
+                const handleSubmit = async () => { 
+                    setError("");
+                    setLoading(true);
+                    try {
+                        if (isRegister) {
+                            if (!name.trim()) throw new Error("Vui lòng nhập họ tên.");
+                            const { user } = await firebase.createUserWithEmailAndPassword(firebase.auth, email, password);
+                            await firebase.setDoc(firebase.doc(firebase.db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { 
+                                email: user.email, 
+                                name: name, 
+                                weddingId: null, 
+                                isSetupComplete: false 
+                            });
+                        } else {
+                            await firebase.signInWithEmailAndPassword(firebase.auth, email, password);
+                        }
+                        setActiveTab('planner'); 
+                    } catch (err) { 
+                        let msg = "Đã có lỗi xảy ra.";
+                        if (err.code === 'auth/invalid-email') msg = "Email không hợp lệ.";
+                        if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') msg = "Sai email hoặc mật khẩu.";
+                        if (err.code === 'auth/email-already-in-use') msg = "Email này đã được đăng ký.";
+                        if (err.code === 'auth/weak-password') msg = "Mật khẩu quá yếu (tối thiểu 6 ký tự).";
+                        if (err.message) msg = err.message;
+                        setError(msg); 
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+
+                return (
+                    <div className="pt-2 animate-in">
+                        <div className="flex bg-stone-100 p-1 rounded-2xl mb-8 relative">
+                            <div className={`absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out transform ${isRegister ? 'translate-x-full' : 'translate-x-0'}`}></div>
+                            <button onClick={() => { setIsRegister(false); setError(""); }} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors ${!isRegister ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>Đăng nhập</button>
+                            <button onClick={() => { setIsRegister(true); setError(""); }} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest relative z-10 transition-colors ${isRegister ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}>Đăng ký</button>
+                        </div>
+
+                        <div className="space-y-5 text-left">
+                            {isRegister && (
+                                <div className="animate-in">
+                                    <label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Họ và tên</label>
+                                    <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="VD: NGUYỄN VĂN A" />
+                                </div>
+                            )}
+                            <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="WEDDY@EXAMPLE.COM" /></div>
+                            <div><label className="block text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2 ml-1">Mật khẩu</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full p-5 bg-stone-50 border border-stone-100 rounded-2xl focus:outline-none focus:border-stone-400 focus:bg-white focus:shadow-md transition-all text-base font-bold text-stone-700 placeholder:text-stone-300 uppercase" placeholder="••••••••" /></div>
+                            {error && <div className="p-3 bg-rose-50 text-rose-500 rounded-xl text-xs font-bold uppercase tracking-wide text-center animate-in"><Icons.X size={12} className="inline mr-1" /> {error}</div>}
+                            <button onClick={handleSubmit} disabled={loading} className="w-full py-5 mt-2 bg-stone-800 text-white rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-stone-700 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">{loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> : (isRegister ? 'Tạo tài khoản' : 'Vào hệ thống')}</button>
+                        </div>
+                        <div className="relative flex py-6 items-center"><div className="flex-grow border-t border-stone-100"></div><span className="flex-shrink-0 mx-4 text-stone-300 text-[9px] font-black uppercase tracking-widest">Hoặc</span><div className="flex-grow border-t border-stone-100"></div></div>
+                        <button onClick={handleGoogleLogin} className="w-full py-5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-sm hover:bg-stone-50 hover:border-stone-300 active:scale-95 transition-all">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Tiếp tục với Google
+                        </button>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen">
+                    <div className="fixed top-2 md:top-4 left-0 w-full z-50 flex justify-center px-2 md:px-4 transition-all duration-500">
+                        <nav className={`flex items-center justify-between px-4 py-2 md:px-6 md:py-2 rounded-full transition-all duration-500 ${scrolled ? 'w-full max-w-5xl bg-white/80 backdrop-blur-2xl border border-white/40 shadow-lg' : 'w-full max-w-6xl bg-white/40 backdrop-blur-md border border-white/10'}`}>
+                            
+                            <div onClick={() => navigateTo('home')}>
+                                <Logo animated={true} />
+                            </div>
+
+                            <div className="hidden md:flex items-center gap-1 font-bold uppercase tracking-widest font-black text-xs">
+                                {[{ id: 'home', label: 'Trang chủ' }, { id: 'planner', label: 'Planner' }, { id: 'invitation', label: 'Thiệp mời' }, { id: 'vendors', label: 'Dịch vụ' }].map((item) => (
+                                    <button key={item.id} onClick={() => navigateTo(item.id)} className={`px-5 py-2.5 rounded-full transition-all uppercase ${activeTab === item.id ? 'bg-stone-800 text-white shadow-lg' : 'text-stone-500 hover:text-stone-900 hover:bg-white/50'}`}>
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="flex items-center gap-3 md:gap-4 font-bold uppercase">
+                                {user && <span onClick={() => navigateTo('account')} className="hidden lg:block text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mr-2 truncate max-w-[120px] cursor-pointer hover:text-stone-600 transition-colors">{user.displayName || user.email}</span>}
+                                {user && (
+                                    <div className="relative" ref={notificationRef}>
+                                        <button onClick={() => setShowNotifications(!showNotifications)} className="w-9 h-9 md:w-10 md:h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors relative"><Icons.Bell size={18} />{notifications.length > 0 && (<span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white"></span>)}</button>
+                                        {showNotifications && (
+                                            <div className="absolute right-0 mt-3 w-[280px] md:w-80 bg-white/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-stone-100 py-6 animate-in zoom-in-95 origin-top-right overflow-hidden z-[60]">
+                                                <div className="px-6 mb-4 flex justify-between items-center text-stone-800 font-bold uppercase"><h4 className="text-[10px] md:text-xs">Thông báo</h4><span className="text-[9px] text-stone-400">{notifications.length} mới</span></div>
+                                                <div className="max-h-96 overflow-y-auto hide-scrollbar px-2 text-stone-600 text-left">
+                                                    {notifications.length > 0 ? notifications.map((n, i) => (
+                                                        <div key={i} className="p-4 rounded-2xl hover:bg-stone-50 transition-colors flex gap-4 items-start cursor-pointer group text-left"><div className="w-8 h-8 bg-stone-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-stone-200 transition-colors shadow-sm"><Icons.Heart size={14} className="text-stone-400 group-hover:text-rose-500 transition-colors" /></div><div className="flex-1"><p className="text-xs font-bold leading-snug">{n.text}</p><p className="text-[9px] font-bold text-stone-300 uppercase mt-1">{n.time}</p></div></div>
+                                                    )) : <div className="py-10 text-center text-stone-300 text-xs italic font-medium">Không có thông báo mới</div>}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                {user ? (
+                                    <>
+                                        <button onClick={() => firebase.signOut(firebase.auth)} className="hidden sm:block px-6 py-2.5 bg-white border border-stone-200 text-stone-600 rounded-full text-[10px] font-black uppercase shadow-sm active:scale-95 transition-all hover:bg-stone-50 hover:border-stone-300">Đăng xuất</button>
+                                        <button onClick={() => firebase.signOut(firebase.auth)} className="sm:hidden w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center text-stone-400 hover:text-stone-800 border border-stone-100 shadow-sm transition-colors"><Icons.LogOut size={16} /></button>
+                                    </>
+                                ) : <button onClick={() => setShowLogin(true)} className="px-6 py-2.5 bg-stone-800 text-white rounded-full text-[10px] font-black uppercase shadow-xl active:scale-95 transition-all hover:bg-stone-700">Đăng nhập</button>}
+                            </div>
+                        </nav>
+                    </div>
+
+                    <main className="pb-safe">
+                        {activeTab === 'home' && <HomeView onNavigate={navigateTo} />}
+                        {activeTab === 'planner' && (user ? <FullPlannerApp currentUser={user} firebase={firebase} /> : <div className="h-screen flex flex-col gap-4 items-center justify-center text-stone-400 p-6 text-center animate-in font-bold uppercase font-black uppercase font-bold"><Icons.Users size={48} className="opacity-10" /><p className="font-medium text-sm text-stone-300 font-bold uppercase tracking-widest uppercase uppercase font-black uppercase font-bold">Vui lòng đăng nhập Planner.</p><button onClick={() => setShowLogin(true)} className="px-8 py-3 bg-stone-500 text-white rounded-full text-xs font-bold uppercase shadow-lg font-bold transition-all active:scale-95 font-bold uppercase font-black uppercase font-bold">Đăng nhập ngay</button></div>)}
+                        {activeTab === 'invitation' && <ComingSoon title="Thiệp Mời Online" desc="Tính năng thiết kế và gửi thiệp mời trực tuyến đang được phát triển." />}
+                        {activeTab === 'vendors' && <ComingSoon title="Dịch Vụ Cưới" desc="Hệ thống kết nối nhà cung cấp dịch vụ uy tín sẽ sớm ra mắt." />}
+                        {activeTab === 'account' && (user ? <AccountView user={user} firebase={firebase} /> : null)}
+                    </main>
+
+                    {/* Footer Component Added Here */}
+                    <Footer />
+
+                    {user && <MobileNav activeTab={activeTab} onNavigate={navigateTo} />}
+
+                    <Modal isOpen={showLogin} onClose={() => setShowLogin(false)} title={null}>
+                        <AuthForm />
+                    </Modal>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
+
