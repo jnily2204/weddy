@@ -1,520 +1,216 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kế Hoạch & Chi Phí Cưới Hỏi Tại Việt Nam</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+import React, { useState } from 'react';
+import { Heart, Mail, Calendar, Gift, Sparkles, Check, ArrowRight, Instagram, Facebook, Twitter } from 'lucide-react';
+
+/**
+ * Component: FeatureCard
+ * Thẻ hiển thị tính năng nổi bật
+ */
+const FeatureCard = ({ icon: Icon, title, description }) => (
+  <div className="bg-white/60 backdrop-blur-md p-6 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all duration-300 group">
+    <div className="w-12 h-12 bg-rose-50 group-hover:bg-rose-100 rounded-full flex items-center justify-center mb-4 mx-auto text-rose-500 transition-colors">
+      <Icon size={24} />
+    </div>
+    <h3 className="text-lg font-bold text-gray-800 mb-2 font-heading">{title}</h3>
+    <p className="text-sm text-gray-600 leading-relaxed font-body">{description}</p>
+  </div>
+);
+
+/**
+ * Component: BackgroundEffect
+ * Tạo hiệu ứng nền nhẹ nhàng
+ */
+const BackgroundEffect = () => (
+  <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+    {/* Gradient Background */}
+    <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-slate-50 to-orange-50 opacity-100"></div>
     
-    <!-- Palette: Vibrant Wedding (Pink/Purple/Gold/Blue) -->
-    <!-- 
-        Palette Name: Vibrant Romance
-        Primary: #E91E63 (Vibrant Pink)
-        Secondary: #9C27B0 (Deep Purple)
-        Accent: #FFC107 (Golden Amber)
-        Neutral: #F3F4F6 (Light Gray)
-        Dark: #1F2937 (Dark Gray)
-    -->
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #FDF2F8; /* Light Pink tint */
-            color: #1F2937;
-        }
-        h1, h2, h3 {
-            font-family: 'Playfair Display', serif;
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px;
-            max-height: 400px;
-        }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 400px;
-            }
-        }
-        /* Timeline styling */
-        .timeline-line {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background-color: #E91E63;
-            transform: translateX(-50%);
-        }
-        .timeline-card {
-            position: relative;
-            width: 45%;
-        }
-        .timeline-dot {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            background-color: #FFC107;
-            border: 4px solid #E91E63;
-            border-radius: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-        }
-        /* Hide timeline line on mobile and adjust layout */
-        @media (max-width: 768px) {
-            .timeline-line { left: 20px; }
-            .timeline-card { width: 100%; padding-left: 50px; margin-bottom: 2rem; }
-            .timeline-dot { left: 20px; }
-            .timeline-left, .timeline-right { left: 0; }
-        }
-    </style>
-    <!-- 
-        Analysis of Source Material & Narrative Plan:
-        1.  Subject: Organizing a wedding in Vietnam requires 9-12 months of preparation.
-        2.  Key Data: 
-            - Average total cost: 350M - 500M VND.
-            - Banquet is the largest cost (50-60%).
-            - Timeline involves: Dạm ngõ -> Ăn hỏi -> Rước dâu -> Tiệc.
-        3.  Narrative Flow:
-            - Intro: The Big Number (Total Budget).
-            - Composition: Where does the money go? (Donut Chart).
-            - Timeline: What to do and when? (Vertical List).
-            - Specifics: Costs of individual items (Bar Chart).
-            - Cash Flow: When to pay? (Line Chart).
-            - Conclusion: Summary tips.
-        4.  Visualizations selected based on "Infographic Chart Selection Guide" (NO SVG):
-            - Donut Chart (Chart.js): Comparison of parts to whole (Budget).
-            - Vertical HTML Layout: Process/Timeline.
-            - Horizontal Bar Chart (Chart.js): Comparing many categories with long names.
-            - Line Chart (Chart.js): Change over time (Cash flow).
-    -->
-</head>
-<body class="bg-pink-50">
+    {/* Animated Blobs */}
+    <div className="absolute top-0 left-0 w-96 h-96 bg-rose-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+    <div className="absolute top-0 right-0 w-96 h-96 bg-purple-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+    <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+  </div>
+);
 
-    <!-- Header Section -->
-    <header class="bg-gradient-to-r from-pink-600 to-purple-700 text-white py-12 px-4 shadow-lg">
-        <div class="max-w-6xl mx-auto text-center">
-            <h1 class="text-4xl md:text-6xl font-bold mb-4">Hành Trình Hạnh Phúc</h1>
-            <h2 class="text-xl md:text-2xl font-light mb-8">Kế Hoạch & Chi Phí Cho Đám Cưới Tại Việt Nam</h2>
-            <p class="max-w-2xl mx-auto text-pink-100 text-lg">
-                Tổng hợp chi tiết các đầu việc cần chuẩn bị từ 12 tháng trước ngày cưới và phân tích chi phí trung bình để giúp các cặp đôi Việt quản lý ngân sách hiệu quả.
-            </p>
+/**
+ * Component: App
+ * Main Application Component
+ */
+export default function App() {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState('idle'); // idle, loading, success, error
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setStatus('loading');
+    
+    // Giả lập API call
+    setTimeout(() => {
+      setStatus('success');
+      setEmail('');
+    }, 1500);
+  };
+
+  return (
+    <div className="min-h-screen font-body text-gray-800 relative selection:bg-rose-200 selection:text-rose-900">
+      <BackgroundEffect />
+
+      {/* Navbar */}
+      <nav className="fixed w-full top-0 z-50 p-6 flex justify-between items-center max-w-7xl mx-auto left-0 right-0">
+        <div className="flex items-center gap-2">
+            <div className="bg-rose-500 text-white p-1.5 rounded-lg shadow-sm">
+                <Heart size={20} fill="currentColor" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight font-heading text-gray-900">Weddy</span>
         </div>
-    </header>
+        <a 
+          href="mailto:contact@weddy.vn"
+          className="hidden sm:flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-rose-600 transition-colors"
+        >
+          <Mail size={16} />
+          Liên hệ
+        </a>
+      </nav>
 
-    <main class="max-w-7xl mx-auto px-4 py-8 space-y-12">
-
-        <!-- SECTION 1: The Big Picture (KPIs) -->
-        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- KPI Card 1 -->
-            <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-pink-500 text-center transform transition hover:scale-105 duration-300">
-                <h3 class="text-gray-500 font-medium uppercase tracking-wider text-sm">Tổng Ngân Sách Trung Bình</h3>
-                <p class="text-4xl font-bold text-pink-600 mt-2">450 Triệu</p>
-                <p class="text-sm text-gray-400 mt-1">VND (Tại các thành phố lớn)</p>
-            </div>
-            <!-- KPI Card 2 -->
-            <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-purple-500 text-center transform transition hover:scale-105 duration-300">
-                <h3 class="text-gray-500 font-medium uppercase tracking-wider text-sm">Thời Gian Chuẩn Bị</h3>
-                <p class="text-4xl font-bold text-purple-600 mt-2">9 - 12</p>
-                <p class="text-sm text-gray-400 mt-1">Tháng trước ngày cưới</p>
-            </div>
-            <!-- KPI Card 3 -->
-            <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-yellow-500 text-center transform transition hover:scale-105 duration-300">
-                <h3 class="text-gray-500 font-medium uppercase tracking-wider text-sm">Khách Mời Trung Bình</h3>
-                <p class="text-4xl font-bold text-yellow-500 mt-2">300 - 400</p>
-                <p class="text-sm text-gray-400 mt-1">Khách (30 - 40 bàn)</p>
-            </div>
-        </section>
-
-        <!-- SECTION 2: Budget Breakdown (Donut Chart) -->
-        <section class="bg-white rounded-xl shadow-md p-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <div>
-                    <h2 class="text-3xl font-bold text-gray-800 mb-4 border-l-4 border-pink-500 pl-4">Phân Bổ Ngân Sách</h2>
-                    <p class="text-gray-600 mb-4 text-lg leading-relaxed">
-                        Trong một đám cưới điển hình tại Việt Nam, <strong class="text-pink-600">Nhà hàng & Tiệc cưới</strong> luôn chiếm phần lớn ngân sách (khoảng 50-60%). Đây là khoản chi phí biến đổi dựa trên số lượng khách mời. Các khoản chi cố định như trang trí, quay phim chụp ảnh, và trang phục chiếm phần còn lại.
-                    </p>
-                    <ul class="space-y-2 mb-6 text-gray-700">
-                        <li class="flex items-center"><span class="text-2xl mr-2 text-pink-500">❖</span> <strong>Tiệc Cưới:</strong> Bao gồm thực đơn, đồ uống và phí phục vụ.</li>
-                        <li class="flex items-center"><span class="text-2xl mr-2 text-purple-500">❖</span> <strong>Trang Trí:</strong> Gia tiên, rạp cưới, backdrop và hoa tươi.</li>
-                        <li class="flex items-center"><span class="text-2xl mr-2 text-blue-500">❖</span> <strong>Hình Ảnh:</strong> Pre-wedding, phóng sự cưới và quay phim.</li>
-                    </ul>
-                </div>
-                <!-- Chart Container -->
-                <div class="flex flex-col items-center">
-                    <div class="chart-container">
-                        <canvas id="budgetDonutChart"></canvas>
-                    </div>
-                    <p class="text-center text-sm text-gray-500 mt-4 italic">Biểu đồ phân bổ chi phí dự kiến (%)</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 3: Timeline of Tasks (Organize/Flow) -->
-        <section class="bg-white rounded-xl shadow-md p-8 relative overflow-hidden">
-            <h2 class="text-3xl font-center text-center font-bold text-gray-800 mb-12">Dòng Thời Gian: 1 Năm Chuẩn Bị</h2>
-            
-            <div class="relative">
-                <!-- Vertical Line -->
-                <div class="hidden md:block timeline-line"></div>
-
-                <!-- Timeline Item 1: 12-9 Months -->
-                <div class="flex flex-col md:flex-row justify-between items-center w-full mb-8">
-                    <div class="order-1 w-full md:w-5/12 md:text-right px-4">
-                        <h3 class="text-xl font-bold text-pink-600">12 - 9 Tháng Trước</h3>
-                        <h4 class="font-semibold text-gray-700">Khởi Động & Ngân Sách</h4>
-                        <p class="text-gray-600 text-sm mt-2">Xác định ngày cưới (xem ngày), lập ngân sách tổng thể, lên danh sách khách mời sơ bộ (để chọn sảnh tiệc phù hợp), đặt cọc nhà hàng.</p>
-                    </div>
-                    <div class="z-20 flex items-center order-1 bg-yellow-400 shadow-xl w-12 h-12 rounded-full justify-center text-white text-xl font-bold border-4 border-white">
-                        📅
-                    </div>
-                    <div class="order-1 w-full md:w-5/12 px-4 mt-4 md:mt-0">
-                        <ul class="text-sm text-gray-600 list-disc list-inside">
-                            <li>Họp mặt hai gia đình</li>
-                            <li>Dự trù ngân sách</li>
-                            <li>Tìm kiếm địa điểm (Venue)</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Timeline Item 2: 6-9 Months -->
-                <div class="flex flex-col md:flex-row justify-between items-center w-full mb-8">
-                    <div class="order-1 w-full md:w-5/12 md:text-right px-4 hidden md:block">
-                         <ul class="text-sm text-gray-600 list-disc list-inside dir-rtl">
-                            <li>Book Studio chụp ảnh</li>
-                            <li>Chọn váy cưới, vest</li>
-                            <li>Book Make-up Artist</li>
-                        </ul>
-                    </div>
-                    <div class="z-20 flex items-center order-1 bg-purple-500 shadow-xl w-12 h-12 rounded-full justify-center text-white text-xl font-bold border-4 border-white">
-                        📷
-                    </div>
-                    <div class="order-1 w-full md:w-5/12 px-4 mt-4 md:mt-0">
-                        <h3 class="text-xl font-bold text-pink-600">9 - 6 Tháng Trước</h3>
-                        <h4 class="font-semibold text-gray-700">Hình Ảnh & Trang Phục</h4>
-                        <p class="text-gray-600 text-sm mt-2">Thời điểm vàng để chụp Pre-wedding (tránh mùa mưa). Chọn đơn vị trang trí (Decor) và đặt may/thuê trang phục cưới.</p>
-                        <!-- Mobile List shown here -->
-                        <ul class="md:hidden text-sm text-gray-600 list-disc list-inside mt-2">
-                            <li>Book Studio chụp ảnh</li>
-                            <li>Chọn váy cưới, vest</li>
-                            <li>Book Make-up Artist</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Timeline Item 3: 3-6 Months -->
-                <div class="flex flex-col md:flex-row justify-between items-center w-full mb-8">
-                    <div class="order-1 w-full md:w-5/12 md:text-right px-4">
-                        <h3 class="text-xl font-bold text-pink-600">6 - 3 Tháng Trước</h3>
-                        <h4 class="font-semibold text-gray-700">Chi Tiết & Nhẫn Cưới</h4>
-                        <p class="text-gray-600 text-sm mt-2">Mua nhẫn cưới, in thiệp cưới, chốt thực đơn nhà hàng, chuẩn bị tráp ăn hỏi, liên hệ MC và ban nhạc.</p>
-                    </div>
-                    <div class="z-20 flex items-center order-1 bg-pink-500 shadow-xl w-12 h-12 rounded-full justify-center text-white text-xl font-bold border-4 border-white">
-                        💍
-                    </div>
-                    <div class="order-1 w-full md:w-5/12 px-4 mt-4 md:mt-0">
-                        <ul class="text-sm text-gray-600 list-disc list-inside">
-                            <li>Mua nhẫn cưới</li>
-                            <li>Đặt in thiệp</li>
-                            <li>Lên kịch bản chương trình</li>
-                        </ul>
-                    </div>
-                </div>
-
-                 <!-- Timeline Item 4: 2 Months - 1 Week -->
-                 <div class="flex flex-col md:flex-row justify-between items-center w-full mb-8">
-                    <div class="order-1 w-full md:w-5/12 md:text-right px-4 hidden md:block">
-                        <ul class="text-sm text-gray-600 list-disc list-inside dir-rtl">
-                            <li>Gửi thiệp mời</li>
-                            <li>Thử váy lần cuối</li>
-                            <li>Chăm sóc da/spa</li>
-                        </ul>
-                    </div>
-                    <div class="z-20 flex items-center order-1 bg-red-600 shadow-xl w-12 h-12 rounded-full justify-center text-white text-xl font-bold border-4 border-white">
-                        💌
-                    </div>
-                    <div class="order-1 w-full md:w-5/12 px-4 mt-4 md:mt-0">
-                        <h3 class="text-xl font-bold text-pink-600">2 Tháng - 1 Tuần</h3>
-                        <h4 class="font-semibold text-gray-700">Nước Rút</h4>
-                        <p class="text-gray-600 text-sm mt-2">Gửi thiệp mời (trước 2-3 tuần), xác nhận số lượng khách lần cuối với nhà hàng, chuẩn bị tiền mặt thanh toán các khoản còn lại.</p>
-                         <!-- Mobile List shown here -->
-                         <ul class="md:hidden text-sm text-gray-600 list-disc list-inside mt-2">
-                            <li>Gửi thiệp mời</li>
-                            <li>Thử váy lần cuối</li>
-                            <li>Chăm sóc da/spa</li>
-                        </ul>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- SECTION 4: Detailed Costs (Bar Chart) -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-white rounded-xl shadow-md p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Chi Phí Chi Tiết Các Hạng Mục</h2>
-                <p class="text-gray-600 mb-6 text-sm">
-                    Ngoài chi phí bàn tiệc (biến động theo số khách), đây là các khoản chi phí dịch vụ trung bình (Cố định) mà các cặp đôi cần chuẩn bị. Lưu ý: <strong>Trang sức & Của hồi môn</strong> không được tính vào chi phí tổ chức vì đây là tài sản tích lũy.
-                </p>
-                <div class="chart-container">
-                    <canvas id="detailedCostChart"></canvas>
-                </div>
-            </div>
-
-            <!-- SECTION 5: Regional Comparison (Grouped Bar) -->
-             <div class="bg-white rounded-xl shadow-md p-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Khác Biệt Bắc - Nam</h2>
-                <p class="text-gray-600 mb-6 text-sm">
-                    Phong tục cưới hỏi tại Miền Bắc (Hà Nội) và Miền Nam (TP.HCM) có sự chênh lệch về chi phí ở một số hạng mục nhất định, đặc biệt là Tráp ăn hỏi và Phong cách tiệc.
-                </p>
-                <div class="chart-container">
-                    <canvas id="regionalChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 6: Cash Flow Management (Line Chart) -->
-        <section class="bg-white rounded-xl shadow-md p-8 border-l-8 border-yellow-500">
-            <div class="mb-6">
-                <h2 class="text-3xl font-bold text-gray-800">Dòng Tiền & Lịch Thanh Toán</h2>
-                <p class="text-gray-600 mt-2">
-                    Nhiều cặp đôi lầm tưởng cần có sẵn 100% số tiền ngay từ đầu. Thực tế, chi phí được chia nhỏ và thanh toán theo giai đoạn. Biểu đồ dưới đây minh họa thời điểm bạn cần chi tiền (Cash Out) so với tổng ngân sách.
-                </p>
-            </div>
-            <div class="chart-container w-full max-w-4xl">
-                <canvas id="cashFlowChart"></canvas>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 text-center text-sm">
-                <div class="bg-pink-50 p-3 rounded">
-                    <strong>Giai đoạn 1 (12-6 tháng):</strong> Đặt cọc địa điểm, Studio (Khoảng 20-30%).
-                </div>
-                <div class="bg-purple-50 p-3 rounded">
-                    <strong>Giai đoạn 2 (3-1 tháng):</strong> Mua nhẫn, trang sức, tạm ứng dịch vụ (Khoảng 20%).
-                </div>
-                <div class="bg-yellow-50 p-3 rounded">
-                    <strong>Giai đoạn 3 (Ngày cưới):</strong> Thanh toán nốt tiệc cưới bằng tiền mừng (Khoảng 50%).
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <footer class="bg-gray-800 text-white py-8 text-center mt-12">
-        <p class="text-gray-400 text-sm">Infographic được thiết kế dựa trên dữ liệu thị trường cưới hỏi Việt Nam năm 2024-2025.</p>
-        <p class="text-gray-500 text-xs mt-2">Lưu ý: Chi phí thực tế có thể thay đổi tùy thuộc vào quy mô và nhu cầu cụ thể của từng gia đình.</p>
-    </footer>
-
-    <!-- SCRIPT SECTION -->
-    <script>
-        // --- UTILITY FUNCTIONS ---
+      {/* Main Content */}
+      <main className="container mx-auto px-4 pt-32 pb-16 flex flex-col items-center text-center max-w-5xl">
         
-        // Function to split long labels into arrays for Chart.js
-        function splitLabel(str, maxLen = 16) {
-            if (str.length <= maxLen) return str;
-            const words = str.split(' ');
-            const lines = [];
-            let currentLine = words[0];
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 border border-rose-100 shadow-sm text-xs font-bold tracking-wide text-rose-600 uppercase mb-8 animate-fade-in-up">
+            <Sparkles size={14} />
+            Sắp ra mắt phiên bản Beta
+        </div>
 
-            for (let i = 1; i < words.length; i++) {
-                if (currentLine.length + 1 + words[i].length <= maxLen) {
-                    currentLine += ' ' + words[i];
-                } else {
-                    lines.push(currentLine);
-                    currentLine = words[i];
-                }
-            }
-            lines.push(currentLine);
-            return lines;
+        {/* Hero Text */}
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold font-heading text-gray-900 mb-6 leading-tight animate-fade-in-up delay-100">
+          Đám cưới trong mơ, <br/>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">
+            Nằm trong tầm tay bạn.
+          </span>
+        </h1>
+        
+        <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200">
+          Weddy là nền tảng tất-cả-trong-một giúp bạn lên kế hoạch, quản lý ngân sách và thiết kế thiệp cưới online. Đơn giản hóa ngày trọng đại của bạn.
+        </p>
+
+        {/* Email Form */}
+        <div className="w-full max-w-md mx-auto mb-20 animate-fade-in-up delay-300">
+          {status === 'success' ? (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded-xl flex items-center justify-center gap-3 shadow-sm animate-fade-in-up">
+              <div className="bg-green-100 p-1 rounded-full">
+                <Check size={16} />
+              </div>
+              <span className="font-medium">Cảm ơn bạn! Chúng tôi sẽ thông báo sớm nhất.</span>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-rose-400 to-orange-400 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
+              <div className="relative flex p-1.5 bg-white rounded-full border border-gray-200 shadow-sm focus-within:ring-2 focus-within:ring-rose-500/20 focus-within:border-rose-500 transition-all">
+                <input
+                  type="email"
+                  placeholder="Nhập email của bạn..."
+                  className="w-full pl-5 pr-4 py-3 bg-transparent outline-none text-gray-700 placeholder:text-gray-400 rounded-l-full font-medium"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className="bg-rose-600 hover:bg-rose-700 text-white px-6 py-3 rounded-full font-bold text-sm tracking-wide transition-all flex items-center gap-2 whitespace-nowrap disabled:opacity-70 disabled:cursor-not-allowed shadow-md hover:shadow-lg transform active:scale-95"
+                >
+                  {status === 'loading' ? (
+                    <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
+                  ) : (
+                    <>
+                      Thông báo tôi
+                      <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-3 text-center font-medium">
+                * Chúng tôi cam kết không spam. Bạn có thể hủy đăng ký bất cứ lúc nào.
+              </p>
+            </form>
+          )}
+        </div>
+
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl animate-fade-in-up delay-400">
+          <FeatureCard 
+            icon={Calendar} 
+            title="Kế Hoạch Thông Minh" 
+            description="Timeline chi tiết từng phút cho ngày cưới. Không còn lo lắng bỏ sót bất kỳ đầu việc nào."
+          />
+          <FeatureCard 
+            icon={Gift} 
+            title="Thiệp Mời Online" 
+            description="Tự thiết kế thiệp cưới website của riêng bạn với thư viện giao diện phong phú và hiện đại."
+          />
+          <FeatureCard 
+            icon={Sparkles} 
+            title="Quản Lý Ngân Sách" 
+            description="Theo dõi chi tiêu thời gian thực. Giúp bạn kiểm soát dòng tiền và tránh vượt ngân sách dự kiến."
+          />
+        </div>
+
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full border-t border-rose-100 bg-white/40 backdrop-blur-md mt-auto">
+        <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="text-sm text-gray-500 font-medium">
+            &copy; {new Date().getFullYear()} Weddy Platform. All rights reserved.
+          </div>
+          <div className="flex items-center gap-6">
+            <a href="#" className="text-gray-400 hover:text-rose-600 transition-colors"><Instagram size={20} /></a>
+            <a href="#" className="text-gray-400 hover:text-blue-600 transition-colors"><Facebook size={20} /></a>
+            <a href="#" className="text-gray-400 hover:text-sky-500 transition-colors"><Twitter size={20} /></a>
+          </div>
+        </div>
+      </footer>
+      
+      {/* CSS Animations & Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+        .font-heading {
+          font-family: 'Playfair Display', serif;
+        }
+        .font-body {
+          font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        // Shared Tooltip Configuration
-        const sharedTooltipConfig = {
-            callbacks: {
-                title: function(tooltipItems) {
-                    const item = tooltipItems[0];
-                    let label = item.chart.data.labels[item.dataIndex];
-                    if (Array.isArray(label)) {
-                        return label.join(' ');
-                    } else {
-                        return label;
-                    }
-                }
-            }
-        };
-
-        // --- CHART 1: Budget Breakdown (Donut) ---
-        const ctxDonut = document.getElementById('budgetDonutChart').getContext('2d');
-        const budgetData = {
-            // Processing labels
-            labels: [
-                'Tiệc Cưới (Nhà hàng)', 
-                'Trang Trí & Decor', 
-                'Trang Phục & Makeup', 
-                'Quay Phim & Chụp Ảnh', 
-                'Thiệp, Quà & Khác'
-            ].map(l => splitLabel(l)),
-            datasets: [{
-                data: [55, 15, 12, 10, 8], // Percentages
-                backgroundColor: [
-                    '#E91E63', // Pink (Banquet - Main)
-                    '#9C27B0', // Purple (Decor)
-                    '#FFC107', // Amber (Attire)
-                    '#2196F3', // Blue (Photo)
-                    '#9E9E9E'  // Grey (Others)
-                ],
-                borderWidth: 0,
-                hoverOffset: 10
-            }]
-        };
-
-        new Chart(ctxDonut, {
-            type: 'doughnut',
-            data: budgetData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } },
-                    tooltip: sharedTooltipConfig,
-                    title: {
-                        display: true,
-                        text: 'Cơ Cấu Chi Phí (%)',
-                        font: { size: 16 }
-                    }
-                }
-            }
-        });
-
-        // --- CHART 2: Detailed Costs (Horizontal Bar) ---
-        const ctxBar = document.getElementById('detailedCostChart').getContext('2d');
-        // Values in Million VND
-        const detailedCostsRaw = {
-            labels: [
-                'Album Pre-wedding',
-                'Quay phóng sự cưới',
-                'Váy cưới & Vest',
-                'Makeup (2 buổi)',
-                'Trang trí gia tiên',
-                'Trang trí nhà hàng',
-                'Nhẫn cưới (Cặp)',
-                'Thiệp cưới (300 cái)',
-                'MC & Ban nhạc'
-            ],
-            data: [15, 12, 20, 8, 15, 30, 10, 3, 5] 
-        };
-
-        new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: detailedCostsRaw.labels.map(l => splitLabel(l)),
-                datasets: [{
-                    label: 'Chi phí trung bình (Triệu VND)',
-                    data: detailedCostsRaw.data,
-                    backgroundColor: '#E91E63',
-                    borderRadius: 4,
-                }]
-            },
-            options: {
-                indexAxis: 'y', // Horizontal bar
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        grid: { display: false }
-                    },
-                    y: {
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: sharedTooltipConfig
-                }
-            }
-        });
-
-        // --- CHART 3: Regional Comparison (Grouped Bar) ---
-        const ctxRegion = document.getElementById('regionalChart').getContext('2d');
-        new Chart(ctxRegion, {
-            type: 'bar',
-            data: {
-                labels: ['Tráp Ăn Hỏi', 'Trang Trí', 'Tiệc Cưới/Bàn'].map(l => splitLabel(l)),
-                datasets: [
-                    {
-                        label: 'Hà Nội (Miền Bắc)',
-                        data: [15, 25, 5.5], // Tráp cao hơn, Tiệc tính theo mâm 6 hoặc 10
-                        backgroundColor: '#9C27B0'
-                    },
-                    {
-                        label: 'TP.HCM (Miền Nam)',
-                        data: [8, 20, 4.5], // Tráp đơn giản hơn, Tiệc tính theo bàn 10
-                        backgroundColor: '#FFC107'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Triệu VND' }
-                    }
-                },
-                plugins: {
-                    tooltip: sharedTooltipConfig,
-                    legend: { position: 'bottom' }
-                }
-            }
-        });
-
-        // --- CHART 4: Cash Flow (Line Chart) ---
-        const ctxLine = document.getElementById('cashFlowChart').getContext('2d');
-        new Chart(ctxLine, {
-            type: 'line',
-            data: {
-                labels: ['12 Tháng', '9 Tháng', '6 Tháng', '3 Tháng', '1 Tháng', 'Ngày Cưới', 'Sau Cưới'],
-                datasets: [{
-                    label: 'Tích lũy chi trả (%)',
-                    data: [5, 15, 25, 40, 50, 60, 100], // Cumulative spending
-                    borderColor: '#2196F3',
-                    backgroundColor: 'rgba(33, 150, 243, 0.2)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#E91E63',
-                    pointRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        title: { display: true, text: '% Tổng Ngân Sách Đã Chi' }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: sharedTooltipConfig,
-                    annotation: {
-                        // Chart.js annotations could go here, but omitted to keep lightweight
-                    }
-                }
-            }
-        });
-
-    </script>
-</body>
-</html>
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+      `}</style>
+    </div>
+  );
+}
